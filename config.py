@@ -18,7 +18,7 @@ os.environ['HF_HUB_DISABLE_SSL_VERIFY'] = '1'
 # ---------------------------
 
 # API Key
-GOOGLE_API_KEY = "AIzaSyC-OveE2ISHSnJO3xkrTuKfinK0GPy6xTo"
+GOOGLE_API_KEY = ""
 # Try to get from env
 if "GOOGLE_API_KEY" in os.environ:
     GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"]
