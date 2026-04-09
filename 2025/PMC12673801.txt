@@ -1,0 +1,3114 @@
+Introduction
+Immunotherapy, particularly immune checkpoint inhibitors (ICIs), has emerged as a significant breakthrough in cancer treatment. By targeting programmed cell death protein 1 (PD-1), its ligand PD-L1, and cytotoxic T-lymphocyte-associated protein 4 (CTLA-4), ICIs can relieve the immune suppression exerted by tumor cells, restoring the effector functions of T cells and thereby effectively promoting the clearance of tumor cells [
+1
+]. However, the application of immunotherapy in resectable cancers remains an area of active exploration. Neoadjuvant immunotherapy (NIT) is an innovative treatment strategy that primarily involves the use of ICIs before surgery to eliminate potential micrometastases or microtumor foci, thus reducing tumor burden and lowering the risk of postoperative recurrence [
+2
+]. Preliminary clinical data have shown favorable pathological response rates for NIT across various tumor types. Despite these promising results, current clinical research still faces the challenge of accurately predicting which patients will benefit from NIT [
+3
+]. Therefore, the precise identification of patients who are most likely to benefit from NIT remains a significant challenge in clinical practice, necessitating the development of accurate predictive models to identify potential responders and optimize treatment strategies before therapy begins.
+The tumor characteristics of cancer patients can be characterized by a variety of data modalities, each contributing valuable insights into different aspects of tumor biology and the immune status [
+4
+]. These include radiological images, digitized histopathological slides, genomic sequencing, proteomic profiles, epigenomic modifications, and microbiome features [
+5
+]. Radiological imaging provides critical details on tumor size, shape, and location, while histopathological slides offer information about tumor-infiltrating immune cells and microenvironment characteristics. Genomic sequencing, through techniques such as whole-genome sequencing and targeted gene panels, identifies specific genetic mutations and alterations that drive tumor progression and immune evasion. Transcriptomics examines gene expression at the RNA level by analyzing the complete set of transcripts, including mRNA and non-coding RNA, to reveal cellular functions and regulatory mechanisms. Proteomic profiling, which analyzes protein expression in the tumor and its microenvironment, reveals biomarkers associated with tumor metastasis and immune suppression. Microbiome data explore the role of microbial communities in modulating immune responses. Epigenomic modifications, including DNA methylation, histone modifications, and chromatin accessibility, provide insights into gene regulation within both the tumor and immune microenvironment, influencing tumor behavior and immune escape mechanisms [
+5
+,
+6
+]. The integration of these data allows for a more comprehensive understanding of tumors.
+However, these diverse data sources are inherently complex, often exhibiting high dimensionality, non-linearity, and heterogeneity, making it difficult to accurately model them using traditional human observation and statistical analysis [
+7
+]. This complexity underscores the limitations of conventional methods, which struggle to account for intricate relationships between tumor biology, immune function, and treatment outcomes. In contrast, artificial intelligence (AI) technologies, particularly machine learning (ML) and deep learning (DL), offer a promising solution by efficiently processing and analyzing these large, heterogeneous datasets [
+8
+]. These techniques can uncover hidden, non-linear patterns between multi-dimensional patient data and their treatment outcomes, resulting in more accurate and generalized predictions of NIT efficacy and helping to tailor personalized treatment strategies.
+In this review, we provide the comprehensive and structured review of existing AI-based predictive models for assessing NIT efficacy. Specifically, we introduce a new taxonomy that classifies current approaches into two principal paradigms. The indirect paradigm infers therapeutic response by predicting clinically validated surrogate biomarkers such as PD-L1 expression, tumor mutational burden (TMB), microsatellite instability (MSI), and the tumor microenvironment (TME) features. In contrast, the direct paradigm leverages AI-driven algorithms to model clinical treatment endpoints directly, including major pathological response (MPR), pathological complete response (pCR), and progression-free survival (PFS). Furthermore, we subgroup these predictive models according to the data modality—distinguishing between single-omics and multi-omics frameworks—to emphasize the strengths of AI in capturing complex biological signals through feature extraction and data integration. Despite significant advances, AI-based computational approaches for NIT prediction remain limited by several challenges and we outline key future directions to address these limitations. Overcoming these barriers will be critical for enhancing the clinical translation of AI models and advancing precision oncology in the NIT landscape.
+Comparison with existing reviews
+Several reviews have been published on the application of AI in predicting immunotherapy outcomes. However, our review distinguishes itself in several key aspects. Firstly, while many existing reviews broadly examine AI in immunotherapy, our work specifically focuses on NIT. This narrower scope highlights a clinically significant and rapidly evolving treatment setting, where accurate prediction is particularly critical for guiding patient selection and optimizing perioperative strategies, thereby distinguishing our review from prior surveys that address immunotherapy in general [
+9
+–
+13
+]. Secondly, unlike reviews that concentrate on specific cancer types, our study adopts a pan-cancer perspective, providing a more comprehensive overview of AI-driven prediction methods across multiple malignancies. This broader scope allows us to identify cross-cancer patterns and insights that would remain hidden in single-entity surveys [
+14
+–
+18
+]. Thirdly, while earlier reviews often confine themselves to a single biomarker class or a specific data modality, our framework embraces both direct prediction of clinical outcomes and indirect prediction via validated biomarkers, without being restricted to one omics layer or biomarker type [
+19
+–
+26
+]. Finally, our review is organized in a structured manner with comparative tables that clearly summarize study attributes such as data modality, cohort size, validation strategy, and performance metrics, thereby facilitating transparent cross-study comparison and synthesis. Together, these perspectives underscore the novelty of our review and provide readers with a structured, integrative, and clinically relevant overview of AI-based prediction in NIT.
+Fig. 1
+Historical evolution of artificial intelligence and representative algorithm architectures. (
+A
+) Timeline illustrating the major developmental phases of AI, from symbolic logic and expert systems (1950s), through machine learning (1980s) and deep learning (2000s), to the current foundation model (2020s). (
+B
+) Schematic representations of classical ML algorithms, including LR, KNN, SVM, RF, and GBDT. (
+C
+) Architectures of widely used DL models, specifically MLP, CNN, RNN, Transformer, and GNN
+AI foundations in cancer research
+AI, a branch of computer science (CS), is dedicated to replicating human intelligence to enable machines to learn and reason autonomously [
+27
+]. Its evolution can be categorized into four distinct stages (Fig.
+1
+A). From the 1950 s to the 1980 s, research was dominated by symbolic reasoning and expert systems, though progress was limited by insufficient computational resources and data. Between the 1980 s and the 2000 s, the adoption of statistical learning marked a shift towards data-driven methods, leading to notable advances in ML [
+28
+]. Since the 2000 s, the emergence of DL has significantly improved AI capabilities, particularly in CV and complex decision-making. Entering the 2020 s, AI has transitioned into the foundation model era, exemplified by large-scale pre-trained systems such as generative pre-trained transformer (GPT), contrastive language-Image pre-training (CLIP), and segment anything model (SAM) [
+29
+]. Trained on massive datasets using self-supervised learning, these models exhibit strong generalizability and adaptability across tasks [
+28
+]. These advancements have laid a robust foundation for the integration of AI into complex real-world domains [
+30
+]. These advancements have laid a solid foundation for integrating AI into complex real-world domains. Among these, AI has been applied to biomedical predictive analytics problems. For example, machine learning models have been used to analyze time-series data from wearable devices, such as heart rate monitors, electrocardiograms, and fitness trackers. These models can predict cardiovascular events, like heart attacks, by detecting abnormalities in heart rhythms and other physiological signals [
+31
+]. Additionally, graph neural networks are being utilized to predict how molecules interact with biological targets [
+32
+]. These models analyze extensive chemical and biological datasets to identify promising compounds for drug development or repurposing.
+Machine learning (ML), a subfield of artificial intelligence (AI), involves constructing mathematical models that enable computers to identify patterns from data and make predictions or decisions without explicit programming [
+33
+]. Among commonly used ML algorithms, logistic regression (LR) is a classic statistical model for binary classification, widely applied in tasks such as disease risk prediction, treatment response evaluation, and survival analysis [
+34
+]. K-Nearest Neighbors (KNN), a non-parametric algorithm based on sample similarity (e.g., Euclidean distance), is valued for its simplicity and interpretability [
+35
+]. Support Vector Machines (SVMs) construct optimal hyperplanes to separate classes, demonstrating robust performance in high-dimensional biomedical data [
+36
+]. Random Forests (RFs), as ensemble methods combining multiple decision trees, improve model robustness and generalization. They are frequently employed in clinical outcome prediction and disease risk assessment, especially in settings with heterogeneous, multidimensional clinical data [
+37
+]. Gradient Boosted Decision Trees (GBDTs) iteratively correct prediction errors to build strong learners, showing effectiveness in genomic feature selection and personalized treatment modeling, particularly when dealing with small but high-quality datasets [
+38
+].
+While conventional ML approaches provide interpretable models with lower computational costs, they heavily depend on handcrafted feature engineering, which may lead to the loss of critical information [
+39
+]. However, DL, another branch of AI, overcomes the limitations of traditional ML methods by leveraging multi-layered neural networks to automatically extract hierarchical features from data [
+39
+]. DL models typically contain multiple hidden layers that abstract data features from low to high levels. Its primary advantage lies in its powerful feature learning capability, particularly in processing large-scale, complex, unstructured data (
+e.g.
+, image and speech data), where it exhibits exceptional performance (Fig.
+1
+C). Specifically, multi-layer perceptrons (MLPs), as fundamental feedforward networks, capture non-linear relationships and serve as the basis for more advanced architectures [
+40
+]. Convolutional Neural Networks (CNNs) are among the most commonly used DL models, particularly for medical image analysis. In NIT, CNNs are widely applied for automated tumor image analysis, such as tumor detection, segmentation, classification, and evaluation of immune microenvironments. CNNs can progressively capture both local and global features of tumor images, enabling precise classification or regression analyses that inform clinical decision-making [
+41
+]. Besides, recurrent neural networks (RNNs) are particularly suited for handling sequential data. In genomics, RNNs have been applied to tasks such as predicting gene expression from promoter sequences by incorporating context information across nucleotide positions [
+41
+]. Unlike CNNs, which rely on convolutional operations to extract local features, vision transformers (ViTs) employ self-attention mechanisms that enable global feature modeling across the entire image. This architecture not only facilitates efficient parallel computation but also enhances the model’s ability to capture long-range dependencies. Consequently, ViTs have demonstrated strong performance in complex visual tasks such as tumor subtyping, segmentation, and multi-modal image fusion [
+42
+]. Also, graph neural networks (GNNs) are gaining traction in medical AI, particularly in modeling relational data, such as protein interactions, molecular structures, and patient networks [
+42
+].
+Indirect biomarker-based prediction methods
+PD-L1
+As a key immune-regulatory molecule, elevated PD-L1 expression is thought to enhance the tumor’s sensitivity to immune checkpoint blockade, which could improve the likelihood of therapeutic benefit [
+43
+]. Extensive clinical trials have consistently demonstrated that tumors with high PD-L1 expression (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\ge$$\end{document}
+1%) tend to achieve higher rates of MPR or pCR following NIT or neoadjuvant chemoimmunotherapy (NCIT), suggesting an indirect association between PD-L1 levels and treatment response [
+44
+–
+49
+]. Therefore, PD-L1 expression is considered a viable indirect biomarker for predicting potential benefits from NIT, contributing to improved preoperative treatment stratification and patient selection. By automating the quantification of PD-L1 expression with exceptional precision, AI models mitigate the inherent variability of manual assessment and provide a means to capture the dynamic spatiotemporal heterogeneity of tumors [
+20
+]. This technological advance could significantly enhance the accuracy of patient selection and ultimately enable more refined, evidence-based decision-making in the clinical application of NIT. A systematic literature search was conducted, followed by independent screening and quality assessment by two researchers, leading to the inclusion of 19 studies that met the predefined criteria and focused on PD-L1 as a biomarker. Among these, 18 studies employed a single-omics approach, with radiomics-driven analyses comprising 10 studies (55.6%), pathomics-based investigations accounting for six studies (33.3%), and genomics-focused research representing two studies (11.1%) (Tab.
+1
+, Fig.
+2
+). Herein, a model built with data from a single type of omics (e.g., radiomics, pathomics, genomics, etc.) is referred to as a single-omics model. In contrast, a model built using data from two or more omics layers is classified as a multi-omics model.
+Single omics-based methods
+Radiomics
+Using an unbiased search approach, we included 10 AI-based radiomics studies focused on lung, bladder, gastric, and breast cancers, with seven studies centered on lung cancer [
+50
+–
+59
+]. Five retrospective studies in lung cancers have demonstrated that CT-based models are effective in predicting PD-L1 expression, with AUC values exceeding 0.75. Following this progression, another NSCLC study introduced a hybrid radiomics model that integrated delta-radiomics and DL features with mathematical models and replaced eight original model features with non-linear fitting parameters, which indicates its high prediction accuracy (cross-validation AUC of 0.91) [
+51
+]. While the majority of previous studies have been concentrated on primary lung cancer, a particular investigation by Meißner et al. [
+59
+] provides a novel non-invasive assessment method for predicting PD-L1 expression in brain metastases from NSCLC. They proposed a radiomics-based model on intracranial PD-L1 expression, which, using stratified cross-validation, achieved an AUC of 0.84 in external validation, demonstrating its ability to accurately predict intracranial PD-L1 expression in NSCLC patients with brain metastases. Furthermore, AI-driven radiomics has also shown broad potential in other cancers. Notably, one study in advanced BC found that subgroup analysis revealed the radiomics model’s independence from IHC-based PD-L1 status, tumor metastatic load, and molecular subtypes, emphasizing its significant value in the automated quantification of PD-L1 expression [
+53
+]. These studies highlight the emerging potential of radiomics in predicting PD-L1 expression, particularly in lung cancer, and underscore ongoing efforts to refine model algorithms.
+Pathomics
+We conducted an unbiased selection of five studies, focusing on NSCLC, esophageal squamous cell carcinoma (ESCC), BC, and glioblastoma (GBM) [
+60
+–
+65
+]. Nearly all of the AI models employed CNN and RNN as core methodologies. Among these, the largest study involved 3,376 BC patients and utilized automated analysis of H&E-stained tissue slide images to predict PD-L1 expression levels, achieving AUC values ranging from 0.91 to 0.93 [
+62
+]. Moreover, two retrospective studies on NSCLC focused on the automated analysis of PD-L1 IHC images labeled with 22C3 and SP263 antibodies. These studies applied a CNN-based PD-L1 tumor proportion score (TPS) model, demonstrating high consistency with pathologist-calculated TPS results (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\text {R}> 0.950$$\end{document}
+), further validating the reliability of this model for automated PD-L1 expression assessment [
+60
+,
+61
+]. Besides NSCLC, another study on GBM developed an ML model based on Raman histopathology. Leveraging a machine learning classifier (MLC), the model successfully visualized PD-L1 expression in glioma cells, CD8
++
+T cells, macrophages, and normal cells, achieving an average accuracy of 0.990. This method not only accurately delineated tumor-normal tissue boundaries but also completed the entire process—from signal collection to image visualization—in just 30 minutes, showcasing its remarkable potential for rapid and efficient analysis [
+64
+]. Overall, AI-based models show strong potential in automated PD-L1 assessment across various cancers, utilizing diverse pathological inputs to enhance accuracy.
+Others
+AI methods have been successfully applied to genomics for predicting PD-L1 expression in cancer. Two multicenter, retrospective studies have demonstrated the potential of AI in predicting durable clinical benefit and survival outcomes in NSCLC patients, achieving exceptional predictive accuracy (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\text {AUC}> 0.80$$\end{document}
+) [
+66
+,
+67
+]. These studies underscore the effectiveness of AI techniques in forecasting PD-L1 expression to predict patient outcomes.
+Multi-omics-based methods
+In AI-based studies on PD-L1 biomarkers, the integration of multiple input data types has proven to be a powerful approach, leveraging the distinct advantages of various omics to enhance prediction accuracy. In a study on gastric cancer (GC), PD-L1 was used as a supplementary biomarker for evaluating immune responses, combined with radiomics and pathomics to assess the efficacy of anti-HER2 therapy in conjunction with immunotherapy [
+68
+]. Specifically, in another study involving 57 NSCLC patients, Byeon et al. (2022) [
+69
+] developed a multi-omics ML model that incorporated sequencing data, IHC images, demographic information, and clinical data. By combining these diverse data types, the model was able to capture the intricate relationships between gene expression, tumor immune microenvironment features, and cancer-specific intrinsic gene signatures, thus providing a precise prediction of immune treatment efficacy (AUC = 0.957). These multi-omics studies centered around PD-L1 highlight the significant potential of AI-driven models in advancing precision medicine and improving therapeutic outcomes.
+Fig. 2
+AI-based single- and multi-omics computational frameworks for pan-cancer NIT response prediction through surrogate biomarker (outer) and direct modeling (inner)
+TMB
+TMB reflects the overall quantity of somatic mutations within a tumor genome and has emerged as a potential biomarker for prognostic assessment and immunotherapy response prediction [
+70
+]. TMB is closely associated with tumor immunogenicity, as higher mutational loads increase the likelihood of neoantigen generation, thereby enhancing tumor visibility to the host immune system [
+71
+]. Clinical evidence across multiple studies indicates that tumors with high TMB (TMB-H) are more likely to exhibit substantial pathological regression and tumor shrinkage following NIT, with a strong correlation between TMB-H status and favorable immune responses [
+72
+–
+74
+]. Consequently, TMB-H is increasingly recognized as a viable biomarker to benefit from NIT. A systematic literature search was conducted, followed by independent screening and quality assessment by two researchers, resulting in the inclusion of 15 studies that met the predefined criteria and focused on TMB as a biomarker. Of these, 14 studies adopted a single-omics approach, with radiomics-driven analyses comprising five studies (35.7%), pathomics-based investigations accounting for seven studies (50%), genomics-focused research representing one studies (7.14%), and transcriptomics-focused research representing one studies (6.7%) (Tab.
+1
+, Fig.
+2
+).
+Single omics-based methods
+Radiomics
+Through an unbiased search approach, we identified five studies validating the capability of AI-based radiomics models in assessing TMB, spanning endometrial cancer, lung adenocarcinoma, NSCLC, and low-grade glioma (LGG) cohorts [
+75
+–
+79
+]. Among these studies, He et al. (2020) [
+77
+] developed a CNN model based on CT imaging to create a DL-based radiomics biomarker, which can accurately differentiate patients with high or low pre-treatment TMB status (AUC 0.8). They observed that the DL radiomics biomarkers also potentially predict the treatment responses to ICIs in NSCLC patients (AUC = 0.81), which also supports TMB as an efficacy biomarker of immunotherapy. In endometrial cancer, Veeraraghavan et al. (2020) [
+75
+] utilized radiomic features from contrast-enhanced CT images to capture tumor morphology and explore the differences in features across various tumor regions and subpopulations. Based on these features, they successfully developed an ML model robustly assessing TMB status (AUC = 0.87) and further observed that peritumoral features are closely correlated with TMB status. Additionally, another study leverages ML algorithms for MRI radiomics model development and achieved TMB evaluation in lower-grade glioma cohorts [
+78
+]. Overall, radiomics demonstrates significant potential as a valuable adjunct for TMB classification, providing sufficient information to guide clinical decision-making in immunotherapy, despite the inherent tumor heterogeneity.
+Pathomics
+We conducted an unbiased selection of six AI-based pathology studies, covering various cancer types, including colorectal cancer (CRC), renal cell carcinoma (RCC), glioma, bladder cancer (BLCA), and GC [
+80
+–
+85
+], [?]. All of these studies utilized data sourced from the TCGA database, with the images processed using H&E staining for subsequent analysis. Also, nearly all studies have opted for CNN-based deep learning models, specifically utilizing architectures such as ResNet18, ResNet50, VGG19, and InceptionNet for image analysis. Notably, in a glioma study, a graph convolutional neural network-based (GCNN) framework was employed to identify pathological features on WSIs of H&E stained tumor biopsies. The DL model can both classify patients into high and low TMB groups and stratify glioma patients based on their overall survival (OS), demonstrating a strong association between TMB-related histopathological features from H&E staining and overall survival [
+82
+]. Furthermore, a multicenter study on BLCA demonstrated that DL-driven spatial analysis of WSI can reliably predict TMB-H and TIL level, another therapeutic biomarker for NIT as elaborated in the following sections. The study also observed that TMB-H patients with lower spatial heterogeneity of TMB and enriched TILs show improved OS [
+84
+]. Overall, AI-based pathology research effectively correlates stratified TMB-related features with clinical outcomes, marking a significant advancement in predicting therapeutic efficacy across cancers.
+Others
+We also reviewed three additional genomics-based studies, two of which focused on pan-cancer analysis rather than a single cancer type [
+86
+–
+88
+]. One pan-cancer study highlighted that the relationship between TMB and OS is not always monotonic, revealing more complex dynamics in certain cancer types. Using a dual-threshold approach combined with a Naïve Bayes (NB)-based machine learning model, this study leveraged large-scale pan-cancer data to capture nuanced interactions between TMB and cancer stem cell characteristics, deepening our understanding of TMB as a biomarker [
+88
+].
+Multi-omics-based methods
+A growing number of studies are now exploring the predictive potential of TMB through multi-omics data combined with AI. In a study by Wang et al. (2022) [
+89
+], a multi-omics model was developed to predict TMB status in lung adenocarcinoma (LUAD) patients by integrating gene expression, miRNA profiles, CpG methylation, and pathological tissue images. This approach enables more precise TMB prediction by capturing nuanced epigenetic changes in the tumor microenvironment, promoting prognostic accuracy. Also, the features selected from these mutational and epigenetic profiles could inspire the rationale and design of simplified clinical assays, such as qRT-PCR, enhancing patient stratification and treatment selection. However, further research is required to refine multi-omics integration methods and validate their applicability in larger, multi-center cohorts.
+MSI/dMMR
+When the mismatch repair (MMR) system becomes dysfunctional, the accumulation of mismatches leads to genomic instability, including an increase in indels within microsatellite regions [
+90
+]. This results in tumors typically exhibiting a higher mutational burden and tumor antigen presentation, associated with better efficacy in immunotherapy. A substantial number of clinical trials have demonstrated that, compared to microsatellite stability (MSS)/proficient MMR tumors, MSI/deficient MMR (dMMR) tumors generally exhibit a higher pathological response rate to NIT or NCIT across multiple cancer types [
+91
+–
+97
+]. Therefore, MSI/dMMR is considered a viable biomarker for predicting the benefit of NIT. Following a systematic search based on predefined criteria, and subsequent independent screening and quality assessment by two reviewers, we ultimately included 37 studies that employed AI to evaluate MSI/dMMR status in cancer patients. Of these, nine (24.3%) were radiomics-based, 23 (62.2%) were pathology-based, three (8.1%) were genomics-based, and two (5.4%) utilized multi-omics approaches (Tab.
+1
+, Fig.
+2
+).
+Single omics-based methods
+Radiomics
+Recent studies have validated the potential of imaging-based AI models for the non-invasive prediction of MSI and dMMR. Through an unbiased literature review, we identified nine relevant studies, the majority of which were retrospective analyses conducted on large cohorts of over 100 patients [
+98
+–
+106
+]. The primary imaging modalities used in these studies included MRI (n=5) and CT or PET/CT (n=4). ML algorithms, including SVM, LR, and KNN, were employed in five studies, while DL was applied in four. CRC remains the most commonly studied cancer, accounting for more than half of the studies (n=5). Other cancer types investigated include EMC [
+98
+,
+100
+,
+101
+] and GC [
+106
+]. Nearly all studies reported satisfactory performance, with an area AUC value greater than 0.8. Notably, Wang et al. [
+101
+] developed a composite model that integrates features extracted from diffusion-weighted imaging (DWI) MRI via CNN with traditional radiomics, clinical parameters, and apparent diffusion coefficient (ADC) values. The model demonstrated excellent predictive performance in an endometrial cancer cohort, highlighting the significant advantages and clinical potential of multi-level, multimodal feature fusion in the non-invasive prediction of MSI.
+Pathomics
+AI models are applied to predict tumor MSI or dMMR status from pathological slides, thereby aiding in individualized NIT regimens. By undergoing a comprehensive literature retrieval, we identified 18 studies focused on AI-based MSI prediction using pathomics features, of which 70% were conducted within CRC cohorts (n=13), while the remaining studies involved endometrial cancer (EMC), prostate cancer, epithelial ovarian cancer (EOC) and GC [
+107
+–
+124
+]. Regardless of cancer type, nearly all studies were retrospective analyses conducted on large cohorts of over 100 patients. In CRC research, 12 studies have demonstrated the robustness of DL models utilizing H&E WSIs for MSI prediction, consistently achieving AUC values greater than 0.85. Among these studies, one study notably proposed an innovative multi-center collaboration approach. Specifically, the study from Saldanha et al.[
+114
+] is the first to successfully apply a swarm learning (SL) framework to a large-scale, multicenter cancer histopathology image dataset comprising over 5,000 patients. Without requiring data sharing and while fully preserving data privacy, the study enabled cross-institutional collaborative training of AI models to predict MSI in CRC. This approach overcomes the reliance on centralized data aggregation typical of conventional AI training and addresses critical barriers related to ethics, legal constraints, and data sovereignty in clinical research. The SL-trained models outperformed most locally trained counterparts. They achieved performance comparable to models trained on pooled datasets, demonstrating strong data efficiency and promising potential for real-world clinical application. Meanwhile, several studies have successfully developed models for predicting MSI in CRC using other types of pathology data. For example, two studies demonstrated that DL models based on infrared imaging and Raman spectroscopy features of tumor biopsies were able to distinguish between MSI and MSS in CRC cohorts [
+109
+,
+116
+]. In other cancer types, all five studies reported DL models can automatically extract features from H&E WSIs and differentiate patients with MSS or MSI with robust performance, indicating that DL models based on H&E WSI are both more commonly studied across various cancer types.
+Besides MSI, we identified four studies that applied DL models based on tumor tissue sections to directly predict the MMR status in CRC [
+125
+,
+126
+] and EMC [
+127
+,
+128
+]. While these studies are also primarily constructed upon H&E WSIs (n = 3), Nowak et al. [
+125
+] developed a DL–based model that predicts dMMR status in CRC using IHC images of MMR proteins, enabling single-cell–level assessment of protein expression. In two independent clinical trial cohorts, the model demonstrated excellent predictive performance (AUC = 0.86), achieving over 75% specificity at 98% sensitivity, with a positive predictive value of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\ge 98\%$$\end{document}
+for the most common somatic dMMR subtype. Further validation in the SCOT trial confirmed the prognostic significance of dMMR status in patients treated with oxaliplatin. In summary, H&E WSIs are the most extensively studied input for ML and DL models in predicting MSI/dMMR. AI models have demonstrated robust performance in predicting MSI/dMMR status across multiple cancer types, reducing the burden of pathological workload. While the majority of models are trained and validated in CRC cohorts, AI has shown efficacy in MSI/dMMR predictions across various cancers such as EMC, prostate cancer (PC), and EOC.
+Others
+Compared to traditional PCR-based methods, next-generation sequencing (NGS)-based computational approaches have emerged as promising alternatives for detecting MSI. These methods are less labor-intensive and allow for the simultaneous analysis of multiple samples and loci. However, a major limitation of conventional NGS-based MSI detection is the requirement for matched normal tissue, which serves as a reference to examine aligned reads—an approach that is computationally intensive and often impractical in clinical settings. To address this, ML algorithms have been developed to predict MSI directly from tumor samples, eliminating the need for normal-tumor pairings. For instance, Swaerts et al. [
+129
+] introduced DeltaMSI, an ML tool that infers MSI status based on raw indel distributions across microsatellite loci. Similarly, Chen et al. [
+130
+] proposed MSINGB, a model based on next-generation boosting (NGBoost) that utilizes tumor mutation annotation data. Both tools demonstrated excellent predictive performance, achieving AUCs of 0.95 and 0.999, respectively. In addition to ML-based methods, DL approaches have also been explored. One study proposes a novel and explainable GNN framework, which, for the first time, integrates RNA expression and DNA methylation data to predict MSI status. The model enables high-performance MSI detection using tumor-only samples, eliminating the need for matched normal tissue. It also identifies key MSI-associated biomarkers with potential relevance to immunotherapy, providing both predictive accuracy and biological interpretability [
+131
+].
+Multi-omics-based methods
+Two studies have developed multi-omics AI models for MSI prediction by integrating data from different omics sources [
+132
+,
+133
+]. Shi et al. [
+132
+] developed a multi-omics integrative model that combines Raman spectroscopy data from formalin-fixed paraffin-embedded (FFPE) tumor slides with preoperative CT imaging to accurately classify MSI status in gastric cancer. The model incorporates a newly proposed Euclidean Distance Raman Spectroscopy algorithm, which effectively mitigates signal variability caused by tumor heterogeneity. Among various machine learning approaches, the EDRS-based model achieved the highest classification accuracy (94.6%). Compared to the Raman-only model (AUC = 0.871), the multi-modal model demonstrated superior performance in distinguishing MSI from MSS tumors (AUC = 0.914), offering a novel and promising strategy for precise NIT prediction. Another study proposed a multimodal DL model for predicting MSI in CRC [
+133
+]. It demonstrated robustness in MSI classification with H&E WSIs alone (AUC=0.809) but can be further enhanced by integrating DNA methylation data (AUC=0.952). Interestingly, combining WSIs with multiple molecular data types (mRNA, miRNA, lncRNA, DNA methylation, and CNV) resulted in lower performance. The study attributed this to the noise from irrelevant features or overlapping information across omics data, which diluted the model’s focus. Overall, while combining multiple omics holds the potential to improve model efficacy, the addition of heterogeneous data can introduce noise and thus requires careful selection.
+TME
+Characteristics of the TME, particularly infiltrating immune cells such as TILs and CD8
++
+T cells, have been widely studied as predictors of immunotherapy benefit and shown to correlate with NIT response rates in clinical trials [
+134
+–
+139
+]. Also, tumor-stromal ratio (TSR), tertiary lymphoid structure (TLS), molecular markers including CTLA-4, and vascular endothelial growth factor (VEGF), have been reported to reflect ICI therapeutic outcomes [
+140
+], with growing evidence suggesting their potential as predictive parameters of NIT outcomes [
+141
+–
+144
+]. The integration of AI holds promise for directly predicting TME components from imaging features, thereby potentially guiding the use of NIT. Following a systematic search based on predefined criteria, followed by independent screening and quality assessment by two reviewers, we ultimately included 34 studies that utilized AI to evaluate components of the TME related to the benefits of NIT in cancer patients. Among these, 18 studies (52.9%) were radiomics-driven, while 16 studies (47.1%) were pathomics-driven (Tab.
+1
+, Fig.
+2
+).
+Single omics-based methods
+Radiomics
+Through an unbiased literature search, we identified 18 studies involving AI models based on radiomics for evaluating TME profiles that are correlated to NIT efficacy. All of these studies were retrospective, with a large proportion of the data originating from single-center cohorts (n=10). Approximately half of the studies focused on BC (n=8), while the remaining studies covered oral tongue squamous cell carcinoma (OTSCC), GC, glioma, clear cell RCC (ccRCC), lung cancer, pancreatic ductal adenocarcinoma (PDAC) and hepatocellular carcinoma (HCC) [
+145
+–
+162
+]. The primary objective of these radiomics models was to predict immune cell infiltration within the TME, particularly TILs (n=7). Most researches focus on the imaging data from BC patients (n=6)[
+145
+–
+150
+]. Additionally, six studies utilized radiomics to evaluate other immune or stromal cell populations within the TME, all employing ML techniques[
+151
+,
+152
+,
+154
+,
+155
+,
+157
+,
+158
+]. Four of these studies used MRI radiomics, while the other two employed CT radiomics. These studies were based on various cancer cohorts and predicted different TME cell populations, highlighting the broad applicability of AI models based on MRI and CT radiomics in predicting TME cellular composition. Interestingly, even within the same study, models built with the same sample group and algorithm showed significant differences in performance when predicting various infiltrating cell populations. For example, in a study of an NSCLC cohort, the ML model based on radiomics predicted
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${CD3}^+$$\end{document}
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${CD8}^+$$\end{document}
+infiltrating cells with AUCs of 0.943 and 0.837, respectively, which may reflect the distinct distribution patterns of these cells within the TME [
+158
+]. As important TME features associated with immunotherapy efficacy, the TSR and TLS can also be assessed through AI models based on radiomics [
+160
+–
+162
+]. For instance, a recent multicenter study in an HCC cohort validated the feasibility of non-invasive TLS quantification using an MRI-based radiomic model with transfer learning, achieving high predictive accuracy and demonstrating clinical relevance in survival stratification and treatment response evaluation [
+162
+]. In addition to cellular composition, radiomics has also been employed to predict the expression levels of certain molecular biomarkers within the TME. For example, He et al. [
+156
+] and Wu et al. [
+159
+] developed machine learning models based on CT radiomics to predict the expression levels of CTLA-4, VEGF, and EGFR in ccRCC and peripheral lung cancer, respectively. In conclusion, radiomics models, when combined with ML or DL techniques, effectively predict TME features associated with NIT efficacy, including cellular populations and molecular biomarkers.
+Pathomics
+In the field of TME analysis, traditional methods for evaluating TILs have long relied on pathologists manually interpreting H&E-stained slides. This visually-based approach is not only time-consuming and labor-intensive but is also prone to inter-observer variability, limiting the reproducibility of results and significantly hindering its widespread application in clinical practice. AI technology, particularly its breakthroughs in automating TME component quantification, offers a novel solution for TIL assessment. Through a literature review, we identified 11 relevant studies that validated the feasibility of AI algorithms in TIL evaluation [
+163
+–
+173
+]. All studies retrospectively collected H&E-stained slide data, with the majority of the data coming from multi-center cohorts (n=8). Among them, seven studies established DL models, while four employed ML models, all demonstrating excellent TIL assessment capabilities across various cancer cohorts. Notably, a model developed by Abousamra et al. [
+168
+] was trained on a large dataset of 7,983 pathological slides, enabling reliable evaluation of TILs across 23 different cancer types. Similarly, another study proposed a generalizable model for tumor-infiltrating lymphocytes classification across multiple cancer types by introducing a CNN simplification approach—Network Auto-Reduction—that substantially reduces computational cost (up to
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$4\times$$\end{document}
+fewer FLOPs) without sacrificing classification accuracy, thereby enabling efficient large-scale digital pathology analysis [
+164
+]. In addition to TILs, more pathomics-based AI models have been developed to predict other features of TME components. For example, Yang et al. [
+174
+] developed an ML model that predicts the expression of CTLA-4 in the TME from H&E WSIs in ccRCC patients. The CTLA-4 signature generated by the model was also effective in predicting the prognosis of ccRCC patients. Furthermore, four studies proposed DL models that were capable of assessing TSR and TLS from H&E slides [
+175
+–
+178
+]. To illustrate, Lian et al. [
+176
+] and Firmbach et al. [
+175
+] developed DL models for accurate TSR evaluation in CRC and BC cohorts. The rest two DL models were also built with H&E WSIs for TLS quantification but were valid across multiple cancer types [
+177
+,
+178
+]. Overall, AI models based on pathology have the potential for reproducible and automated assessment of TME components. Currently, the primary focus is on TILs, and these models are expected to guide clinical practice for NIT.
+Multi-omics-based methods
+Compared to established immunotherapy biomarkers such as PD-L1 and MSI, relatively few studies have focused on predicting TME parameters associated with response to NIT, particularly through the integration of multi-omics data. Although certain TME indicators have recently gained recognition in clinical trials and translational research as potential predictors of immunotherapy efficacy, the development of AI models targeting these markers remains limited. In particular, multi-omics-based models capable of capturing the complex interplay within the TME are still scarce. For instance, Failmezger et al. developed a multi-omics computational framework that integrates spatial pathology and transcriptomic data to characterize tumor immune infiltration in colorectal cancer [
+179
+]. Specifically, the study applied a fused LASSO logistic regression model to classify spatial tumor infiltration phenotypes based on point pattern analysis of immune cell distributions from IHC-stained tissue sections, capturing intra-tumor heterogeneity in immune infiltration. These spatial phenotypes were then linked to genomic features by employing a support vector machine to derive predictive gene signatures from patient-matched transcriptomic data. The resulting model enabled accurate inference of spatial immune infiltration status from gene expression profiles alone and was successfully validated in an independent cohort. Furthermore, the study revealed significant associations between spatial infiltration patterns and common colorectal cancer mutations, highlighting the biological relevance of spatial immune heterogeneity in the tumor microenvironment. In the future, as more TME indicators are adopted in clinical practice, we anticipate that additional AI prediction models will be developed to offer a more comprehensive predictive approach for NIT.
+Other biomarkers
+In recent years, biomarkers for predicting immunotherapy efficacy, particularly in NIT applications, have garnered significant attention. Alongside traditional biomarkers, emerging markers such as genes, cytokines, non-coding RNAs, and DNA methylation are being explored. AI-driven methods play a crucial role in identifying and developing these biomarkers, advancing precision medicine. Through a systematic review, we identified three studies that investigate immune-related lncRNAs as biomarkers across various cancer types, including CRC, LGG, and LUAD (Tab.
+1
+) [
+180
+–
+182
+]. They underscore the exceptional stability and accuracy of immune-related lncRNAs, which are intricately associated with crucial aspects of tumors, including their stage, grade, and prognosis, positioning them as potentially powerful biomarkers in oncology. Specifically in LGG patients, a random survival forest (RSF)-based ML model revealed that lncRNAs related to tumor-infiltrating immune cells were significantly associated with immune characteristics such as MSI, TMB, CD8, and interferon-
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\gamma$$\end{document}
+, which were validated in internal datasets [
+180
+]. Also, a study on LUAD demonstrated that lncRNAs effectively stratify patients and forecast OS, outperforming 95 established GBM biomarkers in prediction accuracy [
+182
+].
+Moreover, gene expression levels have emerged as promising biomarkers for predicting the efficacy [
+183
+–
+185
+]. Particularly, in a study on a small CRC cohort,
+SREBF2
+was demonstrated to be closely associated with multiple immune infiltrating cells and immunotherapy-related genes. However, the underlying mechanisms of
+SREBF2
+and its clinical therapeutic effectiveness require validation through large-scale clinical trials and biological experiments [
+183
+]. These findings highlight the growing potential of emerging biomarkers—particularly those related to immune characteristics and tumor biology—revealing new insights into immunotherapy efficacy and driving the enhancement of treatment outcomes in NIT strategies.
+Table 1
+Summary of studies on indirect biomarker-based prediction
+Ref.
+Author (Year)
+Biomarker
+Omics
+Cancer type
+Data source
+Analysis type
+Total patients
+Training set
+Validation set
+Testing set
+AI model
+Prediction performance
+[
+50
+]
+Wang et al. (2022)
+PD-L1
+Radiomics
+NSCLC
+Multicenter
+Retrospective
+4404
+3629
+873
+818
+DL: NLP/LASSO
+AUC: 0.80
+[
+51
+]
+Jin et al. (2023)
+PD-L1
+Radiomics
+LC
+Multicenter
+Prospective
+104
+97
+-
+46
+DL: CNN
+AUC: 0.91 (cross-validation)−0.85 (external validation)
+[
+52
+]
+Saad et al. (2023)
+PD-L1
+Radiomics
+NSCLC
+Multicenter
+Retrospective
+976
+60%
+10%
+30%
+DL
+C-index: 0.70 (clinical model)−0.75 (composite model)
+[
+53
+]
+Zhao et al. (2023)
+PD-L1
+Radiomics
+BC
+Multicenter
+Retrospective
+240
+171
+-
+69
+ML
+AUC: 0.99 (training)−0.96 (validation)
+[
+54
+]
+Wang et al. (2023)
+PD-L1
+Radiomics
+GC
+Multicenter
+Retrospective
+249
+168
+39
+42
+DL: MLP/CNN
+AUC: 0.81
+[
+55
+]
+Mu et al. (2021)
+PD-L1
+Radiomics
+LC
+Multicenter
+Retrospective
+-
+284
+116
+117
+DL: SResCNN
+AUC: 0.89, Sensitivity: 84.7%, Specificity: 80.4%
+[
+56
+]
+Tian et al. (2021)
+PD-L1
+Radiomics
+NSCLC
+Multicenter
+Retrospective
+939
+750
+93
+96
+DL: CNN/KNN
+AUC: 0.78 (training)−0.71 (validation)-and 0.76 (testing)
+[
+57
+]
+Cao et al. (2024)
+PD-L1
+Radiomics
+BC
+Multicenter
+Retrospective
+183
+70%
+-
+30%
+ML: SVM/RF
+AUC: 0.92 (training)−0.75 (validation)
+[
+58
+]
+Ronrick et al. (2024)
+PD-L1
+Radiomics
+LC
+Multicenter
+Retrospective
+189
+132
+-
+57
+DL: CNN
+AUC: 0.83
+[
+59
+]
+Meißner et al. (2023)
+PD-L1
+Radiomics
+NSCLC
+Multicenter
+Retrospective
+53
+36
+-
+17
+ML: RF/SVM/CNN
+AUC: 0.83 ± 0.18 (training)−0.84 (testing)
+[
+60
+]
+Cheng et al. (2023)
+PD-L1
+Pathomics
+NSCLC
+Singlecenter
+Retrospective
+1288
+627
+577
+84
+DL: CNN
+Accuracy: 96.4%, Specificity: 96.8%
+[
+61
+]
+Wu et al. (2022)
+PD-L1
+Pathomics
+NSCLC
+Multicenter
+Retrospective
+239
+173
+-
+78
+DL: CNN
+Accuracy: 93.3%, Specificity: 96.4%
+[
+62
+]
+Shamai et al. (2022)
+PD-L1
+Pathomics
+BC
+Multicenter
+Retrospective
+3376
+2516
+-
+860
+DL: CNN
+AUC: 0.91–0.93.91.93
+[
+63
+]
+Li et al. (2024)
+PD-L1
+Pathomics
+ESCC
+Singlecenter
+Retrospective
+324 WSIs
+227 WSIs
+-
+97 WSIs
+DL: ViR-RNN
+AUC: 0.92, C-index: 0.81
+[
+64
+]
+Zhou et al. (2024)
+PD-L1
+Pathomics
+GBM
+Singlecenter
+Prospective
+-
+80%
+-
+20%
+ML: MLC-based Raman histopathology/SVM/RF/GBT
+Accuracy: 99%, Concordance: 84.3 %
+[
+65
+]
+Jin et al. (2024)
+PD-L1
+Pathomics
+Pan-cancer
+Multicenter
+Retrospective
+6715
+60%
+15%
+25%
+DL: MITLS
+AUC: 0.83
+[
+66
+]
+Peng et al. (2022)
+PD-L1
+Genomics
+NSCLC
+Multicenter
+Retrospective
+915
+611
+-
+304
+DL: CNN
+AUC: 0.97
+[
+67
+]
+Wiesweg et al. (2020)
+PD-L1
+Genomics
+NSCLC
+Multicenter
+Retrospective
+67
+55
+22
+16
+ML: SVM/RF
+HR: 0.46
+[
+68
+]
+Chen et al. (2024)
+PD-L1
+Multi-omics
+GC
+Multicenter
+Retrospective
+429
+271
+-
+39
+DL: Transformer/MnasNet
+AUC: 0.82 (anti-HER2)−0.91 (combined with PD-L1)
+[
+69
+]
+Byeon et al. (2022)
+PD-L1
+Multi-omics
+NSCLC
+Singlecenter
+Retrospective
+57
+-
+-
+-
+ML: RF/SVM/CNN
+AUC: 0.96
+[
+75
+]
+Veeraraghavan et al. (2020)
+TMB/dMMR
+Radiomics
+EC
+Singlecenter
+Retrospective
+150
+105
+-
+45
+ML: RF
+AUC: 0.87 (TMB)−0.78 (dMMR)
+[
+76
+]
+Wang et al. (2019)
+TMB
+Radiomics
+LUAD
+Singlecenter
+Retrospective
+51
+41
+-
+20
+ML: SVM
+AUC: 0.67
+[
+77
+]
+He et al. (2020)
+TMB
+Radiomics
+NSCLC
+Multicenter
+Retrospective
+327
+236
+26
+65
+DL: 3D-densenet/CNN
+AUC: 0.85 (training)−0.81 (testing)
+[
+78
+]
+Lam et al. (2022)
+TMB
+Radiomics
+LGG
+Multicenter
+Retrospective
+75
+63
+-
+42
+ML: Light Gradient Boosting Machine
+Accuracy: 79.4%
+[
+79
+]
+Hoshino et al. (2022)
+TMB
+Radiomics
+CRC
+Singlecenter
+Retrospective
+24
+70%
+-
+30%
+ML: RF
+AUC: 0.92, Accuracy: 87.5%, Sensitivity: 87.5%, Specificity: 85.7%
+[
+80
+]
+Shimada et al. (2021)
+TMB
+Pathomics
+CRC
+Multicenter
+Retrospective
+-
+201
+-
+77
+DL: ResNet/InceptionNet/CNN
+AUC: 0.93
+[
+81
+]
+Zheng et al. (2024)
+TMB
+Pathomics
+RCC
+Multicenter
+Retrospective
+513
+350
+-
+163
+DL: self-supervised attention-based instance learning
+AUC: 0.83 ± 0.02
+[
+82
+]
+Sun et al. (2023)
+TMB
+Pathomics
+Gliomas
+Multicenter
+Retrospective
+856
+619
+-
+237
+DL: GCNN
+HR: 4.81 (training)−4.00 (validation)
+[
+83
+]
+Huang et al. (2022)
+TMB
+Pathomics
+CRC
+Multicenter
+Retrospective
+509
+-
+-
+-
+DL: ResNet/CNN/MLP
+AUC: 0.82, Accuracy: 87.2%, Precision: 74.8%
+[
+84
+]
+Xu et al. (2022)
+TMB
+Pathomics
+BC
+Multicenter
+Retrospective
+386
+-
+-
+-
+DL: CNN/SVM/RF
+HR: 3.30
+[
+85
+]
+Li et al. (2024)
+TMB
+Pathomics
+GC
+Multicenter
+Retrospective
+450
+362
+-
+88
+DL: ResNet
+AUC: 0.75 (training)−0.97 (testing)
+[?]
+Liu et al. (2024)
+TMB
+Pathomics
+ccCRC
+Multicenter
+Retrospective
+264
+198
+-
+66
+ML: LR
+AUC: 0.65 (training)−0.67 (validation)
+[
+86
+]
+Sanjaya et al. (2023)
+TMB
+Genomics
+Pan-Cancer
+Multicenter
+Retrospective
+2,587
+-
+-
+-
+DL: DNN/MuAt/RF
+Accuracy: 97%
+[
+87
+]
+Nassar et al. (2021)
+TMB
+Genomics
+BC
+Multicenter
+Retrospective
+58
+90%
+-
+10%
+ML: RF/SVM/KNN
+Positive expression [OR =0.35, 95% CI: 0.04–2.98.04.98]
+[
+88
+]
+Zhang et al. (2022)
+TMB
+Transcriptomics
+Pan-Cancer
+Multicenter
+Retrospective
+722
+620
+154
+149
+ML: RF/SVM/NB
+AUC: 0.71 (validation and testing)
+[
+89
+]
+Wang et al. (2022)
+TMB
+Multi-omics
+LC
+Multicenter
+Retrospective
+517
+70%
+-
+30%
+ML: RF/SVM
+AUC: 0.91 (training)−0.86 (validation)
+[
+98
+]
+Jia et al. (2024)
+MSI
+Radiomics
+EMC
+Multicenter
+Retrospective
+225
+158
+67
+132
+ML: SVM/LR/KNN/NB/RF
+AUC: 0.86–0.90.86.90 (SVM), 0.62–0.68.62.68 (KNN), 0.81–0.82.81.82 (RF)
+[
+99
+]
+Xing et al. (2024)
+MSI
+Radiomics
+RC
+Singlecenter
+Retrospective
+308
+-
+-
+-
+ML: KNN
+AUC: 0.85
+[
+100
+]
+Li et al. (2023)
+MSI
+Radiomics
+EMC
+Multicenter
+Retrospective
+82
+60
+-
+22
+ML: LR
+AUC: 0.83 (radiomics)−0.89 (radiomics+clinical data)
+[
+101
+]
+Wang et al. (2024)
+MSI
+Radiomics
+EMC
+Singlecenter
+Retrospective
+116
+81
+-
+35
+DL: CNN
+AUC: 0.87 (DL)−0.99 (combined)
+[
+102
+]
+Zhang et al. (2023)
+MSI
+Radiomics
+RC
+Singlecenter
+Retrospective
+383
+268
+-
+115
+ML: LR
+AUC: 0.83 (training)−0.74 (testing)
+[
+103
+]
+Kim et al. (2023)
+MSI
+Radiomics
+CRC
+Singlecenter
+Retrospective
+233
+139
+-
+94
+ML: LR
+AUC: 0.87 (training)−0.82 (testing)
+[
+104
+]
+Bodalal. et al. (2024)
+MSI
+Radiomics
+CRC
+Multicenter
+Retrospective
+243
+191
+-
+52
+ML
+AUC: 0.69 (radiomics)−0.78 (combined with clinical data)
+[
+105
+]
+Cao et al. (2023)
+MSI
+Radiomics
+CRC
+Multicenter
+Retrospective
+1812
+1124
+482
+206
+DL: Resnet/GPR
+AUC: 0.99 (training)−0.92 (testing)
+[
+106
+]
+Jiang et al. (2023)
+MSI
+Radiomics
+GC
+Singlecenter
+Retrospective
+223
+167
+-
+56
+DL: MLP
+AUC: 0.88 (training)−0.80 (testing)
+[
+107
+]
+Niehues et al. (2023)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+4638
+2190
+-
+2448
+DL: SSL-attMIL
+AUC: 0.94
+[
+108
+]
+Wagner et al. (2023)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+13689
+8181
+-
+889
+DL: Transformer
+AUC: 0.97, Sensitivity: 99%
+[
+109
+]
+Gerwert et al. (2023)
+MSI
+Pathomics
+CC
+Multicenter
+Retrospective
+629
+273
+218
+138
+DL: CNN
+AUC: 0.90
+[
+110
+]
+Saillard et al. (2023)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+1034
+434
+-
+600
+DL: MLP
+AUC: 0.88
+[
+111
+]
+Zamanitajeddin et al. (2024)
+MSI
+Pathomics
+CRC
+Multicenter
+NA
+549 slides
+502 slides
+-
+47 slides
+DL: MIL/Social Network Analysis
+AUC: 0.99
+[
+112
+]
+Chang et al. (2023)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+1884WSIs
+1107WSIs
+157WSIs
+620WSIs
+DL: Resnet
+AUC: 0.95
+[
+113
+]
+Echle et al. (2022)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+8343
+7538
+-
+805
+DL: Resnet
+AUC: 0.74–0.96.74.96
+[
+114
+]
+Saldanha et al. (2022)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+6820
+3741
+-
+2579
+ML: Swarm Learning
+AUC: 0.80–0.82.80.82
+[
+115
+]
+Lou et al. (2022)
+MSI
+Pathomics
+CRC
+Multicenter
+Retrospective
+144
+87
+37
+20
+DL: PPsNet
+AUC: 0.94, Accuracy: 87.28%
+[
+116
+]
+Blake et al. (2023)
+MSI
+Pathomics
+CRC
+NA
+Retrospective
+1490 spectra
+-
+-
+-
+DL/ML: CNN/SVM/PCA-LDA
+AUC: 0.65–0.75.65.75
+[
+117
+]
+Schirris et al. (2022)
+MSI
+Pathomics
+CRC/BC
+Multicenter
+Retrospective
+360
+260
+-
+100
+DL: CNN/MIL
+AUC: 0.87
+[
+118
+]
+Tsai et al. (2023)
+MSI
+Pathomics
+CRC
+Multicenter
+NA
+1888
+60%
+20%
+20%
+DL: CNN/Transformer
+AUC: 0.76–0.88.76.88
+[
+119
+]
+Fujii et al. (2022)
+MSI
+Pathomics
+CRC
+NA
+Retrospective
+1657
+986
+248
+423
+DL: Resnet
+AUC: 0.86–0.92.86.92
+[
+120
+]
+Wang et al. (2024)
+MSI
+Pathomics
+EMC
+Multicenter
+Retrospective
+529
+353
+-
+176
+DL
+Accuracy: 84%−94%, Precision: 81%−93%
+[
+121
+]
+Hu et al. (2024)
+MSI
+Pathomics
+PC
+Singlecenter
+Retrospective
+5538
+4015
+173
+1350
+DL: attMIL
+AUC: 0.78 (validation)−0.72 (testing)
+[
+122
+]
+Wang et al. (2023)
+MSI
+Pathomics
+EOC
+Multicenter
+Retrospective
+1160
+472
+248
+440
+DL: MIL/RNN
+Accuracy: 77%, Sensitivity: 84%, Specificity: 67%
+[
+123
+]
+Su et al. (2022)
+MSI
+Pathomics
+GC
+Singlecenter
+Retrospective
+467WSIs
+348WSIs
+88WSIs
+31WSIs
+DL: Resnet
+Accuracy: 83.9%−86.4%
+[
+124
+]
+Lee et al. (2023)
+MSI
+Pathomics
+GC
+Multicenter
+Retrospective
+714
+331
+102
+383
+DL: CNN
+AUC: 0.89–0.90.89.90
+[
+125
+]
+Nowak et al. (2024)
+dMMR
+Pathomics
+CRC
+Multicenter
+NA
+3547
+2352
+-
+1195
+DL
+AUC: 0.98
+[
+126
+]
+Jiang et al. (2022)
+dMMR
+Pathomics
+CRC
+Multicenter
+Retrospective
+1215WSIs
+441WSIs
+-
+774WSIs
+DL: Densenet/MIL
+AUC: 0.77–0.88.77.88
+[
+127
+]
+Whangbo et al. (2024)
+dMMR
+Pathomics
+EMC
+Singlecenter
+Retrospective
+1168WSIs
+934WSIs
+-
+234WSIs
+DL: GAN/CNN
+AUC: 0.77–0.82.77.82
+[
+128
+]
+Umemoto et al. (2024)
+dMMR
+Pathomics
+EMC
+Singlecenter
+Retrospective
+114
+70%
+15%
+15%
+DL: Resnet
+AUC: 0.91
+[
+129
+]
+Swaerts et al. (2023)
+MSI
+Genomics
+Pan-cancer
+Singlecenter
+Retrospective
+1188
+1072
+-
+116
+ML: LR/SVM
+AUC: 0.95
+[
+130
+]
+Chen et al. (2023)
+MSI
+Genomics
+Pan-cancer
+Multicenter
+Retrospective
+2285
+1432
+-
+853
+ML: NGBoost
+AUC: 0.99
+[
+131
+]
+Cao et al. (2023)
+MSI
+Genomics
+Pan-cancer
+Multicenter
+Retrospective
+7446
+639
+-
+6807
+DL: GNN/Catboost
+AUC: 0.91–0.99.91.99
+[
+132
+]
+Shi et al. (2025)
+MSI
+Multiomics
+GC
+Singlecenter
+NA
+37
+-
+-
+-
+ML: KNN/RF/ELM
+AUC: 0.91
+[
+133
+]
+Qiu et al. (2022)
+MSI
+Multiomics
+CRC
+NA
+Retrospective
+353
+282
+-
+71
+DL: Resnet
+AUC: 0.81 (pathomics)−0.95 (combined)
+[
+145
+]
+Wu et al. (2023)
+TIL
+Radiomics
+BC
+Multicenter
+Retrospective
+494
+60%
+20%
+20%
+DL
+AUC: 0.89
+[
+146
+]
+Jia et al. (2023)
+TIL
+Radiomics
+BC
+Multicenter
+Retrospective
+494
+298
+98
+98
+DL: CNN
+AUC: 0.87
+[
+147
+]
+Zhang et al. (2024)
+TIL
+Radiomics
+BC
+Singlecenter
+Retrospective
+185
+111
+-
+74
+ML: LASSO/LR
+AUC: 0.80 (radiomics)−0.84 (combined with ultrasound features)
+[
+148
+]
+Hu et al. (2024)
+TIL
+Radiomics
+BC
+Singlecenter
+Retrospective
+145
+70%
+-
+30%
+ML: LASSO
+AUC: 0.84 (radiomics)−0.85 (combined with clinical data)
+[
+149
+]
+Lu et al. (2024)
+TIL
+Radiomics
+BC
+Singlecenter
+Retrospective
+378
+80%
+-
+20%
+ML: LASSO/LR
+AUC: 0.87(radiomics)−0.89 (combined with clinical data)
+[
+150
+]
+Su et al. (2022)
+TIL
+Radiomics
+BC
+Singlecenter
+Retrospective
+139
+98
+-
+41
+ML: Elastic Net Regression/LR
+AUC: 0.87 (training)−0.79 (testing)
+[
+151
+]
+Jeon et al. (2022)
+CD8 TILs
+Radiomics
+BC
+Singlecenter
+Retrospective
+182
+137
+-
+45
+ML: LASSO
+AUC: 0.97–0.99.97.99
+[
+152
+]
+Qian et al. (2024)
+Immune Cell Infiltration
+Radiomics
+BC
+Multicenter
+Retrospective
+73
+70%
+-
+30%
+ML: LASSO/LR
+AUC: 0.82 (peri-tumor)−0.84 (combined)
+[
+153
+]
+Ren et al. (2024)
+TIL
+Radiomics
+OTSCC
+Singlecenter
+Retrospective
+68
+90%
+-
+10%
+ML: LR/SVM/RF
+AUC: 0.85 (LR), 0.82 (SVM), 0.81 (RF)
+[
+154
+]
+Huang et al. (2024)
+CD3, CD4, and CD8 TILs
+Radiomics
+GC
+Singlecenter
+Retrospective
+103
+90%
+-
+10%
+ML: RF/LR
+AUC: 0.81–0.87.81.87 (CD3, LR), 0.90–0.91.90.91 (CD4, RF), 0.90–0.97.90.97 (CD8, RF)
+[
+155
+]
+Li et al. (2022)
+Tumour-infiltrating macrophages
+Radiomics
+Glioma
+Multicenter
+Ambispective
+652
+167
+-
+485
+ML: RF/DL
+NA
+[
+156
+]
+He et al. (2023)
+CTLA-4
+Radiomics
+ccRCC
+NA
+Retrospective
+102
+90%
+-
+10%
+ML: SVM
+AUC: 0.72 (validation)−0.77 (testing)
+[
+157
+]
+Li et al. (2025)
+CD8, CD163 and SMA cells in TME
+Radiomics
+ccRCC
+Multicenter
+Retrospective
+100
+69
+18
+17
+ML: LASSO/LR
+AUC: 0.87 (CD8), 0.90 (CD163), 0.86 (SMA)
+[
+158
+]
+Chen et al. (2023)
+CD3 and CD8 T Cells
+Radiomics
+NSCLC
+Singlecenter
+Retrospective
+105
+70%
+-
+30%
+ML: LASSO
+AUC: 0.94 (CD3), 0.84 (CD8)
+[
+159
+]
+Wu et al. (2022)
+VEGF and EGFR
+Radiomics
+LC
+Singlecenter
+Retrospective
+73
+-
+-
+-
+ML: LR
+AUC: 0.87 (VEGF), 0.95 (EGFR)
+[
+160
+]
+Meng et al. (2022)
+TSR
+Radiomics
+PDAC
+Singlecenter
+Retrospective
+148
+110
+-
+38
+ML: LASSO/XGBoost
+AUC: 0.82 (training)−0.78 (testing)
+[
+161
+]
+Liao et al. (2024)
+TSR
+Radiomics
+PDAC
+Multicenter
+Retrospective
+207
+70%
+-
+30%
+DL: CNN/Transformer/self-attention
+AUC: 0.90–0.98.90.98
+[
+162
+]
+Long et al. (2025)
+TLS
+Radiomics
+HCC
+Multicenter
+Retrospective
+660
+307
+76
+277
+ML
+AUC: 0.90 (training)−0.85 (validation)−0.85 (testing)
+[
+163
+]
+Liu et al. (2024)
+TIL
+Pathomics
+BC
+Multicenter
+NA
+125
+80%
+-
+20%
+DL: U-Net
+AUC: 0.93
+[
+164
+]
+Meirelles et al. (2022)
+TIL
+Pathomics
+Pan-cancer
+NA
+NA
+61WSI
+56WSIs
+-
+5WSIs
+DL: Resnet
+NA
+[
+165
+]
+Yosofvand et al. (2023)
+TIL
+Pathomics
+BC
+Singlecenter
+Retrospective
+63WSIs
+80%
+-
+20%
+DL: U-Net/R-CNN
+Accuracy: 98.1%
+[
+166
+]
+Verdicchio et al. (2023)
+TIL
+Pathomics
+BC
+Multicenter
+NA
+151WSIs
+70%
+-
+30%
+ML: LASSO/RF/DT
+AUC: 0.86 (training)−0.86 (testing)
+[
+167
+]
+Shevtsov et al. (2022)
+TIL
+Pathomics
+NSCLC
+Multicenter
+Retrospective
+87
+-
+-
+-
+DL: HoVer-Net
+Precision>90%
+[
+168
+]
+Abousamara et al. (2022)
+TIL
+Pathomics
+Pan-cancer
+Multicenter
+Retrospective
+353411 patches
+351272 patches
+-
+2139 patches
+DL: CNN
+Accuracy: 89%
+[
+169
+]
+Machuca-Aguado et al. (2023)
+TIL
+Pathomics
+EOC
+Singlecenter
+Retrospective
+76
+-
+-
+-
+ML
+NA
+[
+170
+]
+Xu et al. (2022)
+TIL
+Pathomics
+CRC
+Multicenter
+Retrospective
+43440 tiles
+80%
+10%
+10%
+DL: Resnet
+Accuracy: 80.1%
+[
+171
+]
+Zheng et al. (2022)
+TIL
+Pathomics
+BC
+Multicenter
+Retrospective
+380
+133
+-
+247
+ML
+NA
+[
+172
+]
+Fassler et al. (2022)
+TIL
+Pathomics
+BC
+Multicenter
+NA
+2015
+2015
+-
+911
+ML
+NA
+[
+173
+]
+Pan et al. (2022)
+TIL
+Pathomics
+LUAD
+Multicenter
+Retrospective
+793
+276
+-
+517
+DL
+NA
+[
+174
+]
+Yang et al. (2024)
+CTLA-4
+Pathomics
+ccRCC
+NA
+NA
+354
+70%
+-
+30%
+ML: mRMR/REF/GBM
+AUC: 0.74
+[
+175
+]
+Firmbach et al. (2023)
+TSR
+Pathomics
+CRC
+Singlecenter
+Retrospective
+33WSIs
+23WSIs
+4WSIs
+6WSIs
+DL: BPN/U-Net
+Accuracy: 86.5% (BPN), 86.7% (U-Net)
+[
+176
+]
+Xinsen et al. (2023)
+TSR
+Pathomics
+BC
+Multicenter
+NA
+80WSIs
+56WSIs
+-
+24WSIs
+DL: U-Net/Transformer
+Dice-coef: 0.88, IOU-metric: 0.80
+[
+177
+]
+Rijthoven et al. (2024)
+TLS
+Pathomics
+Pan-cancer
+Multicenter
+Retrospective
+1024WSIs
+188WSIs
+69WSIs
+767WSIs
+DL: HoVer-Net
+NA
+[
+178
+]
+Chen et al. (2024)
+TLS
+Pathomics
+Pan-cancer
+Multicenter
+Retrospective
+65
+70%
+10%
+20%
+DL: Encoder-decoder
+AUC: 0.98 (training)−0.99 (validation)−0.97 (testing)
+[
+179
+]
+Failmezger et al. (2021)
+TIL
+Multi-omics
+CRC
+Multicenter
+Retrospective
+80
+80%
+-
+20%
+ML: LR/SVM
+Accuracy: 85%
+[
+180
+]
+Liu et al. (2022)
+lncRNA
+Transcriptomics
+CRC
+Multicenter
+Retrospective
+2277
+791
+-
+232
+ML: RF/SVF/LASSO/Cox
+AUC: 0.75
+[
+181
+]
+Zhang et al. (2022)
+lncRNA
+Transcriptomics
+LGG
+Multicenter
+Retrospective
+932
+518
+169
+168
+ML: RSF
+NA
+[
+182
+]
+Pan et al. (2024)
+lncRNA
+Transcriptomics
+LUAD
+Multicenter
+Retrospective
+916
+-
+-
+27
+ML: LASSO/RSF
+AUC: 0.75 (1 year)−0.72 (2/3 years)
+[
+183
+]
+Peng et al. (2024)
+Lipid metabolism-associated genes
+Genomics
+RC
+Multicenter
+Retrospective
+NA (datasets)
+-
+-
+-
+ML: SVM-RFE/RF
+AUC: 0.68
+[
+184
+]
+Wei et al. (2023)
+Cytokines
+Proteomics
+NSCLC
+Multicenter
+Retrospective
+222
+123
+-
+99
+ML: RSF
+C-index: 0.76 (training)−0.76 (validation)
+[
+185
+]
+Li et al. (2022)
+NRF2
+Genomics
+Pan-cancer
+Multicenter
+Retrospective
+NA (datasets)
+-
+-
+-
+ML; RSF/LASSO/Cox
+AUC: 0.77
+AUC, Area Under the Curve; C-Index, Concordance index; CI, Confidence Interval; HR, Hazard Ratio; OR, Odds Ratio; NA, Not Available
+Direct biomarker-based prediction methods
+Single omics-based methods
+In recent studies, multiple categories of omics data have been used to build models that directly predict the benefits of NIT or NCIT. The integration of AI further facilitates feature identification and response prediction. Through an unbiased search, we identified 40 studies that applied AI to develop single-omics models for predicting the outcomes of NIT or NCIT. More than half of these studies (n=21) relied on patient radiomics data, while the remaining models were constructed using clinical assays, hematology, transcriptomics, pathology, proteomics, and microbiomics data. Most models predicted outcomes such as MPR (n=14) or pCR (n=15) following neoadjuvant treatment, with others predicting indicators like PFS. Radiomics-based models were predominantly established in lung cancer populations (n=14), likely reflecting the widespread application of imaging screening in lung cancer management (Tab.
+2
+). This suggests that, irrespective of the type of omics input, integrated predictive efforts have primarily focused on lung cancer. This finding aligns with the high incidence of lung cancer and the increasing adoption of NIT in this patient population. Additionally, we observed that radiomics data were mostly derived from multicenter studies, whereas single-center data were more common in models using other omics. This difference highlights the adoption and relative prevalence of multicenter collaborations when utilizing imaging data. (Fig.
+2
+).
+Radiomics
+We report 21 studies focused on imaging and histology-based approaches for NIT efficacy prediction, with 14 studies specifically targeting lung cancer, and others addressing various cancers, including ESCC, triple-negative breast cancer (TNBC), and head and neck squamous cell carcinoma (HNSCC) [
+186
+–
+206
+]. Among these studies, CT imaging serves as a widely used input, particularly in the prediction of lung cancer treatments. For instance, Han et al. [
+191
+] notably developed a predictive model based on conventional CT imaging in NSCLC cohorts, incorporating innovative delta-radiomics methods to capture dynamic changes in imaging features during treatment. Unlike traditional static image analysis, delta-radiomics quantifies the variation in CT image characteristics before and after treatment, offering a more comprehensive reflection of tumor biology and its response to therapy. Specifically, significant tumor regression in certain areas post-treatment, especially when compared to pre-treatment images, is often considered a marker of favorable prognosis. These dynamic features further enhanced the accuracy of MPR prediction (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\text {AUC}> 0.8$$\end{document}
+), demonstrating the high accuracy and predictive power of delta-radiomics in evaluating MPR [
+191
+]. Similarly, radiomics features derived from [18F]-FDG PET/CT imaging were employed to predict pathological responses in patients with resectable stage III NSCLC, achieving an AUC of 0.925 [
+189
+]. This further indicates that the combination of PET/CT imaging’s quantitative assessment of tumor metabolic activity with radiomics methods provides a more comprehensive and highly accurate prediction. Incorporating AI methodologies prompt biological insights, as a study predicting the pCR to NIT in NSCLC revealed that higher DL scores were associated with substantially enriched cell proliferation and metabolic pathways, as well as increased infiltration of activated immune cells, including B cells, natural killer cells, and T helper 17 (Th17) cells [
+187
+]. These biological findings underscore the critical role of tumor and TME dynamics in therapeutic responses, highlighting the potential of integrating imaging and biological data to more precisely forecast the efficacy of NIT. While current research primarily focuses on lung cancer, there is a growing exploration of the potential of AI-driven radiomics modeling in other cancer types as well. For instance, Kong et al. [
+202
+] introduced a novel CT-based habitat radiomics approach for predicting treatment response to NCIT in ESCC. This method clusters conventional radiomic features into distinct habitats and models each cluster independently. Results further indicated that the habitat-based model outperforms traditional radiomics analysis models, highlighting its superior predictive capability and providing a more nuanced understanding of tumor biology [
+202
+]. This emphasizes the immense potential of radiomics-based AI models and single omics data in predicting NIT therapeutic outcomes in pan-cancer treatment.
+Pathomics
+Five Studies have validated the feasibility of AI models based on the pathological profiles of patient tissue biopsies to directly predict the efficacy of NIT across different cancer types, like NSCLC, ESCC, and GC [
+207
+–
+211
+]. For example, Han et al. [
+208
+] developed a DL model predicting MPR of NIT in NSCLC cohorts from pathomics features on H&E-stained tumor sections. The study compared various DL algorithms in model construction and utilized gradient-weighted class activation mapping (Grad-CAM) for model explanation. Similarly, another study reported a Transformer framework that automatically identifies pathological features on WSIs of H&E-stained tumor sections and predicts residual tumor percentage in ESCC patients taking NIT [
+207
+]. Besides H&E WSIs, one study reported an ML model based on multiple immunofluorescence (mIF) profiles of immune cell surface markers (
+e.g.
+, CD8) and immune checkpoints (
+e.g.
+, PD-L1) to predict the MPR of NIT in ESCC cohorts [
+209
+]. With an ambispective design, the model was trained in a retrospective cohort but validated in a prospective cohort with reliable performance (AUC = 0.832). In addition, leveraging LASSO for feature selection, the model construction indicates that PD-L1 and CD3 levels are associated with NIT benefits, consistent with the predictive value of PD-L1 expression in NIT, as discussed previously.
+Transcriptomics
+In patients receiving NIT, gene expression differences between responders and non-responders have been identified, particularly among genes related to the TME [
+212
+]. ML algorithms are employed to select the differentially expressed genes (DEGs) most closely associated with treatment efficacy and to develop predictive models. For example, two studies constructed ML models using DEGs derived from pre-treatment RNA-seq data, reliably predicting pCR and MPR following NIT in HER2-negative BC and Gastric and Gastroesophageal Junction Cancer (GGJC) (AUC = 0.841 and 1, respectively) [
+213
+,
+214
+]. However, the latter study had a very small sample size. Both studies also revealed that an inflammatory TME is correlated with improved treatment outcomes. Furthermore, one study built a model based solely on glycosylation-related gene features identified from RNA-seq data, which was able to screen for potential beneficiaries of neoadjuvant therapy in HCC [
+215
+]. This model-building process also highlighted the potential role of glycosylation in modulating the TME and NIT response, warranting further investigation.
+Microbiomics
+AI algorithms have been applied to identify gut microbiome features associated with treatment efficacy in patients undergoing NIT or NCIT, leading to the development of predictive models for selecting likely responders [
+216
+]. In this study, researchers analyzed the 16S rRNA sequences of patients with ESCC receiving NCIT and observed significant differences in the gut microbiome between responders and non-responders. They used the Extreme Gradient Boosting (XGBoost) algorithm to determine the microbial features most relevant to treatment outcomes and then applied the LightGBM algorithm to construct a predictive model that reliably identified responders (AUC = 0.868). This study not only validated the potential of microbial biomarkers in predicting NIT outcomes but also revealed that enrichment of short-chain fatty acid-producing bacteria is associated with favorable responses, whereas a higher abundance of potential pathogenic microbes (
+e.g.
+, Veillonella) is enriched in non-responders.
+Proteomics
+Proteomic characteristics of certain TME markers, such as expression levels and spatial distribution, have been found to correlate with patient responses to NIT or NCIT, making them valuable inputs for AI-based predictive models. For instance, one study utilized mass cytometry to assess the spatial distribution of various protein markers within the TME, including those associated with epithelial cells, endothelial cells, stromal cells, immune cells, cytokines, and immune checkpoints [
+217
+]. Feature selection was conducted using an SVM algorithm, followed by model construction with an RF algorithm, resulting in excellent predictive performance for NCIT response (AUC = 0.97). Moreover, the feature selection process provided important biological insights, identifying that CD8
++
+T cells and B cells within TLS, as well as inflammatory macrophages in fibrotic regions, were associated with favorable treatment responses.
+Others
+We identified nine studies developed ML models that predict NIT or NCIT outcomes leveraging rapid clinical test or blood-based parameters [
+218
+–
+226
+]. Among studies leveraging hematological profiles for model construction, six focused on predicting MPR, pCR, and PFS in NSCLC patients treated with NIT, whereas the rest two studies aimed at predicting NCIT pCR in ESCC cohorts. In these studies, features screened for prediction were either individual hematological parameters or inflammation scores calculated by integrating these parameters, sometimes combined with clinical pathological data such as cancer stage and smoking status. Despite the different hematological features selected, including immune cell ratios (
+e.g.
+, neutrophil-to-lymphocyte ratio (NLR) and monocyte-to-lymphocyte ratio (MLR)), specific immune cell types (
+e.g.
+, CD3
++
+CD56
++
+natural killer T cells), and other indicators such as neutrophil percentage (NEUT%) and PD-L1 expression levels, most of these models demonstrated reliable predictive efficacy in large cohorts of over 100 patients. Besides laboratory hematology analysis, one study validates the feasibility of establishing a prediction model based on a rapid breathing test. Huang et al. [
+219
+] proposed an innovative ML model that identified high-pressure photon ionization time-of-flight mass spectrometry (HPPI-TOFMS) features in patient respiratory samples, capable of distinguishing responders from non-responders to NCIT in ESCC cohorts (AUC = 0.86). Collectively, these studies confirm that ML models can predict responses to NIT using clinical test data, providing a fast, cost-effective, and less invasive approach.
+Multi-omics-based methods
+Multi-omics AI models that integrate omics features from different dimensions have the potential to provide a more accurate method for predicting responses to NIT or NCIT. We report five relevant studies [
+227
+–
+231
+]. Among these studies, Xu et al. [
+228
+] developed a composite model that combines DL-based CT radiomics scores, the mutation counts in ctDNA, and clinical data. It had robust prediction for MPR in a prospective cohort of NSCLC patients undergoing NCIT (AUC = 0.82) and outperformed single-omics DL models in the same cohort (AUC = 0.703). Another study leverages SVM to construct three single-omics models and a multi-omics model predicting NCIT pCR in esophageal cancer cohorts. The single-omics models were developed individually based on CT images (AUC = 0.70), WSIs of H&E-stained tumor biopsies (AUC = 0.77), and clinical data (AUC = 0.63). In contrast, the multi-omics models integrating all three inputs achieved superior performance in predicting performance (AUC = 0.89) [
+229
+]. Similarly, Nie et al. [
+230
+] combined CT radiomics and pathomics inputs in a model predicting NCIT therapeutic responses in extensive-stage small cell lung cancer (ES-SCLC). A combined model based on radiomics and hematological parameters has also been developed, as another study by Yang et al. [
+227
+] proposed an ML model that leverages CT images and laboratory blood tests to predict NCIT pCR in ESCC patients. Consistent with the aforementioned multi-omics approaches, the integrated model in the ES-SCLC and ESCC studies outperformed single omics methodologies in the same cohorts [
+227
+,
+230
+]. Besides combining omics input, one study notably developed an open-source longitudinal MLP model for predicting the outcomes of BC neoadjuvant therapy [
+231
+]. The model combined longitudinal MRI imaging and clinical parameters, achieving superior performance in predicting pCR (AUC = 0.852). Consistent with the above studies, the model integrating the two categories of input (AUC = 0.934) outperformed the radiomics (AUC = 0.874) and hematology models (AUC = 0.772). Collectively, AI algorithms showed feasibility in combining various inputs for enhancing the prediction of NIT clinical endpoints. However, current research remains focused on limited cancer types and omics categories, highlighting the need for broader validation across diverse tumor types and integration of additional omics layers (Tab.
+2
+, Fig.
+2
+).
+Table 2
+Summary of studies on direct biomarker-based prediction
+Ref.
+Author (Year)
+Omics
+Cancer type
+Data source
+Predictive marker
+Analysis type
+Total patients
+Training set
+Validation set
+Testing set
+AI model
+Prediction performance
+[
+186
+]
+Ye et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+pCR
+Retrospective
+178
+108
+-
+70
+ML/DL
+AUC: 0.78, Accuracy: 81.5%
+[
+187
+]
+Qu et al. (2024)
+Radiomics
+LC
+Multicenter
+pCR
+Retrospective
+248
+104
+69
+75
+DL: CNN
+AUC: 0.78 (training)−0.74 (validation)
+[
+188
+]
+Huang et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+148
+105
+-
+43
+ML/DL: SVM/CNN
+AUC: 0.81 (training)−0.77 (testing)
+[
+189
+]
+Liu et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+pCR
+Retrospective
+106
+74
+-
+32
+ML: SVM/RF
+AUC: 0.93 (training)−0.86 (testing)
+[
+190
+]
+Ye et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+pCR
+Retrospective
+113
+80%
+-
+20%
+DL: CNN
+AUC: 0.86
+[
+191
+]
+Han et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+204
+164
+21
+21
+DL: CNN
+AUC: 0.77 (training)−0.73 (validation)−0.83 (testing)
+[
+192
+]
+Cui et al. (2022)
+Radiomics
+NSCLC
+Singlecenter
+pCR
+Pilot study
+50
+30
+-
+19
+ML/DL
+AUC: 0.85; Accuracy: 83%; Sensitivity: 80%, Specificity: 85%
+[
+193
+]
+Yang et al. (2023)
+Radiomics
+NSCLC
+Multicenter
+pCR
+Retrospective
+110
+77
+-
+33
+ML: LASSO
+AUC: 0.85; Accuracy: 81%; Specificity: 81%; Sensitivity: 83%
+[
+194
+]
+She et al. (2022)
+Radiomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+274
+142
+61
+71
+DL: CNN
+AUC: 0.73 (training)−0.72 (testing)
+[
+196
+]
+Wang et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+211
+148
+-
+63
+ML: LASSO
+AUC: 0.70 (training)−0.60 (testing)
+[
+197
+]
+Li et al. (2024)
+Radiomics
+NSCLC
+Singlecenter
+PFS
+Retrospective
+60
+-
+-
+-
+ML: SVM
+Accuracy: 92.3%, Specificity: 96.6%
+[
+198
+]
+Han et al. (2024)
+Radiomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+186
+105
+45
+36
+DL
+AUC: 0.99
+[
+199
+]
+Zhao et al. (2024)
+Radiomics
+SCLC
+Multicenter
+PFS
+Retrospective
+379
+253
+51
+75
+ML: LASSO
+AUC: 0.73 (training)−0.66 (validation)−0.73 (testing)
+[
+200
+]
+Wang et al. (2024)
+Radiomics
+ESCC
+Multicenter
+MPR
+Retrospective
+82
+57
+-
+25
+ML: SVM/RF/LASSO
+AUC: 0.93 (training)−0.85 (testing)
+[
+201
+]
+Shi et al. (2024)
+Radiomics
+ESCC
+Multicenter
+pCR
+Retrospective
+105
+75%
+-
+25%
+ML
+AUC: 0.89 (training)−0.80 (testing)
+[
+202
+]
+Kong et al. (2024)
+Radiomics
+ESCC
+Multicenter
+pCR
+Retrospective
+112
+85
+-
+27
+ML: LASSO/LR
+AUC: 0.90
+[
+203
+]
+Zhang et al. (2025)
+Radiomics
+ESCC
+Multicenter
+pCR
+Retrospective
+741
+469
+118
+120
+DL: 3D-ResNet/ViT
+AUC: 0.91 (traning)−0.83 (validation)
+[
+204
+]
+Ramtohulet al. (2024)
+Radiomics
+TNBC
+Multicenter
+pCR
+Prospective
+-
+112
+-
+83
+ML: LASSO
+AUC: 0.86
+[
+205
+]
+Seban et al. (2023)
+Radiomics
+TNBC
+Multicenter
+pCR
+Retrospective
+191
+70%
+-
+30%
+ML: SVM/RF
+OR: 3.7 [95% CI 1.3–12.4]
+[
+206
+]
+Lin et al. (2024)
+Radiomics
+HNSCC
+Multicenter
+pCR
+Retrospective
+172
+84
+37
+51
+ML: LASSO
+AUC: 0.90 (training)−0.85 (testing)
+[
+207
+]
+Wang et al. (2024)
+Pathomics
+ESCC
+Singlecenter
+Residual Tumor Percentages
+Retrospective
+451
+225WSIs
+30WSIs
+196WSIs
+DL: Transformer
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\text {R}^2$$\end{document}
+: 0.84
+[
+208
+]
+Han et al. (2024)
+Pathomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+186
+105
+45
+36
+DL: DenseNet/XGBoost
+AUC: 0.99 (training)−0.81 (validation)−0.82 (testing)
+[
+209
+]
+Yehan et al. (2024)
+Pathomics
+ESCC
+Singlecenter
+MPR
+Ambispective
+78
+30
+-
+48
+ML: LASSO/LR
+AUC: 0.93 (training)−0.83 (testing)
+[
+210
+]
+Terada et al. (2023)
+Pathomics
+NSCLC
+Multicenter
+MPR
+Retrospective
+125
+55
+-
+70
+DL: CNN
+Accuracy: 0.86 (cross-validation)
+[
+211
+]
+Han et al. (2024)
+Pathomics
+GC
+Multicenter
+PFS
+Retrospective
+584
+130
+44
+99
+ML: RF/KNN
+AUC: 0.98 (training)−0.92 (validation)
+[
+213
+]
+Lu et al. (2024)
+Transcriptomics
+BC
+Multicenter
+pCR
+Retrospective
+195
+69
+71
+55
+ML:Boruta/SVM-RFE/XGBoost
+AUC: 0.93 (training)−0.86 (validation)−0.84 (testing)
+[
+214
+]
+Ji et al. (2024)
+Transcriptomics
+GGJC
+Singlecenter
+MPR
+NA
+30
+-
+-
+-
+ML: LASSO
+AUC: 1
+[
+215
+]
+Tang et al. (2022)
+Transcriptomics
+HC
+Multicenter
+Responders/Non-responders
+NA
+1332
+364
+-
+379
+ML: LASSO/SVM
+Accuracy: 72.4%
+[
+218
+]
+Zhang et al. (2024)
+Clinical Test and Hematology
+NSCLC
+Singlecenter
+PFS
+Retrospective
+175
+50%
+-
+50%
+ML: LASSO
+AUC: 0.74 (1 year)−0.81 (2 years)−0.79 (3 years)
+[
+219
+]
+Huang et al. (2024)
+Clinical Test
+ESCC
+Singlecenter
+Responders/Non-responders
+Ambispective
+133
+70%
+-
+30%
+ML
+AUC: 0.86 (training)−0.85 (testing)
+[
+220
+]
+Wang et al. (2024)
+Clinical Test and Hematology
+LUSC
+Singlecenter
+MPR
+Retrospective
+91
+-
+-
+-
+ML: LR
+AUC: 0.91
+[
+221
+]
+Hu et al. (2024)
+Hematology
+NSCLC
+Singlecenter
+MPR
+Ambispective
+206
+166
+-
+40
+ML: LASSO/LR
+AUC: 0.77 (training)−0.75 (validation)−0.84 (testing)
+[
+222
+]
+Feng et al. (2022)
+Hematology
+ESCC
+Singlecenter
+pCR
+Retrospective
+285
+200
+-
+85
+ML: LASSO/LR
+C-index: 0.76 (training) −0.81 (testing)
+[
+223
+]
+Han et al. (2023)
+Hematology
+ESCC
+Singlecenter
+pCR
+Retrospective
+97
+70%
+-
+30%
+ML: LASSO/LR
+AUC: 0.72 (training)−0.82 (testing)
+[
+224
+]
+Zhai et al. (2024)
+Hematology
+NSCLC
+Multicenter
+MPR
+Retrospective
+173
+147
+-
+26
+ML: LASSO
+AUC: 0.80 (training) −0.82 (testing)
+[
+225
+]
+Zhai et al. (2023)
+Hematology
+NSCLC
+Singlecenter
+pCR
+Retrospective
+128
+-
+-
+-
+ML: LASSO
+AUC: 0.74
+[
+226
+]
+Peng et al. (2021)
+Hematology
+NSCLC
+Singlecenter
+MPR
+Prospective
+211
+127
+-
+84
+ML: LASSO/SVM
+AUC: 0.95 (training)−0.94 (testing)
+[
+216
+]
+Liu et al. (2024)
+Microbiomics
+ESCC
+Singlecenter
+Responders/Non-responders
+Retrospective
+68
+80%
+-
+20%
+ML: XGBoost
+AUC: 0.87 (training)−0.77 (validation)−0.76 (testing)
+[
+217
+]
+Wu et al. (2024)
+Proteomics
+ESCC
+Singlecenter
+Drug Response
+NA
+55
+70%
+-
+30%
+ML: RF/GLM
+AUC: 0.97
+[
+227
+]
+Yang et al. (2024)
+Multi-omics
+ESCC
+Singlecenter
+pCR
+Retrospective
+164
+80%
+-
+20%
+ML: LASSO
+AUC: 0.77 (hematology)−0.87 (radiomics)−0.93 (combined)
+[
+228
+]
+Xu et al. (2025)
+Multi-omics
+NSCLC
+Singlecenter
+MPR
+Prospective
+45
+-
+-
+-
+DL
+AUC: 0.70 (DL)−0.82 (combined)
+[
+229
+]
+Qi et al. (2025)
+Multi-omics
+ESCC
+Singlecenter
+pCR
+Retrospective
+223
+75%
+-
+25%
+ML: SVM
+AUC: 0.99 (training)−0.89 (testing)
+[
+230
+]
+Nie et al. (2025)
+Multi-omics
+SCLC
+Multicenter
+PFS/OS
+Retrospective
+309
+-
+-
+-
+ML: RF
+AUC: 0.76 (training)−0.90 (validation)
+[
+231
+]
+Gao et al. (2024)
+Multi-omics
+BC
+Multicenter
+pCR
+Retrospective
+3352
+80%
+-
+20%
+DL: MLP
+AUC: 0.85
+Discussion
+Research quenstions and main findings
+Q1: How has AI currently been applied to predicting pan-cancer NIT therapeutic outcomes?
+We systematically reviewed AI-based models developed to predict therapeutic outcomes of NIT across cancer types, and categorized them into indirect and direct prediction paradigms. The indirect approach leverages AI to infer the status of established biomarkers, such as PD-L1, TMB, MSI, and TME features, based on omics data, thereby enabling stratification of patient response. In contrast, the direct paradigm involves constructing computational biomarkers or AI-derived scores directly from patient data to predict clinical endpoints such as pCR, MPR, and PFS, or to distinguish responders from non-responders. Current research in this field reveals several trends. First, AI-based predictions of conventional immunotherapy biomarkers have reached accuracies comparable to expert-level assessments; however, models targeting emerging TME features linked to NIT therapeutic outcomes, such as TLS, remain underrepresented. Second, direct prediction models are primarily concentrated in cancers with higher prevalence and NIT practice, particularly lung cancer, and tend to focus on short-term endpoints. Third, most models remain in the preclinical stage, with limited prospective and multi-center validation, posing a major barrier to clinical translation.
+Q2: What are the data categories and sources in AI prediction model development?
+Across studies, regardless of the prediction objective, the most commonly used input modalities are routine clinical imaging and H&E-stained histopathology slides. This likely reflects their low acquisition cost, widespread availability, and standardized presence in clinical workflows. In addition to these conventional inputs, a number of studies have begun to explore novel data sources, such as Raman spectroscopy features from tumor sections, gut microbiome profiles, and spatial proteomics of the TME, to improve the prediction of both biomarker status and clinical outcomes. In terms of data sources, public repositories such as TCGA are frequently used for developing indirect prediction models, offering foundational multi-omics data for biomarker inference. In contrast, direct prediction models often rely on patient-level data obtained from clinical trials or institutional cohorts. Due to ethical and privacy constraints, such data are typically confidential and not publicly shared, which may explain the predominance of single-center studies in this domain. Furthermore, the vast majority of studies, irrespective of predictive targets or data modalities, employ retrospective study designs. In the research of leveraging AI for predicting treatment response, a retrospective study examines existing data collected in the past, often from patient records or databases, to investigate study outcomes. In contrast, a prospective study involves collecting new data moving forward, where participants are followed over time, and data is gathered as particular events occur or treatments are administered. This trend reflects the exploratory nature of NIT research, where prospective trials remain logistically challenging due to the requirements of patient recruitment, long-term follow-up, regulatory approval, and substantial funding. Retrospective designs, by contrast, allow efficient use of existing real-world datasets to rapidly test hypotheses and identify potential predictive features, thereby laying the groundwork for future high-quality prospective validation.
+Q3: How do AI-based models differ from conventional biomarker assessment and therapeutic prediction models?
+Traditional biomarker assessment methods are often costly, labor-intensive, and heavily reliant on clinical expertise. These processes are not only time-consuming but also subject to inter-observer variability and human bias. For example, manual delineation of TILs on histopathological slides frequently suffers from inconsistent accuracy and reproducibility [
+167
+]. In contrast, the integration of AI technologies has introduced significant advantages in this domain. AI enables rapid and automated evaluation of biomarker status, particularly in tasks involving image interpretation and histopathological analysis. Beyond efficiency and scalability, AI-based approaches offer the potential to more comprehensively predict patient response to NIT. By identifying informative features from high-dimensional data, these models may facilitate the discovery of novel biomarkers and enhance our understanding of the underlying biological mechanisms of NIT efficacy. In addition, AI holds promise for reducing labor and time costs associated with conventional biomarker evaluation pipelines [
+232
+,
+233
+]. AI models and conventional therapeutic prediction models differ significantly in terms of necessary validation schemes due to their complexity, data requirements, and interpretability. AI models rely on large, high-dimensional datasets, including multiple omics layers, and often function as “black boxes”. This necessitates not only internal validation (e.g., cross-validation) for model evaluation and optimization, but also external validation on independent datasets to ensure generalizability and reproducibility. By contrast, conventional prediction models typically rely on more direct data input with fewer variables and smaller datasets. These models typically focus on more easily interpretable features like clinical parameters and are more generalizable. Therefore, a single internal validation may suffice if the model is well-understood and used in consistent clinical contexts.
+Q4: What are the characteristics and potential of multi-omics models?
+Multi-omics models offer a distinct advantage in their ability to simultaneously integrate heterogeneous data across different modalities, dimensions, and time points. By leveraging the complementary nature of these data types, such models can provide a more holistic and nuanced characterization of patient status [
+7
+,
+234
+]. Our synthesis of current literature indicates that, within the same patient cohorts, multi-omics models usually outperform their single-omics counterparts in predictive accuracy, underscoring the value of multi-source data integration. Moreover, AI algorithms are particularly well-suited for multi-omics integration, as they can automatically identify complex and subtle associations across diverse feature dimensions [
+235
+,
+236
+]. This capability not only enhances predictive performance but also holds promise for uncovering previously unrecognized biological interactions, potentially shedding light on the mechanisms underlying response to NIT. However, Current models predominantly rely on readily accessible data types. Moreover, despite the potential of data integration approaches, studies employing multi-omics strategies remain relatively limited, reflecting a practical emphasis on feasibility over breadth. This may be attributed to limitations posed by both NIT clinical landscape and AI algorithmic issues, which will be further elaborated in the following sections.
+Biomarker-related limitations and future directions
+Indirect Biomarkers
+Although NIT has demonstrated promising clinical outcomes, the identification and validation of reliable indirect biomarkers remain a significant challenge. Several biomarkers, including PD-L1 expression, TMB, and MSI, have been investigated for predicting NIT efficacy, but their clinical applicability is limited by various constraints. For example, PD-L1 expression, while integrated into clinical decision-making, exhibits inconsistent predictive value due to factors such as intra-tumoral heterogeneity, variability in IHC scoring, and differences in testing platforms [
+44
+,
+49
+,
+237
+]. TMB, however, lacks universally accepted thresholds across different tumor types and does not always correlate with effective anti-tumor immune responses [
+238
+,
+239
+]. MSI is a robust predictor of immunotherapy response in CRC, whereas its relevance in other malignancies is limited due to its lower prevalence [
+240
+]. TME characteristics such as TIL, TLS, and CTLA-4 expression, have been identified to reflect NIT response in clinical, yet fewer studies validated their robustness as therapeutic biomarkers or explored AI-driven automated assessment of these components. Furthermore, the absence of large, diverse patient cohorts for biomarker validation impedes the generalization and widespread clinical implementation of these biomarkers [
+241
+]. To address these challenges, future research should focus on improving the reliability, standardization, and regulatory approval of indirect biomarkers. Additionally, integrating AI-driven approaches into biomarker discovery could accelerate the identification of novel predictive markers from complex multi-omics data and inspire biological insights.
+Direct Biomarkers
+Direct prediction models based on pre-treatment data mainly focus on short-term NIT outcomes such as pCR and MPR, which offer early efficacy signals but fail to capture long-term risks and benefits better reflected by PFS and OS, such as recurrence and metastasis [
+242
+,
+243
+]. Moreover, evidence suggests that the correlation between short-term indicators and long-term treatment outcomes can vary across individuals and cancer types [
+244
+,
+245
+]. However, research focusing on long-term treatment indicators remains relatively limited in the context of NIT. Our analysis indicates that the majority of direct prediction studies have been conducted on NSCLC and ESCC cohorts. As NIT continues to gain traction in other cancer types, such as BC, there is a clear need for the development of prediction models for these underrepresented cohorts. The expansion of NIT research will help validate indirect prediction models and contribute to more diversified datasets for model construction. To advance direct prediction models, it is essential to prioritize the collection of long-term follow-up data from diverse patient populations. Additionally, the development of integrated learning models that combine preoperative imaging, pathological assessments, and postoperative outcomes holds significant promise for more accurate predictions of long-term treatment responses [
+246
+,
+247
+].
+AI-related limitations and future directions
+Interpretability and Trustworthiness
+AI models, particularly DL and ML, often function as black boxes, making it difficult to understand how they arrive at their decisions [
+248
+,
+249
+]. Traditional models like decision trees, random forests, and logistic regression offer better interpretability, providing explicit decision rules or feature importance scores [
+250
+]. In contrast, DL models such as CNNs and Transformer-based architectures extract highly abstract representations, which are challenging to explain [
+251
+]. This lack of interpretability raises trust issues, particularly in healthcare, where clinicians must understand why a model makes a specific prediction before using it in decision-making. Regulatory bodies like the Food and Drug Administration (FDA) and the European Medicines Agency (EMA) also require transparent explanations of how AI models function in medical applications [
+252
+]. To address these challenges, Explainable AI (XAI) methods such as Shapley Additive Explanations (SHAP), Local Interpretable Model-agnostic Explanations (LIME), and saliency maps provide post-hoc explanations [
+39
+,
+253
+,
+254
+]. Hybrid models, which combine deep learning with interpretable techniques (e.g., CNNs with decision trees), could further help build trust and transparency among healthcare professionals and regulators [
+255
+].
+Generalization and Scalability
+AI models in healthcare often face challenges related to generalization and scalability due to variability in data sources, patient demographics, and imaging techniques. A model trained on one dataset may not perform well when applied to another institution or demographic, due to differences in imaging protocols, scanner types, or clinical documentation styles [
+256
+]. Furthermore, many AI models, particularly DL models, require large amounts of labeled data for training, which can be hard to obtain for rare diseases or underrepresented populations [
+257
+]. Techniques such as domain adaptation, transfer learning, self-supervised learning, and federated learning are emerging to improve generalization by reducing the dependency on large, labeled datasets and enabling models to learn robust features across diverse settings [
+258
+–
+260
+]. Scalability remains a challenge, especially in resource-limited environments where access to high-performance computing (HPC) infrastructure may be restricted [
+261
+]. To address this, lightweight neural networks, knowledge distillation, and edge AI solutions could improve scalability by enabling AI deployment on local clinical devices with fewer computational resources [
+262
+].
+Multi-source Data Integration
+AI has the potential to integrate multi-omics data to improve predictive accuracy and aid in biomarker discovery, whereas multi-omics models are underrepresented in research [
+263
+]. Multi-omics models tend to outperform single-omics models, capturing the complex, multi-factorial nature of diseases [
+227
+,
+264
+]. In addition, integrating longitudinal data, such as treatment response measurements taken at multiple time points, could enhance predictions of patient outcomes over time [
+246
+,
+247
+]. However, difficulties remain in aligning and merging heterogeneous data types, particularly data temporally or spatially misaligned [
+265
+]. Therefore, future research should focus on robust data fusion methods that can effectively combine multi-omics and longitudinal data, minimizing noise and misalignment. Advanced techniques such as spatiotemporal models can capture the temporal dynamics inherent in longitudinal data, offering more accurate representations of disease progression or treatment responses [
+266
+]. Attention mechanisms like self-attention and cross-modal attention could also enhance model performance by allowing the model to focus on the most informative features from each data modality, leading to more reliable predictions [
+267
+,
+268
+].
+Bias and Fairness
+AI models trained on biased datasets can lead to unfair and inaccurate predictions, disproportionately affecting underrepresented patient populations [
+269
+]. In the case of NIT prediction, many publicly available medical datasets primarily feature data from high-income countries, introducing ethnic, geographic, and socioeconomic biases [
+270
+]. Moreover, biases in data collection, such as disparities in imaging quality between well-funded and resource-limited healthcare settings, can further exacerbate these issues [
+271
+,
+272
+]. To mitigate bias, it is crucial to ensure that training datasets are diverse and representative of different demographic groups. Additionally, AI models should be evaluated using fairness-aware metrics like equalized odds and disparate impact analysis to ensure that they perform equitably across different subpopulations. Methods like adversarial debiasing, reweighting strategies, and subgroup-aware training can help reduce bias during model development [
+273
+]. Regulatory agencies may also mandate fairness audits as part of AI model validation to promote equitable healthcare outcomes in immunotherapy predictions [
+274
+].
+Security and Privacy
+Medical AI relies on sensitive data, making security and privacy critical concerns, as are vulnerable to data breaches, adversarial attacks, and model inversion [
+275
+,
+276
+]. Adversarial perturbations, like malicious modifications to medical images, can manipulate AI predictions, thereby harming model performance and compromising patient safety. Similarly, model extraction attacks can allow unauthorized entities to replicate proprietary AI models, posing risks of intellectual property theft and misuse [
+277
+]. Therefore, researchers may adopt adversarial defense mechanisms such as adversarial training and robust model architectures [
+278
+]. Privacy-preserving techniques like differential privacy and homomorphic encryption offer promising solutions to ensure patient data remains protected while enabling collaborative model development across institutions [
+279
+,
+280
+]. Furthermore, adherence to regulatory frameworks such as the General Data Protection Regulation (GDPR) and Health Insurance Portability and Accountability Act (HIPAA) is essential to safeguard patient data in AI development [
+281
+]. Future research should focus on enhancing privacy-preserving algorithms and secure multi-party computation to enable safe, large-scale AI training without compromising patient confidentiality.
+Conclusion
+In summary, the application of AI in predicting the efficacy of NIT represents a transformative advancement in precision immunotherapy. By leveraging diverse oncological data, AI-driven models have demonstrated the potential to accurately screen for NIT potential beneficiaries. In this review, we systematically categorized existing AI-based approaches into indirect prediction paradigms, which infer treatment response through clinically established biomarkers, and direct prediction paradigms, which utilize AI to define data-driven biomarkers that are directly linked to clinical endpoints. Despite these advancements, two main challenges remain spanning from the biomarker robustness to AI algorithmic issues that jointly hinder AI application in NIT efficacy prediction. Addressing these issues is essential for advancing medical AI in precision oncology.

@@ -1,0 +1,1011 @@
+Introduction
+Metabolomics, which analyzes metabolite level changes in biological samples, has become a popular research area in systems biology. It provides an instantaneous snapshot of the physiology of a living system including its interactions with the environment, which is relatively limited in other omics such as genomics and proteomics. Liquid chromatography–mass spectrometry (LC-MS) is a commonly used platform for metabolomics studies, mostly because of its wide range of detectable polarity and molecular mass. However, metabolite identification remains a bottleneck in LC-MS-based metabolomics mainly due to component complexity and low database integrity (Dunn et al.,
+2011
+; Peisl et al.,
+2018
+; Want et al.,
+2010
+).
+Based on the five confidence levels for compound annotation and identification determined by the Chemical Analysis Working Group (CAWG) Metabolomics Standards Initiative (MSI), an unknown metabolite is claimed identified with “level-1 confidence” if its 2D structure matches with that of an authentic standard using at least two orthogonal techniques (such as MS/MS spectrum and retention time) (Blazenovic et al.,
+2018
+; Sumner et al.,
+2007
+; Viant et al.,
+2017
+). However, the availability of standard metabolites is limited, while some, although available, are very expensive. Moreover, finding the correct standard is generally a trial-and-error process. It is also almost impossible to find standards for novel or modified metabolites. Owing to such difficulties, putative identification (level 2–3 confidence) has become acceptable, wherein the peaks of the acquired spectrum are matched with those of spectra in public databases. Nevertheless, even with the continuous efforts in collecting MS/MS spectra in many public databases, the number of collected metabolites is still far less than the demand (Blazenovic et al.,
+2018
+; Dunn et al.,
+2013
+; Guijas et al.,
+2018
+; Kind et al.,
+2018
+). Other obstacles to spectrum match include variations in instruments, environment conditions, and sample preparation methods.
+Two major approaches were adopted for MS/MS spectrum identification. One attempts to predict all possible fragmentation patterns of compounds that agree with the given precursor mass, and then determine the most probable compound according to the matches between the predicted fragments and those in the given spectrum (Kind et al.,
+2013
+; Liebal et al.,
+2020
+; Ridder et al.,
+2014
+; Ruttkies et al.,
+2016a
+; Wang et al.,
+2014
+; Wang et al.,
+2021
+). As this spectrum-prediction approach does not rely on the availability of MS/MS spectra in databases or any additional equipment, it is generally more applicable to metabolite identifications than the aforementioned approach. The generation of possible fragmentation patterns demands extensive chemical knowledge, which is usually obtained from specialists or via machine learning (Liebal et al.,
+2020
+; Wang et al.,
+2021
+). Such knowledge or rules may seem reasonable when a single compound is considered. However, metabolomics concerns a mix of many compounds; thus, under complicated interactions between metabolites and environmental influences, the fragment pattern in a spectrum can be different from that of a single compound. This leads to differences between predicted and actual spectra. For example, according to the test result of CFM-ID 4.0, the average similarity (measured by dot product) between in silico spectra and METLIN spectra is 0.38 (Wang et al.,
+2021
+). Furthermore, rules generated from a machine learning approach may not generalize well to unseen compound species. A re-train process is usually needed to account for such data.
+Another approach is oriented in the opposite direction. The possible chemical and physical features are extracted from an MS spectrum of the compound to be identified and the corresponding chemical structure is identified from databases of known compounds via chemical feature matching (Brouard et al.,
+2016
+; Dührkop et al.,
+2019
+; Heinonen et al.,
+2012
+; Ludwig et al.,
+2020
+; Shen et al.,
+2014
+; Tsugawa et al.,
+2016
+). However, this approach usually requires intensive computation and database queries, thus being time-, memory-, and network resource-consuming. For example, according to the test result of SIRIUS, the identification time for 5518 spectra was 5 h 41 min, resulting in an average of 3.71 s per spectrum, not including its long computation time (in days) for compounds with large molecular weight (≥ 850 Dalton (Da) (Dührkop et al.,
+2019
+). Similar to the previous approach, features that are determined via machine learning are highly related to the training data and may require a re-train process if an unseen chemical class or species is present. In summary, current metabolite identification/ranking tools exhibit the following seven issues: (1) identification/ranking accuracy, (2) computation time, (3) applicability to unknown compounds, (4) applicability to large metabolites, (5) batch computation capability, (6) result reproducibility, and (7) internet accessibility.
+Considering these issues, in this work, a simple but effective approach was designed and developed, namely formula subset analysis (FSA), to rank chemical formula candidates during identification in LC-MS/MS-based metabolomics studies. Unlike MS/MS spectrum match, which relies on the availability of MS/MS spectra in public databases, FSA only requires chemical formulas and their corresponding monoisotopic molecular weights that are publicly available in large chemical databases, such as PubChem and ChemSpider. The proposed approach employs a mass match on each of the fragment monoisotopic masses in Da for possible chemical formulas, followed by a series of searches for mother–daughter relationships (MDRs) among the fragments. Here, an MDR indicates the relationship between a pair of ions in a spectrum where the chemical compositions of one ion is a subset of those of the other ion. The formula candidate of the precursor ion that comprises the most MDRs among all fragment ion formula candidates, including itself, is considered the most probable identity for the underlying metabolite. Notably, the FSA was designed to provide a ranking for the formula candidates of the underlying compound by using a list of “centroid and deisotoped” peak
+m/z
+values in an MS/MS spectrum. Thus, isomers that share the same molecular formula but have different atomic arrangements in space are not distinguishable by the proposed algorithm. Additionally, the MS/MS spectra of a metabolite acquired from different experimental conditions (e.g., collision energy, association method, temperature, and humidity) can exhibit different fragment peaks. Such variations in the fragmentation pattern may result in differences in the MDRs. FSA was designed to sustain such variation and maintain consistency provided that sufficient and accurate fragment peaks are presented in a spectrum. The designed FSA algorithm was tested on eight experimental datasets. Its formula ranking performance including accuracy, consistency, scalability, and suitable types of spectra for FSA are discussed herein.
+Materials and methods
+Construction of the test datasets
+Eight datasets were excerpted from two public databases, Human Metabolome Database (HMDB) (Wishart et al.,
+2018
+) and Global Natural Products Social Molecular Networking (GNPS) (Wang et al.,
+2016
+) and a public competition (CASMI
+2016
+) to evaluate the performance of the proposed algorithm. The HMDB database mainly contains information for small molecule metabolites found in the human body, whereas the GNPS is a repository for sharing of MS/MS spectrometry data from various species, instruments, and omics studies. The Critical Assessment of Small Molecule Identification (CASMI) has organized several challenges since 2012 to evaluate computational methods for identifying small molecules from mass spectrometry data, promoting fair benchmarking and method improvement. These eight datasets (three from HMDB, four from GNPS, and one from CASMI 2016) were constructed to cover metabolites in various species, instruments, and a wild range of molecular weights (0–1500 Da).
+The first three datasets, namely HMDB_QTOF, HMDB_ITFT, and HMDB_QFT, were composed of the experimental MS/MS spectra acquired from LC-ESI-QTOF, LC-ESI-ITFT, and LC-ESI-QFT MS, respectively, in the HMDB (
+http://www.hmdb.ca/downloads
+, release 2018-10−19). The LC-ESI-QTOF represents “Liquid Chromatography coupled with Electrospray Ionization-Quadrupole-Time of Flight” whereas the ITFT and QFT in other two instruments stand for Ion Trap-Fourier Transform and Quadrupole Fourier Transform, respectively. Although HMDB contained spectra from other instruments, only those from the three above were used due to their higher spectral counts and sufficient mass accuracy (
+m/z
+with more than two decimal digits).
+The next four datasets were excerpted from the GNPS database
+https://gnps-external.ucsd.edu/gnpslibrary
+on 2022/06/05. Of the four sets, three were extracted from the GNPS NIH Natural Products Library (both round 1 and round 2, to be referred as GNPS-NIH-NPL) and one was extracted from the GNPS Pacific Northwest National Lab Lipids Library (referred to as GNPS-PNNL-LIPIDS). The three datasets NPL_MAXIS, NPL_QTOF, and NPL_OT extracted from GNPS-NIH-NPL were constructed for three different instruments, LC-ESI-MAXIS, LC-ESI-QTOF and LC-ESI-OT (OT for orbitrap), respectively. Although MAXIS is actually a QTOF (Maxis II HD Q-TOF Bruker ™), it generated spectra with a lower mass accuracy than other QTOF spectra probably due to an older model. The fourth dataset, LIPID_OT extracted from GNPS-PNNL-LIPIDS, was acquired from LC-ESI-OT. Notably, two fragmentation types, an ion trap-based collision-induced dissociation (CID) and an orbitrap-based higher energy collisional dissociation (HCD), of MS/MS spectra were provided for each compound in this dataset. To avoid redundancy, the HCD spectra were used because they usually exhibit more extensive fragmentation and thus more structural information about the ions (Jedrychowski et al.,
+2011
+).
+The last dataset, CASMI_OT, was excerpted from the MS/MS spectral data used for the categories 2 and 3 challenges in the CASMI 2016 competition. The data consisted of 520 MS/MS spectra (combining both training and challenge subsets), including 381 in positive and 139 in negative ion mode. All MS/MS spectra were acquired on a Q Exactive Plus Orbitrap from Thermo Scientific using ESI and stepped HCD, with < 5 ppm mass accuracy. The data was cleaned and recalibrated to within 5 ppm using known formulas. All peaks in the MS/MS that did not match to a valid subformula within 5 ppm of the recalibrated data were removed. For a proof-of-concept study and consistency across datasets, the following four criteria were imposed to all datasets to select qualified spectra:
+Compounds are combinations of only C, H, O, N, S, and P where C and H are necessary elements.
+Molecular monoisotopic mass is < 1500 Da.
+The precursor type is either [M + H] + or [M − H]−.
+At least three peaks are present in the centroid and deisotoped MS/MS spectrum.
+The first two criteria are general definitions for metabolites. Notably, the compounds in GNPS-NIH-NPL did not involve P, whereas those in GNPS-PNNL-LIPIDS did not involve S. These elements were removed from the first criterion when candidate chemical formulas were searched in the corresponding datasets. Noted that in real untargeted metabolomics studies, the possible elements of compounds are unknown in advance. However, if certain compounds are known to dominate the sample, limiting possible elements can shrink the search space, improving accuracy and speed. The third criterion was added to simplify the composition in a spectrum. Spectra of metabolites with adduct such as Na and K will be addressed in the discussion section. The fourth criterion was set for sufficient fragments in a spectrum for its identification. As a result, the number of qualified spectra and their corresponding number of compounds in the eight datasets are listed in Table
+1
+.
+Table 1
+Number of spectra and compounds of the eight datasets after filtering using the established criteria
+Dataset
+Source Instrument
+Original
+Spectra (Compounds)
+Qualified
+Spectra (Compounds)
+HMDB_QTOF
+LC-ESI-QTOF
+3743 (995)
+3029 (821)
+HMDB_ITFT
+LC-ESI-ITFT
+4074 (314)
+2601 (242)
+HMDB_QFT
+LC-ESI-QFT
+2195 (334)
+1439 (221)
+NPL_MAXIS
+LC-ESI-MAXIS
+7641 (3624)
+3561 (2833)
+NPL_QTOF
+LC-ESI-QTOF
+2090 (1890)
+1373 (1360)
+NPL_OT
+LC-ESI-OT
+1314 (639)
+270 (239)
+LIPIDS_OT
+LC-ESI-OT (HCD)
+46,724 (1656)
+18,084 (896)
+CASMI_OT
+LC-ESI-OT (HCD)
+520 (448)
+333 (302)
+To construct the MDRs among the ions in an MS/MS spectrum, the possible chemical formulas for each fragment are required. In this study, the PubChem database (Kim et al.,
+2021
+) (ftp://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/XML/, downloaded on 2018/11/08) was used to find the possible formulas for each fragment. The database originally comprises 109,383,767 compounds. These compounds were first filtered by the first two criteria (except that both C and H were optional here as fragments may not include these elements) and then isomers were removed, leaving a total of 928,369 reference chemical formulas. For each of the peaks (including the precursor and its fragments) in a spectrum, the possible chemical formulas were searched from the reference formulas within a given matching tolerance.
+Spectral preprocessing
+Denoising, centroiding, and deisotoping
+As previously mentioned, FSA was designed to perform precursor formula ranking using centroid and deisotoped peak lists converted from a MS/MS spectrum in profile mode. However, denoising is usually performed in advance to remove background noise in the spectra and to reduce the computations for centroiding and deisotoping. All these tasks can be performed using commercial software bundled with a mass spectrometer or free software such as msconvert in ProteoWizard (Chambers et al.,
+2012
+). In fact, most MS/MS spectral databases provide centroid instead of profile peak lists probably due to file size considerations. Nevertheless, some crucial information such as charge state, isotopic ratio, coelution status, and, sometimes, small fragments are lost due to the conversion.
+Monoisotopic mass restoration
+The MS/MS spectra were acquired in either positive- or negative-ion mode, and the masses of the fragment peaks in the spectra are represented by
+m/z
+values in Thomson (Th). These values need to be converted (for example, via Eq. (
+1
+) as shown below) to their corresponding monoisotopic masses in Da before they can be used for mass match with the compounds in the PubChem database.
+1
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${\text{monoisotopic mass }}={\text{ }}\left( {m / z} \right){\text{ }} \times {\text{ }}\left( {{\text{charge state}}} \right){\text{ }} - {\text{ adduct}}$$\end{document}
+Some common adduct values are 1.007276, 22.9892, and 38.9632 Da for [M + H]
++
+, [M + Na]
++
+, and [M + K] + in positive mode and −1.007276, 34.9694, and 78.918885 for [M−H]
+−
+, [M + Cl]
+−
+, and [M + Br]
+−
+in negative mode, respectively. A useful calculator for common adducts can be found at
+https://fiehnlab.ucdavis.edu/staff/kind/metabolomics/ms-adduct-calculator/
+. Notably, multiple-charged ions are likely but rarely seen in metabolite MS/MS spectra. However, isotope information is lost during the deisotoping process; thus, the charge state cannot be evaluated. In this work, for a proof of principle of the designed FSA algorithm, all fragment peaks in a spectrum were considered as single-charged ions.
+Contamination and ambiguous peak removal
+All peaks with masses greater than the precursor mass after mass conversion were removed as they were likely attributed to adducts, multimers, coelution, false centroiding/deisotoping processes, and the presence of contaminants. Furthermore, peaks within [0, −2] Da of the precursor mass were also removed because they were usually caused by false centroiding or deisotoping. An artificial precursor peak was added back to the MS/MS spectrum. Its
+m/z
+value was obtained from the precursor ion selection scan and its height was set to the same value as that of the highest peak in the spectrum. The purpose of this manipulation was to avoid inaccurate or missing precursors due to false centroiding, false deisotoping, or high-energy collisions. Finally, all the peak heights in the MS/MS spectrum were normalized such that the largest height was set to 100. To reduce false MDRs caused by ambiguous peaks, all peaks with height less than 0.5 after the normalization were also removed. After all the preprocessing steps, spectra that did not contain any fragment peaks were assigned with the closest formula by conventional mass match.
+Determination of mass matching tolerance
+A mass matching tolerance shall be determined before the possible chemical formulas can be searched for each peak in a MS/MS spectrum. An appropriate tolerance mostly depends on the accuracy of the mass spectrometer, including instrument types (QTOF, QTOF, OT, ITFT, QFT, etc.), vendors (Agilent, Bruker, Thermo Scientific, Waters, etc.), and years of release. However, such information was generally not available in the databases. Some commonly selected tolerance in the literature ranged from 5 to 25 parts per million (ppm) (Dührkop et al.,
+2019
+; Ludwig et al.,
+2020
+; Schymanski et al.,
+2017
+; Tsugawa et al.,
+2016
+; Wang et al.,
+2014
+; Wang et al.,
+2021
+).
+In this study, instead of relative tolerances in ppm, absolute tolerances in Da were adopted for spectra from different instruments. The selection was based on the observations that a suitable ppm value for a precursor is sometimes too stringent for its small fragments. In the seven datasets from open database, the mass matching tolerances for QTOF, OT, ITFT, and QFT spectra were found to be 1.3, 1.1, 0.6, and 0.5 milli-Da (mDa), respectively. These values were consistent across datasets excerpted from different databases. Notably, the MAXIS spectra exhibited a lower mass accuracy than other QTOF spectra and its mass matching tolerance was found to be 2.9 mDa instead of 1.3 mDa for other QTOF spectra. These settings may seem large for their corresponding instruments. However, these spectra were contributed from multiple sources using different machines and likely different protocols that eventually leads to variations in the mass tolerance. In comparison, the tolerance of 0.5 mDa was set for the CASMI_OT owing to a single and calibrated instrument. The optimal tolerance is instrument dependent. It is suggested that the FSA can be conducted on some known metabolites to probe for the optimal tolerance before applying it to a real experiment.
+Spectra whose precursor mass matched with only one chemical formula within the matching tolerance were classified as sole candidates without being further analyzed by FSA. In addition, spectra whose precursor does not match with any formula within the matching tolerance were denoted as unidentifiable. However, spectra whose fragments did not match with any formula (thus, no MDR) were assigned with the closest formula to their corresponding precursors by conventional mass match.
+Mother–daughter relationship and formula ranking score
+Given a total of
+n
+peaks, including a precursor with monoisotopic mass (
+m
+p
+) and
+n
+− 1 fragments with monoisotopic masses (
+m
+f
+1
+,
+m
+f
+2
+, …,
+m
+f
+(
+n
+−1)
+,
+n
+> 1 and
+m
+fi
+<
+m
+fj
+for
+fi
+<
+fj
+) in a preprocessed MS/MS spectrum, let there be
+d
+possible chemical formulas
+c
+p
+1
+,
+c
+p
+2
+, …,
+c
+p
+d
+for precursor
+m
+p
+within a mass tolerance
+ε
+(
+ε
+is dependent of the instrument accuracy) and
+d
+i
+chemical formulas
+c
+fi
+1
+,
+c
+fi
+2
+, …,
+c
+fi
+di
+for fragment
+m
+fi
+, 1 ≤ i ≤ (
+n
+− 1). Let
+c
+fj
+t
+⊃
+c
+fi
+s
+denote the MDR between the
+t
+-th chemical formula of
+m
+fj
+and the
+s
+-th chemical formula of
+m
+fi
+, where
+m
+fj
+<
+m
+fi
+, and the chemical components of
+c
+fi
+s
+are a subset of those of
+c
+fj
+t
+. For instance, the MDR C
+10
+H
+15
+N
+3
+O
+4
+⊃ C
+5
+H
+7
+N
+3
+O exists as the C, H, N, and O components in C
+5
+H
+7
+N
+3
+O are a subset of C
+10
+H
+15
+N
+3
+O
+4
+.
+The precursor formula with the highest ratio of MDRs among all fragment formulas is anticipated to be the most likely formula of the underlying compound. A numerical study will be presented to demonstrate the effectiveness of this point. Therefore, the ratio of MDRs among all fragment formulas is used as a score to rank all chemical formulas of a precursor, as shown in Eq. (
+2
+).
+2
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${\text{score}}=\frac{{{\text{Number~of}}~MDRs~{\text{among}}~\operatorname{peak} ~\operatorname{formulas} }}{{\left( {\begin{array}{*{20}{c}} n \\ 2 \end{array}} \right)}}$$\end{document}
+where score ∈ [0, 1]. However, multiple formula candidates can receive the same score, particularly when the number of fragments is small. In such cases, the average of absolute differences between the fragment mass and those of their matched formulas is computed for each of the precursor formulas and the one with the smaller value is assigned with a better rank.
+Characteristic fragments
+For a MS/MS spectrum that contains many fragments (
+n
+is large), some of which also associated with many formulas (
+d
+i
+is large, 1 ≤
+i
+≤
+n
+) within the given tolerance, the number of all possible MDR combinations can be enormous. To resolve this problem, a limit (MaxComb) is set for the maximum number of MDR combinations. For each precursor formula in a spectrum, if the combination number was greater than MaxComb, the fragment with the most possible formulas was omitted when computing the combinations. The process was continued until the number of combinations was equal or less than the MaxComb value.
+However, the adequate value for MaxComb is unknown and affects the formula ranking result as well. A numerical study was conducted to explore the relationship between the MaxComb value and the ranking result using the score in Eq. (
+2
+). The percentages of metabolites whose correct formula exhibited the highest score (rank #1) among all the possible formulas were recorded at various MaxComb values of 2
+0
+, 2
+1
+, …, 2
+8
+, and 2
+9
+for all the test datasets. Surprisingly, the percentage of the correct rank#1 precursor formula increased as the MaxComb value was decreased and reached a maximum when the MaxComb value was reduced to 1, as shown in Supplementary Fig
+S1
+.
+The above result for reaching the highest-ranking percentage as MaxComb = 1 reveals that any fragment exhibiting multiple MDRs with other peaks of higher mass should be removed when evaluating the score of a precursor formula. A real MS/MS spectrum of salbutamol (HMDB ID: HMDB0001937) is used as a demonstration in Fig.
+1
+, where the smallest fragment (mass = 164.0710) exhibits two MDRs (C
+11
+H
+19
+N
+4
+O
+2
+→ C
+9
+H
+10
+NO
+2
+) and (C
+11
+H
+19
+N
+4
+O
+2
+→ C
+7
+H
+8
+N
+4
+O) with the precursor formula C
+11
+H
+19
+N
+4
+O
+2
+; thus, the fragment should be removed (or the associated MDRs should be neglected) when evaluating the score of the formula. As a consequence, all the remaining fragments are represented by a single formula and hence exhibit unique MDRs with other peaks of higher mass. Such fragments are called characteristic fragments (CFs) in this work because the number of MDRs among them are crucial for the score, and thus the ranking, of the precursor formula. Noted that whether a fragment is a CF or not is precursor formula-dependent. For instance, in Fig.
+1
+, the smallest fragment is a CF for the precursor formula C
+13
+H
+21
+NO
+3
+but not for C
+11
+H
+19
+N
+4
+O
+2
+and C
+9
+H
+24
+N
+2
+O
+3
+P. In addition, the consistent results across datasets in S1 suggest that the capability of the CFs in ranking the correct precursor formula was dataset- and instrument-invariant.
+Fig. 1
+Possible chemical formulas of the ion peaks in a salbutamol MS/MS spectrum (HMDB ID: HMDB0001937) and MDRs among the peaks. The numbers in the row of MDRs represent all the MDRs for the corresponding precursor formula, whereas those in the parentheses represent the MDRs to CFs. The numbers in parentheses are used as numerators in (2) to rank the precursor formulas
+Formula subset analysis
+With the critical terms defined, the proposed FSA method can be implemented by the following steps:
+Step 1. Spectral Preprocessing: Given a peak list of
+m/z
+values in an MS/MS spectrum, compute the monoisotopic mass of the precursor and those of the fragments. Perform other manipulations as mentioned in the
+Spectral Preprocessing
+section if applicable.
+Step 2. Formula Search: Search for possible chemical formulas for the precursor and for each of the fragments under a given mass matching tolerance. If no formula can be found for the precursor, the spectrum is considered unidentifiable and the ranking score is set to −1. Additionally, if only one formula is found for the precursor, the spectrum is considered identified and the score is computed by Eq. (
+3
+).
+3
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${\text{score}}=\hbox{max} \left( {0,~\frac{{{\text{matching}}~{\text{tolerance}} - {\text{mass}}\,~{\text{difference}}}}{{{\text{matching}}~\,{\text{tolerance}}}}} \right)$$\end{document}
+Step 3. MDR Search: Search all MDRs between chemical formulas of two peaks. If no MDR can be found among all peaks, the spectrum is noted inapplicable and the chemical formulas of the precursor are found via mass match and ranked by the scores computed by Eq. (
+3
+).
+Step 4. CF Determination: For each precursor formula, determine its corresponding CFs, and its score is computed by Eq. (
+4
+).
+4
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${\text{score}}=\frac{{{\text{Number}}~{\text{of}}~{\text{unique}}~{\text{MDRs}}~{\text{among}}~{\text{CF}}~{\text{formulas}}}}{{\left( {\begin{array}{*{20}{c}} n \\ 2 \end{array}} \right)}}+1$$\end{document}
+where
+n
+is the total number of fragments (including the precursor) whose chemical formula can be found and the denominator denotes the number of all the 2-combinations of the
+n
+fragments. The additional number one in the formula is used to distinguish from the mass matching scores in Eq. (
+3
+), whose range is [0, 1].
+Step 5. Formula Ranking: Rank the precursor formulas using their scores. If ties are encountered, assign a better rank to the formula with the smaller average of absolute mass differences between the fragments and their matched formulas.
+The MS/MS spectrum of salbutamol in Fig.
+1
+is used as an example to demonstrate the effectiveness of FSA: The spectrum contains a group of three peaks with
+m/z
+values of 218.1191, 190.1234, and 163.0637 Th in negative ion mode (the precursor
+m/z
+is not present). After spectral preprocessing, the resultant spectrum consisted of a precursor and three fragments with monoisotopic molecular masses of 239.1521, 219.1264, 191.1307, 164.0710, and 83.0739 Da (i.e.,
+n
+= 4). The search for possible chemical formulas under a tolerance of 10 ppm revealed accordingly 3, 4, 4, and 3 formulas for the four peaks, respectively. Despite the 3 × 4 × 4 × 3 = 144 possible combinations, only 16 MDRs among the peak formulas were found. The best combination corresponding to the three precursor formulas and their associated MDRs are indicated by arrows. Although the original number of MDRs was the same for the three combinations (all 5 s), some MDRs in the latter two combinations exhibited multiple choices (dashed lines in Fig.
+1
+) for the daughter fragment (hence, not a CF). After removing such daughter fragments and the associated ambiguous MDRs, the first combination, which consisted of C
+13
+H
+21
+NO
+3
+, C
+13
+H
+17
+NO
+2
+, C
+12
+H
+17
+NO, and C
+9
+H
+10
+NO
+2
+, exhibited the most MDRs and the highest score of 1.8333 (5/6 + 1 by Eq. (
+4
+)). The precursor formula of C
+13
+H
+21
+NO
+3
+was indeed the correct formula for salbutamol.
+The flowchart of the overall formula ranking process is illustrated in Fig.
+2
+. First, MS/MS spectra were selected using the four criteria mentioned in the
+Construction of the Test Datasets
+section. Qualified spectra were preprocessed to convert the protonated/deprotonated peaks to their monoisotopic forms, and peaks with masses larger than that of the precursor were removed. Possible formulas of the remaining peaks in the preprocessed spectra were searched via mass match under a given tolerance. Spectra whose precursor did not display any chemical formula were considered unidentifiable, whereas those with a single formula were regarded as identified. The remaining spectra that did not present any MDR were identified by mass match. Otherwise, the spectra were processed with CF determination and then formula ranking using the scores in Eq. (
+4
+).
+Fig. 2
+Flowchart of the proposed formula ranking process
+Performance evaluation and improvement
+The performance of FSA was analyzed on various spectra in eight datasets. The analysis results can demonstrate the formula ranking capability of FSA toward a variety of metabolite species, mass ranges, experiment settings, instrument types, and manufacturers. A comparison with a state-of-the-art formula ranking tool was also conducted. However, as mentioned earlier, different MS/MS spectra of a metabolite can be acquired under different experimental conditions, resulting in different fragmentation patterns and different formula rankings from FSA. Several factors including fragment number, variance of fragment masses, and ratio of CFs were analyzed to provide guidelines for a better ranking result. Furthermore, the expandability of FSA for involving more chemical elements such as halogens was tested and several performance improvement ideas were investigated.
+Results
+Determination of mass matching tolerance
+To determine a suitable mass matching tolerance for spectra in each dataset, various values ranging from 0.1 to 3 with a step size of 0.1 mDa were tested and the percentage of spectra in each dataset that were assigned with the correct formula was recorded, as shown in Supplementary Fig
+S2
+. The annotated points showing matching tolerance and correct ranking percentage were mostly corresponding to the highest percentage readings, except for the three HMDB datasets. The exceptions were due to situations in which the precursor information was missing in these datasets and therefore the theoretical value was used for mass match. As a result, the correct formulas of these HMDB spectra were always available during mass match, leading to the persistent percentage increase with the decreasing tolerance.
+The matching tolerances of the three HMDB datasets were instead evaluated directly from their MS/MS spectra. The idea was to measure the major mass differences between the possible precursors in the MS/MS spectra and their theoretical values. To avoid false precursor peaks, only spectra with peaks close (< 3 mDa) to their theoretical precursor values were included and the tolerance was selected at 80% of the qualified spectra. The histograms and their accumulated version of the qualified spectra in the three datasets are shown in Supplementary Fig
+S3
+, from which the mass matching tolerances for the three datasets HMDB_QTOF, HMDB_ITFT, and HMDB_QFT, were 1.3, 0.6, and 0.3 mDa, respectively.
+However, for MS/MS spectra generated from a high-resolution instrument such as QFT, a small mass matching tolerance of 0.3 mDa usually leads to a single candidate from mass match. In fact, in the HMDB_QFT dataset, more than 77.8% of spectra had their chemical formula identified via mass match using the tolerance of 0.3 mDa, leaving a very limited room for the FSA to demonstrate its effectiveness in such spectra. Alternatively, a larger tolerance of 0.5 mDa was used in this dataset such that the percentage of mass matched spectra was considerably reduced from 77.83% to 20.64%, whereas the overall correction percentage slightly decreased from 99.86% to 98.05%, as shown in Supplementary Fig
+S4
+. In summary, the mass matching tolerances in FSA for the MAXIS, QTOF, OT, ITFT, and QFT spectra were set to 2.9, 1.3, 1.1, 0.6, and 0.5 mDa, respectively. As previously noted, the tolerance for CASMI_OT was set to 0.5 mDa owing to the use of a single instrument and a rigorous calibration procedure.
+Determination of effective spectral peaks
+As previously mentioned, some peaks in the MS/MS spectra are attributed to coelutions, false centroiding or deisotoping. Moreover, some unstable fragments may not exist in nature environments and cannot be found in the chemical database. Such fragments can degenerate the performance of FSA. Fortunately, these fragments usually appear in the spectra with low abundances. An experiment was conducted to elucidate the relationship between the usage of the top abundant peaks in the spectra and the corresponding formula ranking performance of FSA. Supplementary Fig
+S5
+shows the experiment result, in which various numbers of the top abundant peaks ranging from 5 to 100 were used in FSA and the performance was represented by the percentage of spectra that were assigned with the correct formula. Although the best performance in the eight datasets occurred at different numbers of top abundant peaks (as annotated in the figure), these numbers were mostly near 30 and the performances around the top-30 abundant peaks in each dataset were similar. The experimental result suggests that, by using at most the top-30 abundant peaks, the performance of FSA can be mostly improved or at least maintained in comparison with using all the fragments in the spectra. More importantly, the reduction in peak number can considerably reduce the effort in MDR evaluations, resulting in significant savings in computation time.
+Performance evaluation
+The FSA formula ranking process was applied to the eight test datasets using the aforementioned mass matching tolerances, and the top-30 abundant fragments in each spectrum. The performances are summarized in Table
+2
+, and the detailed results, including the FSA scores and ranking of the correct metabolite of the eight test datasets, are provided in Supplementary File 1.
+Table 2
+Percentage of metabolites/spectra in the eight test datasets with correctly assigned chemical formula
+Datasets
+(Mass Tol.)
+Spectra/Metabolites
+Total qualified
+The correct formula is
+The sole candidate
+The rank#1
+In top-3 ranks
+In top-5 ranks
+HMDB_QTOF
+(1.3 mDa)
+Spectra
+3029
+426 (14.06%)
+2105 (69.49%)
+2677 (88.38%)
+2852 (94.16%)
+Metabolites
+821
+135 (16.44%)
+670 (81.61%)
+776 (94.52%)
+803 (97.81%)
+HMDB_ITFT
+(0.6 mDa)
+Spectra
+2601
+1006 (38.68%)
+2495 (95.92%)
+2596 (99.81%)
+2601 (100.00%)
+Metabolites
+242
+87 (35.95%)
+239 (98.76%)
+242 (100.00%)
+242 (100.00%)
+HMDB_QFT
+(0.5 mDa)
+Spectra
+1439
+297 (20.64%)
+1411 (98.05%)
+1439 (100.00%)
+1439 (100.00%)
+Metabolites
+221
+49 (22.17%)
+221 (100.00%)
+221 (100.00%)
+221 (100.00%)
+NPL_MAXIS
+(2.9 mDa)
+Spectra
+3561
+2 (0.06%)
+2966 (83.29%)
+3342 (93.85%)
+3421 (96.07%)
+Metabolites
+2711
+2 (0.07%)
+2389 (88.12%)
+2609 (96.23%)
+2648 (97.68%)
+NPL_QTOF
+(1.3 mDa)
+Spectra
+1373
+48 (3.50%)
+939 (68.39%)
+1200 (87.40%)
+1274 (92.79%)
+Metabolites
+1360
+48 (3.53%)
+938 (68.97%)
+1193 (87.72%)
+1265 (93.01%)
+NPL_OT
+Spectra
+270
+13 (4.81%)
+249 (92.22%)
+267 (98.89%)
+268 (99.26%)
+(1.1 mDa)
+Metabolites
+239
+13 (5.44%)
+221 (92.47%)
+237 (99.16%)
+238 (99.58%)
+LIPIDS_OT
+(1.1 mDa)
+Spectra
+18,084
+7491 (41.42%)
+12,219 (67.57%)
+17,781 (98.32%)
+18,075 (99.95%)
+Metabolites
+896
+363 (40.51%)
+814 (90.85%)
+891 (99.44%)
+893 (99.67%)
+CASMI_OT
+(0.5 mDa)
+Spectra
+333
+94(28.23%)
+331(99.40%)
+333(100.00%)
+333(100.00%)
+Metabolites
+302
+93(30.79%)
+300(99.34%)
+302(100.00%)
+302(100.00%)
+Total
+Spectra
+30,690
+9377 (30.55%)
+22,715 (74.01%)
+29,635 (96.56%)
+30,263 (98.61%)
+Metabolites
+6792
+790 (11.63%)
+5792 (85.28%)
+6471 (95.27%)
+6612 (97.35%)
+The bold-faced numbers indicate the number (percentage) of rank#1 spectra/metabolites that were assigned with the correct chemical formula
+The ranking capability of the FSA was represented by three values: rank#1, in top-3 ranks, and in top-5 ranks. Rank#1 shows the number of metabolites/spectra whose correct chemical formulas were ranked first among all the possible candidates by FSA. The “in top-3 ranks” and “in top-5 ranks” mean that the correct formula of the precursor was among the top-3 and top-5 ranked formula candidates, respectively. The rank#1 demonstrates the capability of FSA to pinpoint the correct formula from all the possible candidates, whereas top-3 and top-5 ranks show its capability of reducing the number of possible candidates. Notably, to present the overall formula ranking capability of the proposed process in Fig.
+2
+and to compare with the state-of-the-art performance, the numbers of rank#1, top-3 rank, and top-5 rank in Table
+2
+include those inapplicable spectra whose correct chemical formulas were determined by mass match under the dataset-specific mass matching tolerance.
+Moreover, because different MS/MS spectra (e.g., different instrument settings) for a compound may obtain different ranking results, the subsequent test results focused on metabolite instead of spectrum. Nevertheless, some spectra of a metabolite could be found inapplicable, whereas others were applicable. Consequently, the numbers of inapplicable and applicable metabolites do not add up to the number of total metabolites in Table
+2
+. The issue of which types of spectra are more likely found with the correct formula will be addressed in the latter section.
+The rank#1 data in Table
+2
+shows that FSA correctly assigned 85.15% of the metabolite (74.01% of the spectra) formulas in the eight test datasets spanning four different data sources of HMDB, GNPS-NIH-NPL, GNPS-PNNL-LIPIDS, and CASMI. These results demonstrate that by simply evaluating the MDRs of the CFs in a MS/MS spectrum, the underlying chemical formula is highly likely (> 85%) to be identified with rank#1 using FSA. If the top-3 and top-5 ranks were allowed, the percentage would improve to 95.01% and 97.20%, respectively. Although top-3 and top-5 ranks do not actually identify the formula of the underlying compound, they can help rank/reduce the possible candidates, hence reducing the subsequent identification cost. In addition to the accuracy, the precursor formula ranking performed by FSA is fast. The overall computation time of the total 30,690 MS/MS spectra in the eight datasets was approximately 12 min 30 s (0.024 s per spectrum) in the Windows 10 environment with an Intel
+®
+Core™ i9-10900 F CPU. Both formula selection and MDR computation can be achieved via logical operations, making FSA a very effective algorithm for precursor formula ranking.
+Probable causes of datasets with low formula ranking accuracies
+The formula ranking accuracies for spectra in the three datasets, HMDB_QTOF, NPL_QTOF, and LIPID_OT, were lower (< 70%) than those of the other four datasets. The causes of the low accuracy were investigated. First, the low-ranking accuracies may be attributed to the low CF ratios in the three datasets. This argument can be inferred from Supplementary Fig
+S6
+, where the ratios of informative fragments in the spectra of the eight test datasets are displayed. Recalled that the proposed FSA uses the 30 most abundant fragments in a spectrum for the precursor formula ranking. Supplementary Fig
+S6
+a shows the ratio of the 30 fragments in a spectrum that can be found to match with at least one chemical formula (hereafter referred to as fragments with formula), whereas Supplementary Fig
+S6
+b demonstrates the ratio of these fragments with formula that were CFs of the correct precursor formula. As shown in Supplementary Fig
+S6
+a, the fragment-with-formula ratios were rather high, but the CF ratios were among the lowest in HMDB_QTOF and NPL_QTOF. The high fragment-with-formula ratios were most likely caused by low mass accuracy and thus large mass matching tolerance, whereas the low CF ratios mainly resulted from unstable fragments and false peaks. The unstable fragments denote product ions that only exist during high-energy dissociation, not in the natural environment; thus, their formulas are not in the compound database. In contrast, the false peaks are signals in a spectrum that do not represent any compound-related product ions. These peaks generally result from false deisotope/centroiding process, contamination, or coelution. Both unstable fragments and false peaks may be matched with false formulas under large tolerance that usually exhibit no MDR with the precursor, leading to a high fragment-with-formula ratio and a low CF ratio in the corresponding spectrum. Although the spectra in the NPL_MAXIS dataset were also generated from QTOF MS, the differences in collision energy, experiment settings, and instrument manufacturer can lead to different performances.
+However, the causes of low-ranking accuracy in the LIPID_OT dataset were different from those in the previous two QTOF datasets as the spectra therein exhibited both low fragment-with-formula and low CF ratios. Such phenomena may be due to special functional groups, various branch chain structures, and different double bond locations in the lipids. Particular fragmentation mechanisms (e.g., charge-driven and charge-remote processes) of lipid may provide clues for known and predicted fragments in a spectrum. However, such predicted fragments may not have been included in the database, leading to low fragment-with-formula ratios. However, the high molecular mass of some lipid fragments increased the chance of false formulas during mass match, which in turns reduced the number of MDRs and the CF ratios.
+Furthermore, in the NPL_QTOF dataset, the formula candidates of the precursor in 81 (5.9%) spectra contained no correct formula within the given mass matching tolerance (i.e., 1.3 mDa). Although such spectra also existed in the NPL_OT and LIPID_OT datasets, the respective percentages were very low (0.74% (2 spectra) and 0.05% (9 spectra, respectively). Moreover, 1141, 5, 5, 3, 218, and 1 spectra were created in the years of 2014, 2017, 2018, 2019, 2020, and 2021; 74 of the 81 problematic spectra were from 2020. The high percentage (33.94%, 74 out of 218) of spectra with large mass differences in 2020 may be due to changes in experiment conditions. However, such large number of unidentifiable spectra was attributed to the low formula assignment accuracy of FSA for this dataset.
+Comparison with other formula assignment tools
+Several tools have been proposed for automated metabolite formula assignment/ranking for untargeted metabolomics studies (Dührkop et al.,
+2019
+; Ludwig et al.,
+2019
+; Ruttkies et al.,
+2016a
+; Wang et al.,
+2014
+; Wang et al.,
+2021
+; Xing et al.,
+2023
+). Two state-of-the-art tools, SIRIUS (version 5.8.6, downloaded on 2024/2/23) (Dührkop et al.,
+2019
+) and BUDDY (version 0.3.8, downloaded on 2024/10/20)(Xing et al.,
+2023
+) were adopted to compare with FSA. SIRIUS constructs fragmentation trees from MS/MS spectra, ranks candidates using scoring models, and integrates databases such as CSI: FingerID (Duhrkop et al.,
+2015
+) for structural annotation. It was selected for its top performance in category 2 (best automatic structural identification - in silico fragmentation only) of the CASMI 2016 (Schymanski et al.,
+2017
+) contest and the top performance in “correct elemental formulas” of the CASMI 2022 (
+https://fiehnlab.ucdavis.edu/casmi/casmi-2022-results
+). Notably, although ZODIAC (Ludwig et al.,
+2019
+) outperformed SIRIUS in the 2016 contest, it is now also implemented in SIRIUS as an option for improvement in formula ranking. On the other hand, BUDDY adopted a different approach via bottom-up MS/MS interrogation. It assigns putative formulas to unidentified spectra and provides estimated false discovery rates (FDR). High-confidence formula predictions from BUDDY are used by deep learning tools like SingleFrag (Perez-Ribera et al.,
+2025
+) to select promising candidates for structural annotation.
+The comparisons were performed on the eight test datasets, as listed in Table
+1
+. The same chemical elements were specified in the comparisons: CHONSP in HMDB_QTOF, HMDB_ITFT, HMDB_QFT, and CASMI_OT, CHONS in NPL_MAXIS, NPL_QTOF, and NPL_OT, and CHONP in LIPID_OT. However, as the mass matching tolerance in SIRIUS can only be assigned in ppm, various values were tested to determine the best performance of SIRIUS. The comparison result is summarized in Table
+3
+.
+Table 3
+A comparison of formula assignment accuracy and computation time among Buddy, FSA, and SIRIUS
+Datasets
+Total Spectra
+Tools
+(Mass Tol.)
+Computation
+The correct formula is
+Time
+the rank#1
+in top-3 ranks
+in top-5 ranks
+HMDB_QTOF
+3029
+Buddy (20 ppm)
+48 min
+2835 (93.60%)
+2923 (96.50%)
+2933 (96.83%)
+FSA (1.3 mDa)
+1.60 min (96 s)
+2105 (69.49%)
+2677 (88.38%)
+2852 (94.16%)
+SIRIUS (14 ppm)
+51 min
+2324 (76.72%)
+2553 (84.29%)
+2606 (86.03%)
+HMDB_ITFT
+2601
+Buddy (10 ppm)
+14 min
+2493 (95.85%)
+2547 (97.92%)
+2552 (98.12%)
+FSA (0.6 mDa)
+0.63 min (38 s)
+2495 (95.92%)
+2596 (99.81%)
+2601 (100.00%)
+SIRIUS (6 ppm)
+23 min
+2323 (89.31%)
+2425(93.23%)
+2465 (94.77%)
+HMDB_QFT
+1439
+Buddy (10 ppm)
+2 min
+1430 (99.37%)
+1434 (99.65%)
+1434 (99.65%)
+FSA (0.5 mDa)
+0.42 min (25 s)
+1411 (98.05%)
+1439 (100.00%)
+1439 (100.00%)
+SIRIUS (3 ppm)
+10 min
+1408 (97.85%)
+1425 (99.03%)
+1431 (99.44%)
+NPL_MAXIS
+3561
+Buddy (10 ppm)
+699 min
+3354 (94.19%)
+3368 (94.58%)
+3369 (94.61%)
+FSA (2.9 mDa)
+2.73 min (164 s)
+2966 (83.29%)
+3342 (93.85%)
+3421 (96.07%)
+SIRIUS (20 ppm)
+204 min
+2634 (73.97%)
+2798 (78.57%)
+2860 (80.31%)
+NPL_QTOF
+1373
+Buddy
+58 min
+1324 (96.43%)
+1347 (98.11%)
+1347 (98.11%)
+FSA (1.3 mDa)
+2.03 min (55 s)
+939 (68.39%)
+1200 (87.40%)
+1274 (92.79%)
+SIRIUS (15 ppm)
+126 min
+1059 (77.13%)
+1158 (84.34%)
+1176 (85.65%)
+NPL_OT
+270
+Buddy (10 ppm)
+9 min
+262 (97.04%)
+269 (99.63%)
+269 (99.63%)
+FSA (1.1 mDa)
+0.92 min (11 s)
+249 (92.22%)
+267 (98.89%)
+268 (99.26%)
+SIRIUS (7 ppm)
+2 min
+253 (93.70%)
+263 (97.41%)
+264 (97.78%)
+LIPIDS_OT
+18,084
+Buddy (10 ppm)
+1017 min
+17,863 (98.78%)
+17,988 (99.47%)
+18,025 (99.67%)
+FSA (1.1 mDa)
+5.87 min (352 s)
+12,219 (67.57%)
+17,781 (98.32%)
+18,075 (99.95%)
+SIRIUS (20 ppm)
+1260 min
+11,268 (62.31%)
+11,765 (65.06%)
+11,924 (65.94%)
+CASMI_OT
+333
+Buddy (10 ppm)
+1 min
+330 (99.10%)
+331 (99.40%)
+331 (99.40%)
+FSA (0.5 mDa)
+0.15 min (9 s)
+331 (99.40%)
+333 (100.00%)
+333 (100.00%)
+SIRIUS (5 ppm)
+2 min
+309 (92.79%)
+327 (98.20%)
+332 (99.70%)
+Total
+30,690
+Buddy
+1848 min
+29,964 (97.63%)
+30,233 (98.51%)
+30,260 (98.60%)
+FSA
+12.50 min (750 s)
+22,715 (74.01%)
+29,635 (96.56%)
+30,263 (98.61%)
+SIRIUS
+1678 min
+21,578 (70.31%)
+22,714 (74.01%)
+23,058 (75.13%)
+The bold-faced numbers indicate the best performance among the three tools
+Overall, Buddy demonstrated the highest formula assignment accuracy (97.63%) among the three tools. However, FSA was able to rapidly screen five candidate formulas (750/30690 = 0.024 s/spectrum), with the correct one included in more than 98% of cases. Individually, FSA attained similar or better ranking accuracies than SIRIUS in five of the eight datasets, except for the two QTOF datasets. The inferior performance of FSA in the QTOF spectra may be due to the low CF ratios in these datasets, as demonstrated in Supplementary Fig
+S6
+b. Although the FSA employed CFs to remove ambiguous MDRs in a rather efficient and effective manner, more sophisticated rules, such as those employed in SIRIUS and Buddy, which involve structural information, are needed to remove false MDRs. However, SIRIUS faces difficulties to address compounds with masses larger than 850 Da. Due to this limitation, 13, 258, 16, 2, and 1905 compounds in HMDB_QTOF, NPL_MAXIS, NPL_QTOF, and NPL_OT, respectively, could not be processed by SIRIUS, indicating that the tool is less suitable for large metabolites such as lipids. Furthermore, although SIRIUS + ZODIAC usually outperform SIRIUS alone, as shown in Supplementary Table
+S1
+, the former exhibited small variations in different runs due to the Gibbs sampling used in ZODIAC.
+The selected mass matching tolerances for the SIRIUS to achieve the best formula assignment accuracy in the eight datasets were 14, 6, 3, 20, 15, 7, 20, and 5 ppm, respectively. These tolerances selected for SIRIUS are highly correlated (correlation coefficient = 0.76) with those for FSA (i.e., 1.3, 0.6, 0.5, 2.9, 1.3, 1.1, 1.1, and 0.5 mDa). This phenomenon demonstrates that the matching tolerances used in FSA actually reflected the properties of the spectra in the corresponding dataset rather than were tailored for the performance of FSA. Notably, the tolerances used in SIRIUS were selected to achieve the best accuracies in the eight datasets such as to compare with those of FSA. The matching tolerance for Buddy was less sensitivity to the formula assignment accuracy, 20 ppm was used for the MAXIS and QTOF datasets and 10 ppm was used for the others. The changes in ± 5 ppm did not change the results.
+In addition to accuracy, computation time was also tested among the three tools. From Table
+3
+, FSA was 148 (1848 min/12.5 min) times faster than Buddy and 134 (1678 min/12.5 min) times faster than SIRIUS, making it rather suitable for prescreening formula candidates for the formula assignment tools. Such a comparison may not seem fair as FSA only imposed no more than 30 most abundant fragments in a spectrum for the formula assignment, whereas Buddy and SIRIUS used all the fragments. However, even if all the fragments are used for the assignment, FSA can still complete the eight datasets in 33.52 min (0.066 s per spectrum), which is more than 50 (1678 min/33.52 min) times faster than both Buddy and SIRIUS.
+Performance impact on artificial noise
+The spectral preprocessing steps listed in Sect.
+2.2
+cannot remove all the noise in the signal. Yet, the quality and quantity of the noise is unknow. To evaluate the impact on FSA’s performance with known noise level, 1, 3, 5, 10, and 20 noise peaks were added into the spectra of the eight test datasets. Recall that FSA only imposed at most the 30-top peaks in a spectrum for formula ranking and prescreening. The number of noise peaks added to the spectra ensured that when the maximum number of 20 noise peaks were added, the noise level was no less than 40% (at most 30 original and additional 20 peaks) in the spectrum. The noise peaks were added uniformly and randomly in the range of [0 ~ precursor m/z], with intensities also assigned uniformly and randomly in the range of 0 ~ 10% the height of the base peak. For each spectrum, the experiments were conducted 10 times and the average of the top-1 formula accuracy was computed and the result was shown in Supplementary Fig
+S7
+. In general, the added noise exhibited small impact to the performance of FSA. The reduction in accuracy was mostly less than 5%, except for the HMDB_QTOF (5.15%) and the NPL_OT (7.66%).
+Performance impact on halogen inclusion
+Most metabolites naturally produced in organisms lack halogen atoms. Halogenated metabolites are predominantly derived from exogenous sources, such as dietary intake, pharmaceuticals, or environmental pollutants, or are biosynthesized by specialized enzymes. Research on halogenated metabolites primarily encompasses environmental toxicology, drug metabolism, food additive metabolism, and marine natural products. In previous analyses, only compounds composed of C, H, O, N, S, and P were considered; in the present study, compounds containing additional halogen elements, specifically F, Cl, Br, and I, were also included. As a result, the original list of 928,369 reference chemical formulas from PubChem was increased to 2,613,203 formulas. In addition, the number of qualified MS/MS spectra in the test datasets was also increased, as presented in Supplementary Table
+S2
+. Notably, the LIPID_OT dataset was removed from this test as no halogen element was found in the dataset.
+The performances of FSA after including the halogen elements are summarized in Supplementary Table
+S3
+. The rank#1 data in the table shows that the proposed FSA correctly identified 77.84% of the metabolite (74.54% of the spectra) formulas in the six test datasets. These results demonstrated that after including the halogen elements in the formula list, FSA can still maintain > 77% accuracy in pinpointing (rank#1) the underlying chemical formula in the eight datasets. If the top-3 and top-5 ranks were used, the percentage would improve to 89.59% of the metabolites (88.0% of the spectra) and 92.60% of the metabolites (91.59%% of the spectra), respectively. In comparison with the previous test without the halogen elements, the performance of FSA decreased 7.44% (85.28%→77.84) in metabolite but increased 0.5% (74.01%→74.54%) in spectrum after the four halogen elements were added. Notably, FSA exhibited considerable performance reductions in HMDB_QTOF (81.61%→67.56% for metabolite and 69.49%→55.68% for spectrum) and NPL_QTOF (68.97%→59.95% for metabolite and 68.39%→59.53% for spectrum). This may be due to the combination effect of high energy collision and halogen elements in the spectra, producing abundant fragments that were nonexistent in the compound database. If the two QTOF datasets were not considered, the performance dropped from 90.74% (4184 of 4611 metabolites) to 86.46% (3658 of 4231 metabolites), a 4.28% of reduction.
+In addition, the total computation time for the 14,689 spectra was 39 min 32 s with an average of 0.16 s per spectrum, which was 6.67 (0.16/0.024) times longer than that of the previous test. However, the increases of 1.67 times (6→10) in element number and 2.81 times (928,369→2,613,203) in reference formula number resulted in increases of 1.67×
+n
+and 2.81 times in MDR calculation and formula candidates search, respectively, where
+n
+is the additional number of formula candidates from all fragments. With such additional computations and large overhead in passing data (more than half of the computation time), the proposed FSA was still able to process an MS/MS spectrum in a fraction of second and with a limited performance decrease, showing its capability of performing reliable formula ranking with the expansion of compound compositions.
+Performance impact of adduct inclusion
+In addition to halogen, the FSA was also tested on it capability of assigning the correct formula to MS/MS spectra generated from metabolites with adducts such as sodium ([M + Na]
++
+), potassium ([M + K]
++
+), and chloride ([M + Cl]⁻). Cation/anion adducts observed in mass spectra are not present as stable species in living organisms. Instead, they are transient gas-phase ions formed during the ionization process, reflecting the interaction of the analyte with available ions (e.g., Na⁺, K⁺, Cl⁻) in the solvent or ion source environment, and hence may not be found in the PubChem database. Instead of expanding the search database as done for halogen inclusion, specific rules were developed to iteratively account for potential adducts in both the precursor and its fragment ions. In addition, constraints were introduced in the FSA to improve adduct detection, such as prohibiting protonated precursor ions from generating cationic adduct fragments, while allowing cationic precursors to produce protonated fragments. Three datasets, namely NPL_MAXIS_Adduct and NPL_OT_Adduct, comprising 1,206 and 379 spectra respectively with adducts [M + Na]
++
+, [M + K]
++
+, or [M + Cl]⁻, were extracted from the GNPS–NIH–NPL dataset for testing. However, the results were unsatisfactory: only 8.21% and 9.23% of spectra were correctly assigned the top-ranked (#1) formula by FSA. If the top-5 candidates were considered, the percentage were increased to 65.84% and 29.55%. Some of the incorrect rankings were due to close m/z values between ions with two different adducts. For example, a metabolite C
+31
+H
+28
+O
+14
+with a chloride adduct ([M + Cl]⁻) in negative ion mode has a fragment at m/z of 145.0282, which can be either annotated as [M + Cl]⁻ with formula C
+9
+H
+6
+O
+2
+or can be annotated as [M-H]⁻ with formula C
+3
+H
+10
+O
+4
+. However, both annotations of the fragment exhibit MDR with the precursor and hence the MRD is not accounted for due to the violation of the definition of a CF. Such an ambiguity requires additional rules (probably chemical ones) to determine the correct one.
+Performance consistency in metabolite mass
+The formula ranking capability of FSA toward different metabolite masses in the eight test datasets was analyzed. The analysis result is shown in Supplementary Fig
+S8
+, in which only the metabolites whose formulas were actually assigned by FSA are displayed. Supplementary Fig
+S8
+a shows the number of such metabolites in total and in each dataset, whereas Supplementary Fig
+S8
+b illustrates the percentage of metabolites in (a) that were assigned with the correct formulas. Some of the lines are disconnected at certain mass ranges due to lack of metabolite in those mass ranges. In addition, the metabolites were divided into different mass ranges from 0 to 1500 Da for every 100 Da. The number of metabolites instead of spectra were considered as multiple spectra can correspond to the same metabolite, each with different collision energies, particularly in the HMDB datasets. Some of such spectra may either contain few fragments (low energy) or only very low abundant fragments (high energy), resulting in few MDRs, being not suitable for FSA.
+As indicated in Supplementary Fig
+S8
+b, the averaged assignment accuracy of FSA (green line) exhibits a rather stable behavior (mostly ≥ 75%) across the entire mass range. The larger variations in the high mass range 1000–1500 Da compared to the low mass range 100–1000 Da may be due to small sample size (< 40) in the datasets. From the aspect of individual dataset, FSA exhibited the best performance in the HMDB_QFT, followed by HMDB_ITFT, NPL_OT, NPL_MAXIS, LIPID_OT, HMDB_QTOF, and NPL_QTOF, which coincides with the data in Table
+2
+. The worse performance in the two QTOF datasets may be due to the low percentage of CFs in the spectra, as previously discussed. The performance of FSA to large mass (> 600 Da) metabolites in the two QTOF datasets (red and blue lines in Supplementary Fig
+S8
+b) seemed contradictory. However, the sample sizes were small in these two sets. More test data is required before deriving any conclusion.
+Suitable types of spectra
+As MDRs of CFs are both critical to the FSA, the accuracy, amount, and location of the fragment peaks can all contribute toward the final score and rank of a spectrum. The manner fragments should appear in a spectrum for the FSA to provide an accurate formula ranking was also investigated.
+First, the relationship between the formula ranking capability of the FSA and number of fragments in a spectrum was analyzed. Supplementary Fig
+S9
+shows boxplots illustrating whether the fragment numbers were differently distributed between spectra whose correct formulas were ranked #1 (R1) and those that were otherwise ranked (R2+) in each of the eight test datasets. At the top of each boxplot, a
+p
+-value computed by the one-sided Wilcoxon rank sum test is displayed, indicating their differences in the median values as the fragment numbers were not normally distributed (
+p
+< 0.01 by both the Kolmogorov–Smirnov (K–S) test and the Anderson–Darling (A–D) test). The fragment number in the vertical axes is drawn in the logarithmic scale due to the large value range (102–104) among datasets. The median fragment numbers of the R1 spectra were 14, 14, 22, 219, 1276, 30, 74, and 15 whereas those of the R2 + spectra were 13, 13.5, 13, 101, 802, 17, 66, and 39.5 in the eight test datasets, respectively. Although the fragment numbers in both groups were not significantly different, the fragment numbers in the R1 spectra were mostly higher than those in the R2 + spectra, suggesting that higher fragment numbers in a spectrum may have a higher chance for correct formula assignment by FSA.
+Next, the distribution of fragment peaks in a spectrum was analyzed based on the standard deviation (SD) of the absolute distances between two neighboring peaks. The precursor peak was added to the spectrum (in case it was missing due to high-energy collision) to distinguish between peak clusters with high and low mass values. The boxplots of the SDs in the rank#1 spectra versus those in the non-rank#1 ones for the eight datasets are presented in Supplementary Fig
+S10
+. The median SDs of the R1 spectra by the FSA method were 13.00, 15.03, 12.82, 3.71, 0.77, 13.23, 22.79, and 10.54, whereas those of the R2 + spectra were 15.98, 22.93, 22.89, 7.45, 1.21, 55.75, 24.76, and 10.30 in the eight test datasets, respectively. The one-sided Wilcoxon rank sum test showed that the SDs of the neighboring peak distances in the R1 spectra were significantly lower (
+p
+< 0.01) than those in the R2 + spectra in almost all the eight datasets (except the CASMI_OT), suggesting that a lower SD of peak distances in a spectrum may also improve formula assignment performance. The result is understandable because fragment peaks with small inter-peak distance SDs are likely to be more evenly distributed in an MS/MS spectrum. This reflects a higher chance for more MDRs and a higher score for the underlying formula of the spectrum. The exception for the CASMI_OT dataset may be attributed to the removal of the fragment peaks not matching any subset of the chemical formula of the precursor. The SD values of both R1 and R2 + spectra in CASMI_OT were around 10, which was already a relatively small value of R1 in other datasets.
+Two other factors, namely the CF ratio and the difference between the top two scores, were also investigated. Supplementary Fig
+S11
+shows the box plots of the CF ratios in the R1 and R2 + spectra of the eight datasets. The median ratios of the CF to the 30 most abundant fragments with formula were 0.66, 0.80, 0.90, 0.80, 0.66, 0.90, 0.46, 0.88 in the R1 spectra and 0.27, 0.25, 0.80, 0.43, 0.44, 0.75, 0.27, and 0.53 in the R2 + spectra for the eight test datasets, respectively. The one-sided Wilcoxon rank sum test revealed that the CF ratios were significantly higher (
+p
+< 0.05) in the R1 spectra than in the R2 + spectra, suggesting that a higher CF ratio in a spectrum may imply a higher chance for correct precursor formula assignment by FSA.
+In addition, the difference between the top-two FSA scores represents the effectiveness of the scoring mechanism proposed in (4). Supplementary Fig
+S12
+shows boxplots of the differences between the R1 and the R2 + spectra of the eight datasets. The median differences of the top two FSA scores in the R1 spectra were 0.13, 0.40, 0.47, 0.19, 0.10, 0.24, 0.0441, and 0.40 whereas those of the R2 + spectra were 0.04, 0.05, 0.13, 0.04, 0.03, 0.03, 0.0444, and 0.04 in the eight datasets, respectively. The one-sided Wilcoxon rank sum test showed significant (
+p
+< 0.05) differences between the R1 and the R2 + spectra in all eight datasets, suggesting that a higher score difference in a spectrum may indicate a higher chance that the proposed scoring mechanism can identify the correct precursor formula. However, the median value of the R1 group was slightly smaller than that of the R2 + group in the LIPID_OT dataset, which is opposite to what occurred with the other datasets. The exceptions for the LIPID species are probably due to their branch chain structures, resulting in alternative MDRs and reducing the CF ratios (refer to Supplementary Fig
+S6
+b) and scores.
+Discussion
+Several experiments were conducted to improve the FSA performance; however, limited progress was achieved. First, the length of the fragmentation path was considered in addition to the sum of MDRs. Many attempts to include additional terms in Eq. (
+4
+), to encourage a long fragmentation path (consecutive MDRs in a series of fragments), were tested. Second, possible formulas were searched for fragment peaks without a match in the PubChem database. Adducts may attach to a compound leading to a different fragment pattern in the spectrum. Some fragments in the spectrum may also be associated with the adducts; hence, their formulas may not be found in the PubChem database. Furthermore, some fragment peaks that were generated during the collision process may not be stable in the natural environment; therefore, their formulas cannot be found in PubChem. Efforts were made to develop the formulas of such fragments by adding/subtracting different known adducts and neutral losses (Ma et al.,
+2014
+) from fragments with known formulas while maintaining MDRs with the precursor. Some chemical rules may need to be incorporated into FSA to solve the ambiguity mentioned in Sect. 3.7. Third, combinations of different scoring strategies were also tested. As mentioned earlier, the current scoring method only computes MDRs for fragments with a single formula (i.e., CFs). Although this method achieved the best performance, fragments with multiple possible formulas may still provide clues to identify the spectra. Different weighted combinations of such multi-formula fragments were tested through a genetic algorithm approach. Although some of the above modifications did increase the formula ranking accuracy in some datasets, the improvements were limited and not consistent across all the test datasets.
+Although several strategies have been tested to improve the formula ranking accuracy in the test datasets, few chemical rules have been implemented to rank possible formulas and filter out unfeasible ones. Such rules can be crucial in certain compound species and in compounds with adducts. In addition, species-related rules can also be applied to improve the ranking algorithm. As some compound species contain a specific functional group, fragments related to such groups can be used to reduce possible candidates. Including more chemical formula databases, such as ChemSpider, ChEBI, and SciFinder and updating the PubChem database in FSA may also improve the performance of FSA. For example, the current PubChem version (2022/11/27), which consists of 112,419,402 compounds in comparison with the employed version of 109,383,767 compounds, may help FSA increase the fragment-with-formula ratio and the CF ratio so as to analyze spectra with no or few MDRs.
+The FSA demonstrated effective and efficient performance in generating candidate molecular formulas across eight test datasets, which included MS/MS spectra acquired from diverse sample types (human metabolites, natural products, and lipids), instruments, and operators. Although the rank #1 accuracy of the computed formulas was not yet comparable to that of state-of-the-art tools such as Buddy and SIRIUS, FSA’s ability to rapidly produce a top-n candidate list—within a fraction of a second per spectrum—while including the correct formula with nearly 98% probability is highly encouraging. With its fast prescreening and ranking capabilities, FSA can complement other formula identification tools, enabling subsequent identification steps to be performed more effectively and efficiently. As a proof-of-concept algorithm, FSA has so far been validated on datasets containing compounds composed of C, H, O, N, S, and P. Future work will focus on extending its applicability to more complex molecules and to compounds forming various types of adducts.
+Supplementary Information
+Below is the link to the electronic supplementary material.
+Supplementary Material 1
+Supplementary Material 2

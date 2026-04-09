@@ -1,0 +1,653 @@
+Core Tip:
+Explainable artificial intelligence (XAI) seeks to improve the interpretability and transparency of machine learning models in healthcare settings. In this context, Explainable Ensemble Learning, a fundamental strategy within XAI, integrates multiple models, including Random Forest, Extreme Gradient Boosting, and Stacking, to improve classification performance in hepatocellular carcinoma (HCC). Despite their high predictive accuracy, the inherent "black-box" feature of ensemble methods remains a barrier to clinical practice. XAI techniques—such as SHapley Additive exPlanations, Local Interpretable Model-agnostic Explanations, and Gradient-weighted Class Activation Mapping—clarify model predictions, fostering medical trust and interpretability. By combining clinical, genetic, and imaging data with XAI frameworks, diagnosis, staging, and prognosis of HCC can be improved, ultimately supporting transparent and reliable decision-making in healthcare. Future research should focus on model interpretability, data integration, and user-friendly clinical interfaces.
+INTRODUCTION
+Hepatocellular carcinoma (HCC) is the predominant primary liver cancer in adults, recognized as the sixth most commonly diagnosed malignancy and the third cause of cancer-related mortality globally, as reported by GLOBOCAN 2022[
+1
+]. The diagnosis of HCC is confirmed with a detailed examination that includes the patient's medical history, status of underlying certain liver diseases (such as cirrhosis, alcohol, or viral hepatitis), alpha-fetoprotein (AFP) levels, and specific features on radiological imaging techniques, including ultrasound (US), computed tomography (CT), magnetic resonance imaging (MRI), positron emission tomography (PET) and conventional angiography[
+2
+-
+4
+]. HCC management depends on early and accurate diagnosis and classification, which is critical for treatment strategies and patient survival[
+5
+]. The clinical urgency of early detection is underscored by stark survival disparities across HCC stages. Early-stage HCC patients have a 5-year survival rate of greater than 70%, while late-stage patients have an overall survival rate of less than 18%[
+6
+-
+10
+].
+Recently, artificial intelligence (AI) has gained attention in improving diagnostic and classification precision in challenging fields such as HCC[
+11
+-
+13
+]. Within AI models, machine learning (ML) allows algorithms to learn patterns from data, while ensemble learning-a specialized ML technique- combines the strengths of multiple models, such as random forest (RF), Gradient Boosting Machines (GBM), Extreme Gradient Boosting (XGBoost), Adaptive Boosting (AdaBoost), Light GBM, and Categorical Boosting (CatBoost), to outperform single models[
+14
+-
+17
+]. However, the ''black-box'' nature of ML application models, including these advanced ensemble learning models, remains a major barrier to their comprehensive implementation in clinical practice[
+18
+,
+19
+]. This opacity and lack of interpretability limits the medical community’s confidence in model predictions[
+19
+,
+20
+].
+It is precisely these black-box constraints that have driven the focus of research toward explainable AI (XAI). XAI strives to shed light on the inner workings of ML models so that those model predictions can be trusted in high-risk fields such as healthcare[
+21
+,
+22
+]. In explainable ensemble learning, multiple ML algorithms are combined to improve accuracy and robustness while also providing interpretability, model-agnostic explanation techniques such as SHapley Additive exPlanations (SHAP) or local interpretable model-agnostic explanations (LIME), outperforming individual models[
+23
+,
+24
+]. In HCC management, explainable ensemble learning algorithms are required both to detect the presence of HCC and to classify the disease into clinically meaningful subgroups for prognosis and treatment planning, while simultaneously providing interpretability to support clinical decision-making. Explainability becomes more significant in medical applications so that a level of trust can then be placed on the model predictions, leading to interpretability and clinical applicability[
+25
+,
+26
+]. In HCC classification, developing interpretable models is important to help the physician make good decisions on both diagnosis and treatment[
+27
+]. This paper aims to delineate and elucidate the foundational principles of explainable ensemble learning, examine the clinical rationale and significance of HCC classification, review the extant literature on explainable ensemble learning applications in HCC, identify crucial ensemble and explainability techniques, summarize the datasets and applications utilized, present reported performance metrics and levels of achieved explainability, and finally, examine current challenges, and outline future research directions in this evolving field.
+STUDY DESIGN AND LITERATURE SEARCH STRATEGY
+This narrative review synthesizes current evidence on explainable ensemble learning approaches for both detection and classification of HCC. A systematic literature search was conducted using electronic databases including PubMed, Scopus, IEEE Xplore, and arXiv, focusing on studies published between January 2015 and December 2024. Keywords included combinations of ''hepatocellular carcinoma'', ''ensemble learning'', ''Explainable artificial intelligence'', ''machine learning'', ''feature importance'', ''SHAP'', ''LIME'', and ''clinical decision support''. Reference lists of eligible articles and recent reviews were manually screened to identify additional relevant studies. In this review, we incorporated the Scale for the Assessment of Narrative Review Articles (SANRA) checklist and the Preferred Reporting Items for Systematic Reviews and Meta-Analyses framework into the methods section to strengthen methodological rigor and reproducibility[
+28
+,
+29
+]. Additionally, this narrative review adhered to the SANRA checklist, ensuring transparency, bias mitigation, and reproducibility of findings. Key aspects include:
+Structured literature search
+A three-stage strategy (initial screening, full-text assessment, reference list screening) ensured comprehensive inclusion of studies on explainable ensemble learning for HCC classification.
+Bias mitigation
+Dual review by authors minimized selection bias, with discrepancies resolved
+via
+consensus.
+Data synthesis transparency
+Findings were synthesized thematically, focusing on explainable ensemble learning methodologies (
+e.g.
+, SHAP/LIME), clinical integration challenges, and dataset heterogeneity.
+Inclusion and exclusion criteria
+Studies were included if they:
+Focused on HCC classification (diagnosis, staging, or prognosis) using ensemble learning models. Integrated explainability techniques [
+e.g.
+, SHAP, LIME, feature importance, Gradient-weighted Class Activation Mapping (Grad-CAM)]. Reported performance metrics [
+e.g.
+, accuracy, area under the receiver operating characteristic curve (AUC), F1-score] and interpretability outcomes. Were published in peer-reviewed journals.
+Exclusion criteria encompassed:
+Non-English publications. Studies lacking clinical or biomedical relevance. Purely theoretical or simulation-based works without application to HCC. Conference abstracts or studies with insufficient methodological details.
+Data extraction and quality assessment
+For included studies, the data were extracted on:
+Study characteristics:
+Authors, year, country, dataset source, sample size, and clinical context.
+Methodological details:
+Ensemble techniques (
+e.g.
+, RF, XGBoost, stacking), explainability methods (
+e.g.
+, SHAP, LIME), feature types (clinical, imaging, genomic), and validation strategies.
+Outcomes:
+Performance metrics, key predictive features, and clinical interpretability insights.
+Quality assessment was performed using the SANRA checklist for narrative reviews, emphasizing transparency in study selection, data synthesis, and bias mitigation.
+Synthesis of evidence
+Findings were organized thematically:
+Ensemble learning frameworks:
+Comparative analysis of bagging (
+e.g.
+, RF), boosting (
+e.g.
+, XGBoost, LightGBM), and stacking approaches in HCC classification.
+Explainability techniques:
+Role of SHAP values, LIME, feature importance analysis, and visualization tools (
+e.g.
+, Grad-CAM) in interpreting model decisions.
+Dataset characteristics:
+Evaluation of clinical datasets [
+e.g.
+, SEER program, electronic health records), The Cancer Genome Atlas (TCGA), Gene Expression Omnibus (GEO), and imaging modalities (CT and MRI)].
+Performance metrics:
+Summary of accuracy, AUC, Brier scores, and calibration curves across studies.
+Challenges and limitations:
+Discussion of data heterogeneity, model complexity, and clinical integration barriers.
+Use of XAI techniques
+Explainability methods were categorized as:
+Model-specific:
+Techniques tailored to tree-based models (
+e.g.
+, Gini impurity, XGBoost feature splits).
+Model-agnostic:
+SHAP, LIME, and partial dependence plots applied across diverse ensembles.
+Local
+vs
+global explanations:
+LIME
+vs
+population-level insights (SHAP summary plots).
+Fundamentals of explainable ensemble learning
+Ensemble learning is a collaborative ML paradigm that brings together the predictions of multiple independent models, typically called "weak learners" or "base models" to derive a stronger, more accurate final prediction[
+30
+]. This is much like consulting a variety of knowledgeable experts before accepting a single person's appraisal. The objective of ensemble learning is reduction in errors and overall improvement in predictive performance for ML models through pooling their strengths collectively[
+31
+]. It has been significantly applied on datasets that have less size or more complexity[
+24
+]. The strength of ensemble learning has several formative principles. Most important is the introduction of models with different biases and variances: An ensemble can thus overcome weaknesses inherent in individual models and obtain a lower error rate[
+31
+,
+32
+]. Evidence suggests that greater diversity of the combined models usually brings about generalization that is more accurate by the resulting ensemble learning model[
+33
+,
+34
+]. This is consistent with the crowd's wisdom, which presupposes that the aggregate prediction from the pool of learners is often more accurate than prediction of any single member within that pool[
+34
+-
+36
+]. These ensemble methods also balance tradeoffs between bias and variance[
+37
+]. For instance, boosting usually reduces bias at later learning stages by repeatedly learning from mistakes of prior models, while bagging reduces variance mostly by training many models independently on different subsets of data[
+17
+,
+38
+].
+There are some widely common ensemble learning techniques[
+24
+]. Bagging, Bootstrap Aggregating, trains several independent base models on different random subsets of training data sampled usually with replacement[
+24
+]. An example of a bagging algorithm is the RF, which aggregates decision trees trained on bootstrapped subsets of the dataset[
+39
+]. Bagging's effectiveness lies in reducing variance and avoiding or reducing overfitting[
+40
+,
+41
+]. Most boosting algorithms including AdaBoost, CatBoost, GBM, LightGBM, and XGBoost are trained sequentially[
+24
+,
+40
+,
+42
+]. In boosting algorithms, each new model attempts to correct the misclassifications made by the previous models, often by assigning greater weights to the previously misclassified instances. The primary objective of boosting is to reduce bias[
+41
+,
+43
+].
+A really powerful stacking is the integrating a number of base learners into a single dataset and then training a "meta-learner" on the results produced by such base learners[
+44
+-
+47
+]. The meta-learner can learn how predicatively best to integrate the results of the various base models, and this methodology can accommodate heterogeneous base learners that have been trained on different algorithms[
+44
+-
+46
+]. Lastly, voting involves rather simple ways of combining predictions, which in turn devolve upon determining the final predictions among the base learners' majority vote in a classification task or by averaging their predictions in regression[
+48
+-
+51
+].
+The increasing accuracy resulting from ensemble learning has proved challenging in terms of interpretability because of the complexity in combining various models, thus calling for explainable ensemble learning techniques, which represent a specialized subset of XAI approaches. This challenge is particularly important in critical fields like healthcare, which require a clear understanding and trust concerning the predictions of these ensemble learning models. Several principles contribute to building trust and explainability in AI systems, including: (1) Transparency, meaning that stakeholders should understand the decision-making procedure[
+52
+]; (2) Fairness, which ensures equity or fairness of decisions for all groups[
+53
+]; (3) Trust, which evaluates the level of confidence from users toward the system[
+54
+]; (4) Robustness, making sure the consistency of performance exists across changes of varying conditions[
+55
+]; (5) Privacy, protecting sensitive information[
+56
+]; and (6) Interpretability, providing understandable human-based reasons for predictions[
+57
+]. As such, explainability techniques can be classified into model specific, which are the ones created for specific types of models, and model agnostic, which mostly refers to techniques that can fit any trained ML model[
+58
+,
+59
+]. Further categories include local, focusing on one prediction, and global explanations, which give general conceptions about the broad behavior of the model[
+60
+]. The purpose of such a combination is to ensure that the feature of high predictability is balanced with that which has been termed a 'necessary condition' of interpretability in mission-critical applications[
+27
+,
+61
+].
+Grad-CAM heat maps provide spatial insights into model decision-making by visualizing regions of interest in imaging data[
+62
+]. For example, in CT imaging of HCC patients, annotated features such as irregular tumor margins, portal vein thrombosis, and characteristic enhancement patterns (arterial hyperenhancement with venous washout) demonstrate how the model aligns with clinical diagnostic criteria. These annotations bridge the gap between algorithmic outputs and medical interpretation, fostering trust in ensemble learning models[
+6
+,
+27
+,
+62
+,
+63
+].
+Bagging, boosting, or stacking integrate predictions from multiple models, like decision trees, SVMs, or neural networks, to classify HCC based on features like imaging data (CT/MRI), clinical biomarkers (AFP levels), or genomic profiles. For HCC, the most common ones are:
+Bagging (Bootstrap aggregating):
+Multiple models,
+e.g.
+, RFs, are trained on different subsets of data, and predictions are averaged together. It reduces variance and overfitting, improving stability of predictions in the presence of noise from medical datasets[
+17
+,
+40
+,
+64
+].
+Boosting:
+Sequentially trains models like AdaBoost, XGBoost, and LightGBM to focus on misclassified samples to optimize the accuracy[
+65
+]. This is very effective for the imbalanced HCC datasets where there is considerable variation between the healthy and the cancer cases[
+47
+].
+Stacking:
+It is a set of diverse base models (logistic regression, k-Nearest Neighbors, Convolutional Neural Networks) and employs another layer of prediction called metamodeling to predict the final output[
+17
+,
+66
+]. It harnesses the combined complementary strengths of many models to analyze complex HCC patterns[
+67
+].
+Therefore, this is how ensembles can classify HCC
+Diagnosis:
+Discriminating HCC from non-HCC (healthy liver, cirrhosis,
+etc.
+)[
+67
+,
+68
+].
+Staging:
+Predicting tumor stage for treatment purposes (early
+vs
+advanced)[
+69
+,
+70
+].
+Prognosis:
+Predicting survival or recurrence risk after treatment[
+16
+,
+71
+].
+Another possibility of making system predictions interpretable through ensemble predictions is by using Black-box models in which XAI techniques can be integrated.
+HCC classification is, among others, made possible through
+Feature importance analysis:
+To establish which features, such as tumor size, AFP levels, and vascular invasion, are the most important in terms of influencing the predictions. Approaches: Permutation importance, Gini (tree-based models, such as RFs), or SHAP values[
+72
+-
+74
+]. Example: SHAP plots show high AFP levels increasing the likelihood of HCC so that clinicians can comprehend the reasons for the model[
+6
+].
+LIME:
+LIME uses a simple and interpretable model, such as a linear model, to approximate the prediction of complex EL models for individual cases[
+75
+]. For example, in a specific patient, LIME may highlight that tumor size > 5 cm and portal vein thrombosis are key determinants of HCC.
+Partial dependence plots:
+Provides the average relationship between a feature (
+e.g.
+, liver stiffness) and HCC risk while other features' effects are averaged away. Aids the clinicians to see how the change in the biomarker affects the predictions.
+Decision path visualization:
+Traces the decision paths for tree-based ensemble learning—such as XGBoost—to reveal how particular feature thresholds lead to a classification outcome. For an example, a decision tree may split on whether the AFP level is greater than 400 ng/mL, leading clinicians to this biomarker.
+Attention mechanisms (for neural network ensembles):
+Identify regions within imaging data (
+e.g.
+, MRI or CT scans) that contribute to the HCC decision-making process[
+76
+,
+77
+]. Example: Heat maps overlay tumor regions on CT scans, highlighting the areas prioritized by the model[
+78
+].
+HCC CLASSIFICATION: MEDICAL SIGNIFICANCE AND CHALLENGES
+HCC is the commonest primary tumor of the liver in the adult population. It is also one of the foremost causes of cancer death globally-an important public health issue in its own right. Development of HCC is strongly associated with pre-existent chronic liver diseases, primarily cirrhosis from chronic viral hepatitis [hepatitis B virus (HBV), hepatitis C virus (HCV)], alcohol abuse, and increasingly common metabolic dysfunction-associated steatotic liver disease with its more severe form as metabolic dysfunction-associated steatohepatitis[
+79
+,
+80
+]. Early diagnosis is crucial, as it greatly increases the chance of successful treatment and survival of the HCC patients[
+81
+,
+82
+]. Classification with ML algorithm will help to stage the disease so that the most effective treatments can be proposed[
+69
+,
+83
+]. Moreover, classification gives the opportunity for tailoring personalized strategies and appropriately predicting outcome by understanding the differing subtypes of HCC that are categorized by morphological characteristics, molecular workings, and other facets[
+84
+-
+86
+]. Accurate identification of HCC, differentiating it from all other forms of liver lesions-whether benign or malignant-would provide a true direction for a diagnosis and eventual clinical management[
+20
+,
+87
+-
+89
+]. Despite advancements in medical diagnostics, challenges in the diagnosis and classification of HCC still exist. In fact, many patients present at advanced stages of the HCC due to vague, non-specific early symptoms and current limitations of surveillance. Yet another complicating factor is that HCC shows large-scale molecular and histological heterogeneities[
+90
+,
+91
+]. One of the most considerable challenges left for clinicians is distinguishing HCC from its precursor lesions of dysplastic nodules and from other liver lesions that may mimic HCC such as cholangiocarcinoma, and colorectal cancer liver metastasis[
+87
+,
+88
+,
+92
+-
+94
+]. Thus, the currently used diagnostic modalities in US and serum AFP test lack sufficient sensitivity and specificity in early-stage detection[
+95
+,
+96
+]. Another restraining factor is the difficulty of obtaining histology-representative tissue samples due to inherent tumor heterogeneity. Yet other hindrances in the treatment of advanced HCC are the lack of effective and clinically viable molecular targets. These diverse challenges highlight the strong impetus for research into new and improved diagnostic and classification capacities of HCC[
+97
+-
+99
+]. Biochemical biomarkers (
+e.g.
+, AFP, des-γ-carboxy pro thrombin) and genomic profiles (
+e.g.
+, TP53, CTNNB1 mutations) are critical for HCC classification[
+100
+]. These data, sourced from repositories like TCGA and GEO, provide molecular insights into tumor heterogeneity and therapeutic vulnerabilities[
+101
+,
+102
+]. When combined with imaging and clinical features, they enable ensemble models to achieve high predictive accuracy while offering biologically meaningful explanations and targeted therapy[
+63
+,
+103
+,
+104
+]. ML based combination of multi-omics integration incorporates data from genomics, transcriptomics, proteomics, metabolomics, radiomics, and clinical information to provide a comprehensive understanding of tumor biology in HCC, supporting the development of systems that enhance clinical decision-making, refine diagnosis, classify tumors, estimate outcomes, and offer personalized targeted therapy[
+105
+-
+109
+].
+EXPLAINABLE ENSEMBLE LEARNING APPROACHES FOR HCC CLASSIFICATION
+The application of ensemble learning techniques [Bagging (RF), Boosting (XGBoost, LightGBM, CatBoost), Stacking (Base learners: RF, XGBoost, SVM; Meta-learner: Logistic Regression), Voting (Hard Voting, Soft Voting)] in the domain of HCC classification has gathered considerable importance and most of these have been used towards improving the clinical diagnostic and prognostic accuracy[
+67
+,
+71
+,
+104
+,
+110
+,
+111
+]. Among these methods, RF has again been most widely used for HCC diagnosis and survival prediction along with the identification of key genes related to the disease[
+6
+,
+112
+]. Gradient Boosting, as an ensemble ML method within AI, has demonstrated efficacy in liver disease classification, including HCC[
+113
+,
+114
+]. While XGBoost has emerged as a particularly effective approach for prediction related to early mortality in patients with bone metastasis, prognostication on overall survival after stereotactic body radiation therapy, finding crucial prognostic factors, therapy responses in patients, and general liver disease classification, XGBoost mostly outperformed other techniques in these contexts[
+114
+-
+116
+]. Other ensemble methods such as Stacking have been used for improving prediction accuracy by combining outputs from different base learners strategically, while Voting Ensembles aggregate predictions made by different models to further improve robustness of the classification[
+117
+,
+118
+]. An explainable boosting machine (EBM) is noted for its considerable accuracy in liver disease prediction, emphasizing the trend toward not just accurate but also interpretable models[
+63
+,
+70
+,
+119
+,
+120
+].
+To date, quite a number of those explanation methods mentioned above have applied to the case of HCC classification to remedy the lack of transparency from power that is well concentrated in such ensemble models. Among these methods, Feature Importance is generally used to learn the most relevant features between the outcome and the input that is contributing to the output prediction of the ensemble model. Thus, in early mortality prediction among patients suffering from HCC with bone metastasis, based on feature importance analysis, predicted critical features included chemotherapy, radiation therapy, and lung metastases[
+119
+]. Another widely adopted approach is SHAP, which has applied for global and local explanations with respect to the ensemble model output[
+119
+,
+121
+]. Each SHAP value indicates the aggregated contribution of each feature of prediction value, providing understanding of complicated, nonlinear relationships and even interactions between features in that model[
+119
+,
+122
+]. As such, such a methodology proves to be particularly effective to revealing the major risk factors underlying HCC development in patients with HBV infection. LIME gives local explanations by approximating the complex ensemble model locally with a simpler, more interpretable linear model that can explain its predictions within a local region[
+123
+,
+124
+]. This method has been applied to identifying the genes responsible for diagnosis and treatment in individual cases of HCC. Furthermore, the global explainability techniques Partial Dependence Plots and Accumulated Local Effects plots have sometimes been applied to conceptualize the average effects of features on a model's output[
+6
+,
+58
+,
+119
+]. Table
+1
+summarizes key research papers that focus on the application of explainable ensemble learning for HCC classification/Liver cancer and related tasks[
+6
+,
+27
+,
+67
+,
+112
+,
+118
+,
+119
+,
+125
+-
+127
+].
+Table 1
+Explainable ensemble learning for hepatocellular carcinoma classification
+Ref.
+Ensemble learning method
+Explainability technique
+Dataset used (including size and type)
+Performance metrics
+Clinical relevance of top predictive features
+[
+119
+]
+Soft Voting Ensemble
+SHAP
+SEER program (
+n
+= 1897), External validation from two tertiary hospitals in China (
+n
+= 98)
+AUC: 0.779 (internal), 0.764 (external); Brier score: 0.191 (internal), 0.195 (external)
+Chemotherapy, radiation therapy, lung metastases (reflect metastatic burden and treatment history)
+[
+112
+]
+RF (best performing), NB, LR, KNN
+LIME
+NCBI
+GSE14520
+microarray dataset (445 samples, 22268 genes)
+Accuracy: 96.53%; Precision: 97.30%; AUC: 0.95
+Gene expression profiles (
+e.g.
+, TP53, CTNNB1 mutations linked to tumorigenesis)
+[
+118
+]
+Stacking Ensemble
+LIME
+Data from 1622 liver cancer patients (46 variables)
+AUC: 0.9826 (training), 0.9675 (testing)
+Tumor size, vascular invasion (key pathological determinants of staging)
+[
+127
+]
+AutoML (TPOT) leading to a Tree-based model (likely ensemble)
+TreeSHAP
+Publicly accessible metabolomics data of HCC patients and cirrhotic controls
+AUC: 0.81
+Metabolite ratios (
+e.g.
+, glutamate/glutamine reflecting metabolic reprogramming in malignancy)
+[
+67
+]
+Stacking ensemble
+Dataset from 165 HCC patients at Coimbra's Hospital and University Centre (49 features)
+Accuracy: 0.9030; F1-score: 0.8857
+AFP, child score
+[
+126
+]
+RF, RR, AdaBoost, DT, LR
+Hospital Authority Data Collaboration Lab in Hong Kong (
+n
+= 124006 patients with chronic viral hepatitis)
+AUC: 0.842 (RR, training), 0.844 (RR, validation); 0.992 (RF, training), 0.837 (RF, validation)
+Viral load, platelet count (indicators of viral activity and portal hypertension)
+[
+70
+]
+GB (best performing), RT, RF, XGBoost
+SHAP
+Liver disease dataset
+Accuracy, precision, recall, specificity, AUC (high values reported)
+Bilirubin, albumin (liver function markers correlating with prognosis)
+[
+6
+]
+RF (best performing)
+SHAP
+Data from patients with HCC and HBV (training set:
+n
+= 361, Validation set:
+n
+= 155)
+AUC: 0.996 (training), 0.993 (validation)
+AFP, AST/ALT ratio, GGT (liver damage and tumor biomarkers validated against BCLC criteria)
+[
+125
+]
+XGBoost
+SHAP
+MRI data: 117 patients (training), 33 (external validation), 30 (prospective validation)
+AUC: 0.835 (training), 0.830 (internal), 0.816 (external), 0.776 (prospective)
+Arterial hyperenhancement, venous washout (LI-RADS imaging features for malignancy); Tumor margin irregularity (radiological indicator of invasiveness)
+AdaBoost: Adaptive boosting; AFP: Alpha-fetoprotein; ALT: Alanine aminotransferase; AST: Aspartate aminotransferase; AUC: Area under the curve; BCLC: Barcelona Clinic Liver Cancer; DT: Decision tree; ET: Extra trees; HBV: Hepatitis B virus; HCC: Hepatocellular carcinoma; GB: Gradient boosting; GGT: Gamma-glutamyl transferase; KNN: K-nearest neighbor; LI-RADS: Liver imaging reporting and data system; LIME: Local interpretable model-agnostic explanations; LR: Logistic regression; MRI: Magnetic resonance imaging; NCBI: National Center for Biotechnology Information; NB: Naïve bayes classifier; RF: Random forest; RR: Ridge regression; SHAP: SHapley Additive exPlanations; TreeSHAP: Tree-based SHapley Additive exPlanations; XGBoost: Extreme gradient boosting.
+DATASETS AND EVALUATION METRICS FOR EXPLAINABLE ENSEMBLE LEARNING IN HCC
+Multiple datasets would be developed together with numerous metrics for analysis to develop and assess explainable ensemble learning models for HCC classification. The most popular data sets in this aspect include clinical and demographic data obtained mainly from hospital electronic health records which typically contain numerous laboratory parameters (such as levels of bilirubin, liver enzymes and AFP), demographics of the patient (like age, gender and marital status), medical history (including cirrhosis, HBV or HCV infection and other comorbidities) and imaging features. Another major source of datasets are microarrays or RNA-sequencing profiles by gene expression. The GEO and the TCGA are among the popular repositories publicly accessible used by researchers as these greatly help in establishing genetic biomarkers pertaining to HCC classification and prognosis. Both of these sets of data provide high-dimensional gene expression profiles from tumor and normal tissue samples, thus enabling the application of ML techniques in the discovery of subtle patterns and identification of promising therapeutic targets[
+27
+,
+128
+].
+Medical imaging data, encompassing US, CT, MRI and PET/CT, play a crucial role in HCC research by providing essential information for diagnosis, tumor staging, treatment planning, and forecasting patient response to various therapeutic interventions such as resection, transplantation, immunotherapy and molecular-targeted therapies[
+129
+-
+132
+]. Advanced diagnostic approaches such as radiomics, which involve extracting quantitative features from medical pictures, and ML models, including deep learning are frequently applied to these datasets to help detect and characterize HCC[
+14
+,
+133
+,
+134
+]. These datasets contain an emerging trend in the field where multi-omics datasets are fused together; that is, observational omics datasets are assembled together into a single entity which provides additional knowledge for a more integrated and comprehensive understanding of the complex biological process underlying HCC development and progression[
+135
+,
+136
+]. Thus, researchers aim to integrate the complementary information derived from these diverse data sources to construct more accurate and robust predictive models[
+127
+,
+137
+].
+A wider variety of evaluation metrics are used to evaluate model performance and explainability. The first of these evaluation metrics is accuracy, which is the measure of overall correctness in classification by the model. Precision measures how many were predicted as positive among all instances of predicted positive cases correctly identified as positive, while Recall (sensitivity) measures the ability of the model to detect all actual positive cases correctly. The ratio between all true negative cases and the predicted negative cases is what Specificity measures. F1 is the harmonic mean of precision and recall, which gives more balanced measures of the model's performance, especially when class imbalances are present among the datasets. The AUC is also such an important metric in determining how well the model is able to discriminate different classes. For probabilistic predictions, the Brier score is used to measure the accuracy of the predicted probabilities whereas Calibration Curves are meant to give visual assessment of how agreeable predicted probabilities are with observed frequencies of outcomes. Finally, regarding the degree of explainability achieved, SHAP Values and Feature Importance Scores are used to quantify the contribution of each input feature in model predictions[
+27
+,
+138
+].
+The datasets reflect an emerging trend of multi-omics integration, which combines diverse biological data layers (
+e.g.
+, genomics, transcriptomics, proteomics, metabolomics) with clinical and imaging data (such as radiomics). For example: Integrating metabolomics (profiles of small molecules) with radiomics (quantitative features from medical images) can correlate metabolic dysregulation with tumor morphology. Combining genomics (gene mutations) with proteomics (protein expression) identifies molecular drivers of HCC progression. Such integration enables a holistic understanding of HCC pathogenesis and enhances predictive modeling[
+127
+,
+139
+,
+140
+].
+PERFORMANCE AND EXPLAINABILITY ACHIEVED IN HCC CLASSIFICATION STUDIES
+Research demonstrates that Explainable Ensemble Learning methods for HCC classification show both high accuracy levels and strong capability to analyze factors responsible for prediction. Explainable Ensemble Learning models demonstrate high diagnostic performance in HCC classification. These results highlight the heterogeneity in metric reporting and underscore the need for standardized evaluation frameworks. For the prediction of early mortality in HCC patients with bone metastases, the ensemble model incorporating XGBoost achieved a commendable AUC of 0.779. Stacking and voting ensemble methods sometimes outperform individual base learners, even showing benefit when ensembles are considered[
+119
+,
+141
+].
+Each ensemble learning model included explainability features together with successful implementation of different explanation techniques for their decision-making process. Feature importance analysis identified key clinical, pathological, and genetic factors significantly associated with HCC diagnosis, prognosis, and treatment response. The SHAP analysis, on the other hand, helps explain feature contributions in detail, proving the existence of non-linear relationships and complex interaction among different predictive features. Nevertheless, SHAP plots have emphasized the contributions of age, basophil-lymphocyte ratio, D-Dimer levels, aspartate aminotransferase to alanine aminotransferase (AST/ALT), γ-glutamyltransferase, and AFP levels in predicting the risk of HCC in patients with HBV infection[
+6
+]. LIME explanation can provide patient-specific explanations by identifying the genes or clinical features that drive the prediction for each individual case[
+142
+]. Finally, visualization methods like Grad-CAM have significantly helped increase understanding concerning image-based features that deep-learning ensembles learn to view as important for their predictions in HCC[
+6
+,
+27
+,
+63
+].
+CHALLENGES AND POTENTIAL FUTURE RESEARCH DIRECTIONS
+Nevertheless, other issues need further research despite clear improvement in the application of Explainable Ensemble Learning for HCC classification. The innate difficulty to fully appreciate the ensemble model decision-making process is further complicated with the advanced techniques for XAI. Moreover, huge variations inherent to the datasets used for training these models-from differences in patient populations to different data collection methodologies and the very different distributions of the stages of the disease-may also compromise the external validity as well as the accuracy of models built through entailment. Many of the novel Explainable Ensemble Learning models crafted in academic settings still require extensive validation in independent, heterogeneous data sources and their seamless integration into current clinical workflows to drive home their relevance and impact in real-world healthcare settings. The integration of ensemble methods with high-dimensional data such as large-scale omics datasets while ensuring interpretability of results is indeed a challenge, both computationally and methodologically. The absence of standard metrics for the assessment of explainability complicates any quantitative comparison of the interpretability levels that different models and techniques could achieve. Finally, the use of computationally intensive XAI methods like SHAP, especially in the training and interpretation of complex ensemble models, leads to real-life constraints in some systems[
+128
+,
+137
+].
+Some possible areas in which future research can venture are likely to advance the field in terms of explaining ensembles in HCC classification. Designing novel ensemble architectures that are inherently more interpretable but without diminishing predictive accuracy is one potential area. Further research is warranted regarding effective multimodality integration approaches of heterogeneous data types, such as clinical information, medical images, and various omics data, in an explainable ensemble learning framework to provide more comprehensive views of HCC. Early detection is the primary improvement measure in the HCC outcomes, and in this regard, future studies could adapt explainable ensemble learning methods to improve HCC detection at earlier and more treatable stages. There also exists a substantial gap awaiting consideration in developing explainable ensemble learning models that can perform personalized risk prediction and model individual patients' responses to diverse treatment modalities accurately. These models could be made even more clinically relevant and trustworthy by including existing domain knowledge such as defined medical guidelines and biological pathways in their learning and explanation processes. The development of accessible and intuitive user interfaces making the explanations produced by the ensemble models easily consumable and comprehensible to clinicians would be central to their adoption in everyday practice. Fairness and bias issues, both in the datasets and in the models themselves, must be addressed to ensure that all patient subgroups benefit equitably from reliable predictions. Lastly, explainable ensemble learning models can somehow be vindicated in longitudinal research to assess the evolving dynamic picture of HCC over time with a dynamic risk projection, which might be quite useful in informing long-lasting patient management[
+119
+,
+127
+].
+The computational burden of SHAP and LIME remains a critical hurdle, particularly for high-dimensional datasets. For instance, TreeSHAP applied to metabolomics data in a study required distributed computing to manage runtime, while extrapolations to whole-slide imaging suggest potential delays exceeding 24 hours[
+127
+]. Mitigation strategies include approximate SHAP methods (
+e.g.
+, KernelSHAP), feature selection to reduce dimensionality, and distributed computing frameworks[
+125
+]. Simpler surrogate models (
+e.g.
+, EBM) also offer a trade-off between accuracy and explainability with lower computational costs[
+143
+].
+Dataset bias poses a significant challenge, exemplified by the SEER program’s Western population dominance[
+119
+], which limits generalizability to HBV-endemic regions like Asia. Similarly, TCGA and GEO gene expression datasets lack ethnic diversity, risking skewed predictions for minority groups[
+128
+]. To address this issue, future work should prioritize diverse cohort curation, transfer learning to adapt models to regional etiologies, and synthetic data generation to balance underrepresented groups[
+125
+]. Auditing models for fairness metrics will further ensure equitable performance across populations.
+CLINICAL TRANSLATION BARRIERS AND INTEGRATION WITH EXISTING WORKFLOWS
+Explainable ensemble learning models hold promise for enhancing clinical decision-making frameworks like the barcelona clinic liver cancer (BCLC) staging system, which guides HCC management based on tumor burden, liver function, and performance status[
+83
+,
+144
+,
+145
+]. However, BCLC staging struggles to capture patient-specific heterogeneity in biomarkers, comorbidities, and treatment responses and new treatment modalities[
+146
+-
+148
+]. Explainable ensemble learning models address these gaps by refining staging precision, predicting treatment outcomes, and enabling dynamic risk stratification[
+83
+,
+149
+]. For instance, SHAP-based models identified AFP levels and AST/ALT ratios as key predictors in patients with HBV infection, aligning with BCLC’s focus on liver function while adding granularity. By integrating radiomics, genomic data, and clinical features, explainable ensemble learning models can distinguish early-stage HCC from dysplastic nodules, enabling personalized treatment recommendations. These models also forecast responses to therapies like sorafenib or immunotherapy, using SHAP/LIME explanations to highlight actionable biomarkers such as PD-L1 expression and tumor mutational burden. Additionally, longitudinal monitoring
+via
+explainable ensemble learning models allows real-time updates to risk scores based on evolving patient data, such as post-treatment imaging or biochemical results[
+6
+].
+Despite their potential, explainable ensemble learning models face significant deployment challenges. First, data heterogeneity limits generalizability: Models trained on datasets often underperform in regions with differing epidemiological profiles (
+e.g.
+, HBV
+vs
+HCV prevalence)[
+23
+,
+150
+]. Federated learning frameworks offer a solution by enabling multi-center collaboration without raw data sharing, ensuring diversity and compliance with privacy regulations[
+151
+]. Second, poor interoperability with electronic health records hinders clinician adoption, as manual data entry disrupts workflows. API-driven plugins compatible with platforms like Epic or Cerner could automate data extraction and enable real-time predictions. Regulatory hurdles further delay clinical integration due to the lack of standardized benchmarks for explainable ensemble learning models in oncology.
+Other barriers include clinician distrust of "black-box" features (
+e.g.
+, radiomic textures) and computational costs. Overreliance on opaque features reduces trust, but prioritizing model-specific explainability and collaborating with clinical experts to validate feature relevance can improve adoption. High computational costs for SHAP/LIME analyses of large imaging datasets also delay real-time deployment. Lightweight surrogate models like EBMs may mitigate this by enabling edge computing in resource-limited settings. Finally, dataset biases risk perpetuating disparities in non-Western populations. Implementing bias-auditing protocols and fairness-aware ML techniques could ensure equitable performance across subgroups. Addressing these challenges is critical to translating explainable ensemble learning models into clinical practice, ensuring they complement existing workflows while improving patient outcomes[
+152
+-
+154
+]. Explainable ensemble learning models hold significant promise for enhancing HCC classification, but their integration into clinical practice faces critical challenges. Technical limitations such as data variability, computational complexity, and dataset bias directly translate to barriers in real-world adoption. For instance, models trained on datasets like the SEER program—which predominantly represent Western populations—often underperform in regions with distinct epidemiological profiles, such as HBV-endemic areas in Asia. This data variability undermines model generalizability across institutions, particularly when deploying explainable ensemble learning tools in multi-center settings where patient demographics, imaging protocols, or lab assays differ significantly. Additionally, the computational demands of explainability techniques like SHAP or LIME, such as TreeSHAP analyses requiring distributed computing for high-dimensional metabolomics data, pose resource constraints in low-bandwidth environments. Similarly, dataset biases in repositories like TCGA or GEO—where ethnic diversity is limited—risk perpetuating healthcare disparities, as evidenced by lower AUC scores for HBV-associated HCC in non-Western cohorts. Overreliance on opaque features (
+e.g.
+, radiomic textures) further exacerbates clinician distrust, even when performance metrics are robust. Addressing these challenges is essential to bridge the gap between research innovation and clinical utility.
+CONCLUSION
+This report has detailed the application of explainable ensemble learning toward HCC classification. Analysis shows that ensemble methods in general, and RF, Gradient Boosting, and XGBoost in particular, seem to hold a great promise in providing very high accuracy for diagnosis, prognosis modeling, and treatment-response modeling of HCC. Integration of explainability techniques such as feature importance analysis, SHAP, LIME, and Grad-CAM allowed for interpreting and making these complex models transparent and understandable to the medical community. These techniques reveal which clinical, imaging, and genetic features most significantly influence the models' predictions, thereby increasing their clinical utility and fostering trust. Although a lot of effort has gone into this work, challenges still remain in tackling the complexity of the ensemble models, the heterogeneity of data, robust validation, and seamless clinical integration. Future studies need to concentrate on developing interpretable ensemble architectures by capitalizing on multi-modal data sources, enhancing early detection of HCC, personalizing risk prediction and treatment response modeling, codifying domain medical knowledge, building an explanation interface that is user-centric, considering fairness and bias, and carrying out longitudinal studies to model disease evolution dynamically. If these hurdles and research streams are confronted, the promise of explainable ensemble learning can be fulfilled to maximize HCC classification and enhance patient care in this important area of oncology.

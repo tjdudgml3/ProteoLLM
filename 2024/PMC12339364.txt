@@ -1,0 +1,1563 @@
+Main
+Personalized antigen discovery, enabling the identification of peptides presented on a person’s cancer cells by class I and II human leukocyte antigen (HLA-I and HLA-II) and recognized by autologous T cells, is crucial for the development of cancer vaccines, adoptive transfer of T cells and various T cell-targeting molecules. Methods based on whole-genome sequencing (WGS) or whole-exome sequencing (WES) and RNA sequencing (RNAseq) for mutated antigen (neoantigen) predictions are commonly used for translational research and in clinical trials
+1
+. Recently, the application of mass spectrometry (MS) to identify HLA-bound peptides, in combination with proteogenomics, facilitated the exploration of novel targets from a variety of antigens naturally processed and presented in cancer, including neoantigens, tumor-associated antigens and tumor-specific antigens (TAAs and TSAs), oncoviruses and peptides translated from putative non-protein-coding transcripts
+2
+. However, their identification is laborious and current clinical pipelines do not support immunopeptidomics and are restricted to predicted neoantigens
+3
+–
+5
+.
+Immunotherapies are remarkably effective against some tumor indications; however, robust immune pressure may lead to immune editing
+6
+, resulting in the selection of tumor cells displaying diminished antigenicity
+7
+. Mutations, such as somatic single-nucleotide variants (SNVs), insertions, deletions and copy number (CN) variations (CNVs), can disable parts of the antigen processing and presentation machinery (APPM). These alterations affect components such as β2-microglobulin (B2M), transporters associated with presentation (TAP1 and TAP2) and the HLA locus, hindering immune recognition
+8
+. It is, thus, essential to gain a comprehensive understanding of the heterogenous antigenic landscape and of the tumor’s capacity to present antigens.
+In this study, we introduce an ‘end-to-end’ clinical antigen discovery proteogenomic pipeline called NeoDisc. NeoDisc is a compilation of publicly available and in-house software for the identification of immunogenic tumor-specific HLA-I and HLA-II antigens from genomics and transcriptomics and MS-based immunopeptidomics, as well as their prediction and prioritization with rule-based and machine-learning (ML) tools. It enables the assessment of both tumor heterogeneity and the functionality of the APPM. We compared NeoDisc’s performance with other available tools and demonstrated its application for personalized antigen discovery for translational cancer research and its clinical implementation for the design of cancer vaccines. Through deep investigation of tumors from seven persons with cancer of various indications, we exemplify how NeoDisc’s comprehensive multiomics data integration allows detection and prioritization of immunogenic TSAs from various sources. We also demonstrate how NeoDisc uncovers the heterogeneous antigenic landscape linked to defects in the APPM, which are crucial for translational research and the advancement of personalized cancer immunotherapy.
+Results
+General overview of the NeoDisc pipeline
+NeoDisc is a dedicated computational framework that combines genomic, transcriptomic and immunopeptidomic data for the prediction and direct identification of clinically relevant antigenic peptides presented exclusively on cancer cells derived from multiple sources, including mutations, TSAs, TAAs, oncoviral elements and noncanonical transcripts (Fig.
+1a
+, Extended Data Fig.
+1
+and Supplementary Table
+1
+). The framework integrates curated public databases of known immunogenic TSAs and viral antigens
+9
+with ML and rule-based models for the prioritization and selection of clinically relevant antigens (Extended Data Fig.
+2
+)
+10
+,
+11
+.
+Fig. 1
+NeoDisc pipeline overview and benchmarking.
+a
+, Schematic overview of NeoDisc pipeline. Input data are shown in the top white boxes, while the different modules of NeoDisc are represented in gray boxes and their output is shown as white boxes. Background colors indicate the data types used by the modules. Arrows display the flow of data between modules. Dark blue squares, below module output boxes, highlight which data are used in combination for multiple-sample analysis.
+b
+, Number of immunogenic peptides from the NCI-test dataset (15 samples and 24 immunogenic peptides) ranked by NeoDisc rule-based algorithm, ML algorithm, pTuneos and pVACseq and reported by Gartner et al. The color of the bars indicates the number of immunogenic peptides when considering only the top
+n
+ranked peptides in each person. Horizontal dashed bars indicate the highest number of immunogenic peptides ranked in the top
+n
+across all algorithms. The red horizontal line shows the total number of immunogenic peptides.
+NeoDisc uses matched tumor and germline genomic (WES or WGS) data for sample-specific variant characterization, tumor content estimation and the identification of CNVs and somatic mutations (SMs). While WGS data can be used in NeoDisc, they were not implemented in this study. Bulk RNAseq data are used for human gene and SM expression quantification and estimation of T cell inflammation. Unmapped RNAseq reads are further used for viral infection identification and viral gene expression quantification, primarily targeting oncoviruses. NeoDisc creates personalized proteome references, where single-nucleotide polymorphisms (SNPs), SMs and noncanonical expressed transcripts are annotated and used for downstream HLA binding and immunogenicity prediction of antigenic peptides. Immunopeptidomic data are searched against the personalized proteome to identify naturally presented antigenic peptides. HLA-I and HLA-II typing is derived from germline and tumor WES and from RNAseq data. Defects in the tumor APPM and HLA loss of heterozygosity (LOH) are identified and highlighted. An ML algorithm, specifically trained on a complex matrix of tens of features, prioritizes likely immunogenic HLA-I neoantigens (minimal epitopes) and longer mutated sequences and supports the design of RNA-based and peptide-based vaccines
+10
+. Beyond HLA-I-restricted neoantigens, ranking of other classes of antigens exclusively expressed in the tumor, such as HLA-II neoantigens, TAAs and oncoviruses, is performed by rule-based approaches, adjusted on the basis of a decision scheme considering a limited set of features (Extended Data Fig.
+2
+). NeoDisc supports data integration of multiple samples from the same person, providing insights into tumor heterogeneity and evolution (Fig.
+1
+and Extended Data Fig.
+1
+).
+NeoDisc runs on a Linux system and is packed in a Singularity container
+12
+. The runtime was 15.78 ± 9.52 h (100 GB of random-access memory and 24 central processing units) for a participant’s dataset that included matched germline–tumor WES, tumor RNAseq and data-dependent and data-independent acquisition (DDA and DIA, respectively) of immunopeptidome MS data. The runtime is determined by the sample’s sequencing depth, immunopeptidome depth and mutational load. Lastly, NeoDisc generates processed genomic, transcriptomic and immunopeptidomic data, detailed characterization of the APPM, prioritized lists of TSAs and sample-specific reports, ensuring data traceability (Fig.
+1a
+, Extended Data Fig.
+1
+and Supplementary Data
+1
+).
+Multiple sources of cancer-specific tumor-reactive antigens
+NeoDisc applies four variant-calling algorithms
+13
+–
+15
+to WES and WGS data. Variants detected by only one caller are deemed to have low identification confidence, whereas those identified by two or more callers are considered as having high identification confidence. In default settings, low-confidence and high-confidence variants are included in the personalized proteome for immunopeptidomic searches, while only high-confidence variants are considered for in silico neoantigen predictions, ensuring a robust selection of predicted neoantigens. Highly mutated tumors tend to better respond to immunotherapy
+16
+, likely because they present more neoantigens. Yet, the selection of immunogenic neoantigens among numerous possibilities is challenging
+10
+,
+17
+. Initially, rule-based approaches were applied for the prioritization of HLA-I-restricted and HLA-II-restricted neoantigens and other antigenic peptides exclusively expressed in the tumor (Extended Data Fig.
+2
+). Recently, large datasets of neoantigens in tumors of 112 participants (called the National Cancer Institute (NCI) cohort) were systematically screened by Gartner et al. for autologous T cell responses, allowing the training of ML tools for prioritization
+18
+. Minigenes expressing almost all the called mutations were transcribed in vitro and transfected into autologous antigen-presenting cells (APCs) followed by a coculture with TIL cultures and interferon-γ (IFNγ) enzyme-linked immunospot (ELISpot) immunogenicity measurement. In most cases, additional immunogenicity screens were performed to identify the optimal epitopes and their HLA restrictions. Previously, we trained ML classifiers on a fraction of this dataset (NCI-train) and tested their performance on the remaining samples (NCI-test), as well as additional cohorts
+10
+. These ML classifiers were integrated into NeoDisc, ensuring effective prioritization of immunogenic neoantigens. We evaluated the performance of NeoDisc’s rule-based and ML ranking approaches against existing tools such as pTuneos
+19
+, pVACtools
+20
+,
+21
+and the ML tool introduced by Gartner et al.
+18
+. NeoDisc’s ML prioritization algorithm surpassed all the evaluated tools (Fig.
+1b
+and Supplementary Table
+2
+). The rule-based approach was superior to pTuneos and pVACseq, motivating its implementation for ranking HLA-II neoantigens. We envision that ML approaches will be developed for HLA-II neoantigens once sufficient immunogenicity data become available in the public domain.
+We illustrated NeoDisc’s efficient prioritization on a cervical adenocarcinoma (CESC-1) characterized by an exceptionally high mutational burden (25 SMs per Mb) (Supplementary Table
+3
+). Of the 393 identified actionable mutations (that is, nonsynonymous in coding regions), representing a pool of 19,051 peptides with a predicted binding rank ≤ 2%, 66 HLA-I neoantigenic short peptides (minimal epitopes) were initially selected by the rule-based prioritization for T cell screening of autologous tumor-infiltrating lymphocytes (TILs) by IFNγ ELISpot. Specifically, 11 of 66 peptides were immunogenic, including two that ranked among the top ten candidates (Fig.
+2a
+and Extended Data Fig.
+3a
+). Reordering of the tested neoantigens with the NeoDisc ML model resulted in an impressive ranking of six immunogenic peptides within the top ten (Fig.
+2b
+and Supplementary Table
+3
+). Furthermore, NeoDisc successfully identified two confirmed immunogenic neoantigens in the CESC-1 tumor MS immunopeptidomic data (Fig.
+2b, c
+), underscoring the potency of immunopeptidomics for pinpointing relevant targets. In particular, the ML algorithm ranked the two immunogenic MS-detected neoantigens at positions 4 and 5 along with additional neoantigens in the top 50 candidates that were ultimately not tested because of the limited T cell availability (Fig.
+2b
+). For comparison, they were ranked at positions 18 and 39 by pVACseq and 230 and 667 by pTuneos (Fig.
+2b
+and Supplementary Table
+3
+).
+Fig. 2
+Detection of immunogenic TSAs.
+a
+, Explored antigens in CESC-1: ‘mutations’, actionable SMs; ‘predicted neo’ and ‘predicted viral’, predicted rank ≤ 2%; ‘MS neo’, MS-identified neoantigens.
+b
+, Ranking of top 50 HLA-I neoantigens tested for immunogenicity in CESC-1. Initial selection with rule-based prioritization compared to ordering of the same peptides with the ML tool (‘selection’) and to the ML, pTuneos and pVACseq prioritizations that include untested peptides (white, ‘top 50’).
+c
+, Endogenous and synthetic peptide spectral comparison of immunogenic neoantigens RPL18 p.Met53Ile and USP7 p.Glu1095Gln (cosine similarities of 0.950104 and 0.660189, respectively; mutant amino acids, red; y-ion fragments, orange; b-ion fragments, blue).
+d
+, EBV gene expression in NPC-1 through EBV cycle phases.
+e
+, IFNγ SFU per 10
+6
+cells (mean ± s.d.) from preREP and REP TILs rechallenged with EVB peptides in NCP-1 (CD8, cyan; CD4, brown). HLA alleles and predicted HLA restrictions are presented. IEDB annotations: antigen absent, white; antigen present, gray; antigen present and immunogenic on any NPC-1 HLAs, black. The EBV phase denotes the gene expression across the EBV cycle.
+f
+, Peptides derived from expressed HC-TSAs in MEL-1: predicted (rank ≤ 0.5%), blue; MS-identified, orange; immunogenic validated by IFNγ ELISpot assay, dark blue; confirmed as tumor-rejecting by TCR cloning, red.
+g
+, Comparison of ipMSDB presentation (above
+x
+axis) and binding predicted (below
+x
+axis) HLA-I (blue) and HLA-II (yellow) hotspots for
+MLANA
+and
+MAGEC2
+for MEL-1. Binding-restricted hotspots (gray) and MS-identified and immunogenic (red) peptides are shown.
+h
+, Distribution of ipMSDB coverage of HLA-I and HLA-II predicted peptides (rank ≤ 0.5%) (HLA-I,
+n
+= 872; HLA-II,
+n
+= 464), MS-identified peptides (HLA-I,
+n
+= 110; HLA-II,
+n
+= 51), immunogenic peptides (HLA-I,
+n
+= 2) and peptides confirmed following tumor recognition assays (HLA-I,
+n
+= 4) in MEL-1 (independent one-sided
+t
+-test).
+i
+, Comparison of ipMSDB coverage across all HC-TSA predicted binder peptides annotated as immunogenic in IEDB (HLA-I,
+n
+= 91; HLA-II,
+n
+= 42) and HC-TSAs not annotated as immunogenic in IEDB (HLA-I,
+n
+= 14,721; HLA-II,
+n
+= 16,769) (independent one-sided
+t
+-test). The box plot center lines represent the median. The bounds of the box represent the 25th and 75th percentiles (interquartile range (IQR)). The whiskers extend to the smallest and largest values within 1.5× the IQRs. Individual dots represent minima and maxima beyond the whiskers.
+Source data
+In viral-induced cancers, targeting viral antigens becomes an attractive approach as viral proteins often drive cancer initiation and progression
+22
+. NeoDisc aligns unmapped RNAseq reads to a database of human viruses (from the National Center for Biotechnology Information (NCBI) Virus Genomes database
+23
+) to identify viral infections and consequently reports in silico predicted HLA-I-bound and HLA-II-bound peptides originating from actively expressed oncoviruses and those identified by MS. Predicted viral peptides are prioritized on the basis of their source gene expression, evidence of immunogenicity in the Immune Epitope Database (IEDB)
+9
+and binding prediction, increasing their likelihood of eliciting an immune response (Extended Data Fig.
+2
+). NeoDisc successfully detected human papillomavirus type 18 (HPV18) infection in CESC-1. Of the 1,542 predicted (binding rank ≤ 2%) HPV18 HLA-I peptides, the second-ranked peptide KLPDLCTEL, which derived from the highly expressed (34.045 transcripts per million mapped reads (TPM)) E6 oncoprotein and was confirmed immunogenic in IEDB, induced a spontaneous CD8
++
+T cell response (Fig.
+2c
+, Extended Data Fig.
+3a
+and Supplementary Table
+4
+).
+In a participant diagnosed with epidermoid nasopharyngeal carcinoma (NPC-1), NeoDisc detected evidence of Epstein–Barr virus (EBV) infection in all five tumor samples (Fig.
+2d
+). EBV is characterized by a long double-stranded DNA genome encoding a wide range of proteins and noncoding RNAs. We found consistently high expression levels of
+RPMS1
+across all samples, in line with previous studies reporting higher
+RPMS1
+circular RNA expression in metastatic NPC
+24
+. Expression of both latent and lytic genes revealed an active replication of EBV (Fig.
+2e
+). T cell reactivity was assayed in TIL cultures collected at the end of the first prerapid expansion protocol (preREP) and second REP expansion phase
+25
+. Remarkably, of the 108 viral HLA-I and HLA-II peptides tested in T cell assays, 34 were immunogenic across the participant’s HLA alleles (Fig.
+2e
+), of which 15 peptides were immunogenic in both preREP and REP conditions. Furthermore, 16 and 3 peptides were found immunogenic only in the preREP and REP cultures, respectively, supporting previous studies demonstrating how REP protocol induces functional and phenotypic changes in TILs that may limit their responsiveness to REP
+26
+,
+27
+. A total of 19 epitopes were reported immunogenic in IEDB, including six with the same HLA specificity as in NPC-1 (Fig.
+2e
+and Extended Data Fig.
+3b–d
+). Immunogenic peptides originated from genes associated with the latent (21 peptides) and lytic (13 peptides) phases of EBV (Fig.
+2e
+). Moreover, while CD8
++
+T cells responses were more prevalent, strong CD4
++
+T cell responses were also observed against peptides derived from genes
+BARF1
+and
+BALF2
+, associated with the latent and lytic phase, respectively (Fig.
+2e
+).
+TAAs are minimally expressed in healthy tissues, except for the testis, which is considered as an immune-privileged site
+28
+. While some TAAs induce spontaneous responses in persons, they remain a concern for safety
+29
+. To mitigate this risk, we curated a list of high-confidence TSAs (HC-TSAs) that had no or extremely low evidence of expression in healthy tissues from the Genotype-Tissue Expression (GTEx) database
+30
+, with the exception of testis and sun-exposed skin. NeoDisc systematically selects expressed HC-TSAs and ranks MS-detected or in silico predicted HC-TSA-derived peptides on the basis of their binding affinity to the participant’s HLAs, their global HLA presentation hotspot coverage captured in the Immunopeptidomics MS Database (ipMSDB), comprising hundreds of healthy tissues, cell lines and tumor samples
+31
+, and their annotated immunogenicity in IEDB (Extended Data Fig.
+2
+). All nonunique peptides encoded by commonly expressed proteins are excluded. In a participant with melanoma (MEL-1), NeoDisc identified 19 expressed HC-TSA genes (Fig.
+2f
+). A total of 161 HLA-bound peptides derived from 18 HC-TSAs were identified by MS and, among these, we confirmed the immunogenicity of six HLA-I peptides by T cell screening (Extended Data Fig.
+3e
+). Following the cloning of antigen-specific T cell receptor (TCR) candidates into recipient activated peripheral T cells, four HC-TSA peptides were confirmed as tumor rejection antigens (Extended Data Fig.
+3f
+and Supplementary Table
+3
+). We found a positive association for HC-TSAs between their coverage in ipMSDB and their detection by MS, immunogenicity and ability to induce T cell recognition in MEL-1 (Fig.
+2g,h
+). Globally, we found a significantly higher ipMSDB coverage for confirmed immunogenic peptides from HC-TSA in IEDB (HLA-I,
+n
+= 91; HLA-II,
+n
+= 42) compared to all predicted peptides across HLAs from HC-TSAs that were not reported as being immunogenic (HLA-I,
+n
+= 14,721; HLA-II,
+n
+= 16,769) (Fig.
+2i
+). This aligns with our previous findings, indicating that mutations predicted to be covered by at least one ‘exact’ wild-type peptide in ipMSDB
+31
+are five times more likely to induce spontaneous CD8
++
+T cell responses compared with all other mutations
+32
+. Overall, these results demonstrate that the methods implemented in NeoDisc accurately identify and prioritize immunogenic antigenic peptides from multiple sources (Supplementary Table
+4
+).
+Personalized vaccine design
+While the default NeoDisc settings exhibit good performance, biopsies with very low tumor content and low mutation burden may result in the detection of an insufficient number of actionable high-confidence expressed mutations, resulting in a suboptimal vaccine. To address this limitation, NeoDisc offers two additional modes: (1) the ‘sensitive’ mode, which considers the union of mutations called by all four variant-calling tools, to be used when an insufficient number of mutations are detected with the default setting, and (2) the ‘panel’ mode, where mutations listed in the available diagnostic clinical gene panel (GP) are used as input, allowing the design of vaccines for persons lacking dedicated biopsies. It is, however, important to acknowledge that GPs often provide insufficient number of mutations leading to suboptimal lists of neoantigens or potentially none at all. We compared the performance of the sensitive and default settings with a subset of the NCI-test cohort data (
+n
+= 20) in which at least one immunogenic neoantigen was validated. With the sensitive mode, we detected more mutations per sample, yet both the variant allele frequency (VAF) and the fraction of RNAseq reads supporting mutations decreased compared to the default mode, indicating a decrease in the specificity of identified variants (Fig.
+3a–c
+). Nevertheless, all immunogenic mutations were identified in both modes and we demonstrated that the ranking of immunogenic mutations was comparable but better with the default setting (Fig.
+3d
+). We compared the three operational modes on samples derived from the same non-small cell lung cancer participant (NSCLC-1). A tumor tissue biopsy (NSCLC-1-Tissue) with an estimated ~4% tumor content and a pleural effusion punction sample (NSCLC-1-PEC) with a challenging estimated tumor content of ~1.5% were analyzed with the default and the sensitive modes and a GP (NSCLC-1-GP) report of five SMs derived from a historical diagnostic sample was analyzed with the panel mode (Fig.
+3e,f
+and Extended Data Fig.
+4a
+). No actionable SMs with RNAseq support were detected in NSCLC-1-PEC with the default mode, compared to 36 in the sensitive mode. A similar increase in the number of expressed actionable mutations was found in NSCLC-1-Tissue, in which 15 actionable mutations supported by RNAseq reads were identified in the default mode and 34 were identified in the sensitive mode. Using the sensitive mode enabled the detection of all five panel mutations in the tissue, whereas only three were detected with the default mode. Likewise, the default mode resulted in the detection of three panel mutations in the PEC sample, whereas none were identified with the default mode (Fig.
+3f
+and Extended Data Fig.
+3a
+). Sample-specific mutations likely reflect false-positive identifications and differences in the sample composition, as those were collected from different sites and at different time points. Because the false-positive rate can be high in such low-tumor-content samples, RNAseq data are required to accurately prioritize the mutations. In conclusion, the three modes in NeoDisc allow for the analysis of various sample sources, ensuring the effective identification of expressed mutations.
+Fig. 3
+Mutation prioritization and personalized vaccine design.
+a
+–
+c
+, Comparison of NeoDisc default and sensitive modes across all NCI-test samples on the number of SMs identified per sample (
+n
+= 20 samples) (
+a
+), VAF of the identified SMs (
+n
+= 20 samples) (
+b
+) and percentage of mutations supported by RNAseq reads (
+n
+= 20 samples) (
+c
+).
+d
+, Number of immunogenic mutations from the NCI-test dataset (20 samples and 37 immunogenic mutations) ranked by NeoDisc ML algorithm in default and sensitive mode. The bar colors indicate the number of immunogenic mutations identified in the top
+n
+ranked mutations in each participant. Horizontal dashed lines indicate the highest number of immunogenic mutations ranked in the top
+n
+. The red horizontal line shows the total number of immunogenic mutations.
+e
+, Schematic overview of samples available for participant NSCLC-1.
+f
+, Number of actionable SMs identified with NeoDisc’s sensitive mode in NSCLC-1-Tissue and NSCLC-1-PEC samples compared to the GP. The number of SMs per sample is shown with bars on the left. The distribution of mutations across samples is shown with the top bars, with connected dots highlighting in which sample(s) they were identified.
+g
+, Three examples of long neoantigen peptide sequences designed by NeoDisc based on short peptide predictions and hotspot annotation. Sorted (top to bottom) HLA-I and HLA-II predicted neoantigens considered for the design of the long peptide sequence are displayed below the long peptide sequence in dark blue and yellow, respectively. The connected dots indicate which allele(s) the short HLA-I and HLA-II peptides are predicted to bind. For the bar plots, the heights of the bars represent the mean value and error bars represent the 95% confidence interval of the bootstrap distribution. For the violin plot, the center dot represents the median. The bounds of the box represent the 25th and 75th percentiles, indicating the IQR. The whiskers extend to the smallest and largest values within 1.5× the IQR from the 25th and 75th percentiles, respectively. Panel
+e
+created with
+BioRender.com
+.
+Source data
+In cancer vaccines, long sequences, encoded as tandem minigenes in mRNA vaccines or as synthetic peptides, are often favored over minimal short peptides
+33
+. This preference is motivated by the efficient uptake and processing by APCs, resulting in the presentation of multiple minimal HLA-I and HLA-II neoantigens
+34
+. The ML tool implemented in NeoDisc ranks the mutations on the basis of their potential immunogenicity
+10
+. NeoDisc optimally designs long sequences by maximizing coverage of high-quality predicted HLA-I and HLA-II neoantigens, considering binding affinities and the location of the wild-type sequences in presentation hotspots in ipMSDB
+31
+(Fig.
+3g
+and Extended Data Fig.
+4b
+). Mutations tend to deviate from the long peptide’s midpoint and, in HLA-II neoantigens, mutations are restricted to those located within the predicted binding core. Furthermore, concerning peptide-based vaccines, NeoDisc supports the adjustment of the N and C termini to comprise amino acids compatible with peptide synthesis. In particular, NeoDisc provides lists of short minimal epitopes for immune-monitoring and long peptides, ready for vaccine manufacturing, ranked on the basis of their potential immunogenicity.
+Deficiencies in the antigen presentation machinery
+Certain cancer types are particularly prone to CNVs, resulting in imbalances in gene expression levels of oncogenes and tumor suppressors. CNVs can disrupt the APPM, one notable mechanism being the HLA LOH, which results in reduced diversity in the presented antigens
+35
+. NeoDisc annotates the expression levels, CNVs and SMs affecting essential components of the HLA-I and HLA-II APPMs, relative to their expression on matched healthy tissues and cancer types from GTEx and The Cancer Genome Atlas (TCGA), respectively. To capture HLA LOH, NeoDisc combines sample-specific HLA typing with HLA CN information. Briefly, NeoDisc uses Sequenza
+36
+to estimate tumor content and CNVs and HLA-HD
+37
+for HLA typing of the germline and tumor WES and RNAseq. HLA allele-specific CNs are assessed using two methods; the first relies on tumor content and differential coverage ratios, similarly to McGranahan et al.
+38
+, and the second uses naive Bayes models trained on sample-specific tumor–germline depth ratio and allele frequencies. Results from both approaches are combined to infer HLA LOH events (Extended Data Fig.
+5a,b
+). We compared the performance of NeoDisc HLA-I and HLA-II LOH identification with LOHHLA
+38
+, which is the gold standard for HLA-I LOH detection, and with Sequenza
+36
+, which does not perform HLA LOH analysis but instead provides CN estimation at HLA-I and HLA-II loci. First, we demonstrated on 68 samples of the NCI cohort that NeoDisc’s HLA CN estimates strongly correlated with both LOHHLA for HLA-I (Pearson’s
+r
+= 0.871,
+P
+< 0.0001) and with Sequenza for HLA-I (Pearson’s
+r
+= 0.863,
+P
+< 0.0001) (Fig.
+4a,b
+). In total, 25 of the 37 HLA-I LOH events identified in 17 participants were common between NeoDisc and LOHHLA and were in agreement with Sequenza’s estimated minor allele CN (Fig.
+4c
+). We examined the estimated tumor content in samples where LOH events were detected by both NeoDisc and LOHHLA, as well as those uniquely identified by each tool. NeoDisc’s estimation seemed to be relatively uninfluenced by the tumor content (Fig.
+4d
+). A similar analysis on HLA-II alleles showed relatively good agreement between NeoDisc and Sequenza (Pearson’s
+r
+= 0.751,
+P
+< 0.0001; Fig.
+4e–g
+). Next, in five NCI cohort participants with HLA-I LOH events, eight immunogenic neoantigens were reported, of which five were restricted to alleles impacted by the LOH. We evaluated how excluding or retaining lost HLA-I alleles affects immunogenic neoantigen ranking with the ML prioritization (Fig.
+4h
+). Three neoantigens, which were predicted to preferentially bind the lost HLA alleles, were negatively impacted when those alleles were excluded from the prioritization, while the ranking of the remaining neoantigens, which were predicted to bind other alleles equally well, was marginally altered. Consequently, as HLA LOH events are typically subclonal, to support comprehensive immunomonitoring investigations in the autologous settings of the heterogenic antigenic landscape, alleles impacted by HLA LOH are retained by default. However, for vaccine design, we recommend excluding HLA-I alleles with LOH. HLA-II alleles impacted by LOH may be retained, as the presentation of HLA-II neoantigens in tumors is commonly mediated by professional APCs. Notably, retaining or discarding HLA-I or HLA-II alleles with LOH for subsequent predictions is configurable in NeoDisc and does not impact their potential identification by immunopeptidomics.
+Fig. 4
+HLA CN analysis and LOH event detection.
+a
+, Comparison of decimal CN estimation of 346 heterozygous HLA-I alleles from the NCI cohort (
+n
+= 68 samples) reported by NeoDisc (
+x
+axis) and LOHHLA (
+y
+axis).
+b
+, Comparison of rounded CN estimation of 389 (homozygous and heterozygous) HLA-I alleles from the NCI cohort (
+n
+= 68 samples) reported by NeoDisc (
+x
+axis) and Sequenza (
+y
+axis).
+c
+, Sequenza estimation of HLA-I CN (
+x
+axis) of all NeoDisc and LOHHLA HLA-I loss calls (
+n
+= 17 participants and 37 events;
+y
+axis). Colors indicate common and tool-specific calls.
+d
+, Tumor content estimation of samples with HLA-I loss calls (
+n
+= 37 samples).
+e
+, Comparison of rounded CN estimation of 639 (homozygous and heterozygous) HLA-II alleles from the NCI cohort (
+n
+= 68 samples) reported by NeoDisc (
+x
+axis) and Sequenza (
+y
+axis).
+f
+, HLA-II CN estimated by Sequenza (
+x
+axis) of all NeoDisc HLA-II loss calls (
+n
+= 18 samples and 53 events;
+y
+axis).
+g
+, Tumor content estimation of samples with HLA-II loss calls (
+n
+= 53 events). The box plot center lines represent the median. The bounds of the box represent the 25th and 75th percentiles (IQR). The whiskers extend to the smallest and largest values within 1.5× the IQR. Individual dots represent minima and maxima beyond the whiskers. All individual values are shown as dots.
+h
+, Comparison of the effect of keeping or discarding lost HLA-I alleles from the ML prioritization on the ranking of immunogenic peptides from the NCI samples with HLA-I loss (
+n
+= 5 samples and 8 peptides). In
+a
+,
+b
+and
+e
+, correlation coefficients and
+P
+values were calculated using a two-sided Pearson test.
+Source data
+Figure
+5a
+demonstrates MEL-2 tissue as a case of functional APPM. All HLA-I alleles were present and expressed in MEL-2 and, because of CNVs in chromosome 6, duplications of the HLA-A*26:01, HLA-B*38:01, HLA-C*12:03 and other HLA-II alleles were found. Notably, experimentally validated immunogenic HLA-I peptides were predicted to bind HLA-A*26:01 and HLA-C*12:03 (Supplementary Table
+3
+and Extended Data Fig.
+5c
+). In MEL-2, all six HLA-I alleles were represented in the tumor immunopeptidome where 34 unique HC-TSA peptides were identified (Fig.
+5b
+). Widespread presentation of HLA-I was confirmed by multiplexed immunofluorescence (mIF) staining in Sox10
++
+MEL cells (Fig.
+5c,d
+and Extended Data Fig.
+5d
+).
+Fig. 5
+Altered antigenic landscape mediated by HLA LOH and APPM defects.
+a
+, Inferred HLA allele-specific CN and their expression level in participant MEL-2, represented as bars and connected dots above, respectively.
+b
+, HLA allele distribution of all unique MS-identified antigen sequences (left,
+n
+= 27,910) and of HC-TSAs (right,
+n
+= 37) from participant MEL-2.
+c
+, mIF staining of a tumor tissue sample derived from participant MEL-2 (
+n
+= 1 slide).
+d
+, mIF quantification of HLA-ABC and HLA-DR on cancer cells (Sox10
++
+) from participant MEL-2 (
+n
+= 352 tiles).
+e
+, Genome-wide CNVs in samples MEL-3-A (top), MEL-3-B (center) and MEL-3-C (bottom). Chromosomal segments are displayed along the
+x
+axis and their estimated minor and major CNs are displayed along the
+y
+axis. The color map represents the CCF of the
+B2M
+p.Glu67fs mutation across samples.
+f
+, Inferred HLA allele-specific CNs and their expression level in participant MEL-3, represented as bars and connected dots above, respectively.
+g
+, Expression levels of
+B2M
+in healthy sun-exposed skin (GTEx,
+n
+= 701), MEL samples (TCGA,
+n
+= 468) and MEL-3 samples, correlated with
+B2M
+CCF. The box plot center lines represent the median. The bounds of the box represent the 25th and 75th percentiles (IQR). The whiskers extend to the 5th and 95th percentiles.
+h
+, mIF staining of a tumor tissue sample derived from participant MEL-3 (
+n
+= 1 slide).
+i
+, mIF quantification of HLA-ABC and HLA-DR on cancer cells (Sox10
++
+) from participant MEL-3 (
+n
+= 605 tiles).
+Source data
+In the case of MEL-3, from which three samples were collected from a tumor-bearing right external iliac lymph node, NeoDisc revealed an important impairment of HLA expression and heterogenous gains and losses in chromosomal segments in all three samples. The detection of clonal CN gains of
+BRAF
+,
+KRAS
+and
+MYC
+oncogenes, along with the loss of one copy of
+TP53
+and a p.Leu194Arg mutation in the remaining copy, highlighted alterations that are critical for tumor fitness and progression (Fig.
+5e
+). In addition, we found LOH in the entire HLA-I and HLA-DPA1 locus (Fig.
+5e
+). Notably, HLA-I allele expression levels, obtained from bulk RNAseq, exhibited a strong association with their respective CN, underscoring the benefit of HLA expression information in the calculation of HLA LOH (Fig.
+5f
+). Of note, evaluating HLA-II expression is generally ineffective for determining allele presence or absence because cancer cells frequently lack HLA-II expression.
+Furthermore, NeoDisc detected the LOH of additional components of the APPM in sample MEL-3-C, including
+CIITA
+and
+CALR
+(Fig.
+5e
+). A remarkable finding was the identification of B2M LOH and a frameshift mutation (p.Glu67fs) with a cancer cell fraction (CCF) of 0.88, 0.79 and 0.02 in samples MEL-3-A, MEL-3-B and MEL-3-C, respectively (Fig.
+5e,g
+).
+B2M
+expression in MEL-3 samples correlated with the estimated CCF, was downregulated compared to the matched healthy tissues (GTEx) and was in the lower range of expression in TCGA MEL samples (Fig.
+5g
+). We hypothesized that the
+B2M
+p.Glu67fs mutation, coupled with the
+B2M
+and HLA LOH, would abolish HLA-I presentation in most of the cancer cells. mIF staining confirmed that most tumor cells (Sox10
++
+) lacked cell-surface HLA-I expression (Fig.
+5h,i
+and Extended Data Fig.
+5e
+).
+Tumor neoantigen heterogeneity
+NeoDisc provides a deeper understanding of tumor heterogeneity by consolidating data from multiple lesions. To illustrate real-world challenges, we examined MEL-4, from whom two distinct MEL metastases were surgically removed on the same day, from the gastrointestinal (GI) and pelvic (P) regions, each with three tissue samples (named GI1–GI3 and P1–P3, respectively). NeoDisc generated a tumor phylogenetic tree annotated with known driver mutations from Intogen
+39
+, effectively differentiating the samples on the basis of their respective regions (Fig.
+6a
+). Evidence of
+B2M
+LOH across all six samples was found while P1–P3 samples also carried a
+B2M
+frameshift mutation p.Ser31fs, causing a premature stop codon, with an estimated CCF of 0.85, 0.92 and 0.95 in samples P1, P2 and P3, respectively. Low T cell inflammation, determined by the calculation of immune-related gene expression signatures, was associated with the combined effect of
+B2M
+p.Ser31fs and
+B2M
+LOH (Extended Data Fig.
+6a
+). The sample P1, which exhibited the lowest
+B2M
+p.Ser31fs CCF, displayed an inflamed phenotype, likely because of greater heterogeneity. mIF staining of CD8
++
+T cells in both tumor and stroma niches confirmed the heterogenous exclusion of CD8
++
+T cells in the P region (Fig.
+6b
+). In addition, one quarter of the tumor cells (Sox10
++
+) lacked HLA-I and HLA-II expression in the P tissues (Fig.
+6c,d
+and Extended Data Fig.
+6b,c
+). Furthermore, TAAs and HC-TSAs with supporting evidence of expression were identified, including
+MAGEA1
+,
+MLANA
+and
+TYR
+(Fig.
+6e
+). NeoDisc further identified by MS six mutated neoantigens, of which two where immunogenic (Supplementary Table
+4
+), and multiple peptides derived from expressed noncanonical sources such as long noncoding RNAs (lncRNAs), including MAGEA4-AS1, ATF6-DT and DSCR8, and a processed pseudogene (GAPDHP40), not expressed in GTEx (Fig.
+6e,f
+). Of note, MAGEA4-AS1 and DSCR8 were previously associated with high expression in several tumor types
+40
+–
+43
+. While the expression levels of the above sources remained consistent across all six samples, their presentation on HLA-I and HLA-II were significantly lower and almost undetectable in samples containing the p.Ser31fs mutation (
+P
+= 0.0042) (Fig.
+6e,f
+and Extended Data Fig.
+6d–f
+). Generation of a primary cell line from the MEL-4 P1 tissue confirmed the presence of two MEL cell populations, with about 30% of cells expressing very low HLA-I, corroborating the above mIF staining (Fig.
+6g
+). We independently isolated and expanded HLA-low and HLA-high autologous tumor cell lines. While IFNγ treatment increased the expression of IFNγ-responsive genes (including
+CIITA
+, HLA-II alleles and the immunoproteasome subunits
+PSMB8
+,
+PSMB
+9
+and
+PSMB
+10
+) in both HLA-high and HLA-low cells (Fig.
+6h
+), TSA presentation increased only in HLA-high cells. The treatment had minimal impact on the HLA-low cells, which lost the ability to present peptides by HLA-I and HLA-II (Fig.
+6f
+and Extended Data Fig.
+6e
+). In line with these results, neoantigen-specific TCRs, targeting MS-detected and predicted neoantigens, effectively recognized HLA-high tumor cells only, although the mutations were also expressed in HLA-low cells (Fig.
+6i
+and Extended Data Fig.
+6g
+). In summary, NeoDisc revealed important tumor-intrinsic heterogeneity, which is expected to hinder the effectiveness of antitumor immunity.
+Fig. 6
+Deep characterization of sample heterogeneity in MEL-4.
+a
+, Phylogenetic tree of tumors and cell lines, annotated with mutations in known driver genes (black) and
+B2M
+defects (red).
+b
+, mIF-derived CD8
++
+T cell infiltration in GI and P samples. Dots represent CD8 densities in the stroma and tumor in each tile.
+c
+, Digital reconstruction and density map from mIF quantification of Sox10
++
+cells expressing HLA-ABC and HLA-DR in GI and P lesions.
+d
+, mIF quantification of HLA-ABC and HLA-DR on cancer cells (Sox10
++
+) GI and P lesions.
+e
+, Heat map comparing expression levels of genes encoding for TSAs in healthy tissues (GTEx, 90th percentile expression value; left) and MEL-4 tumors and the HLA-low and HLA-high isogenic cell lines derived from the P lesion with and without IFNγ treatment (right).
+f
+, DIA-based quantification of HLA-I and HLA-II tumor-specific peptides identified by MS DDA and DIA across MEL-4 tumors and cell lines with and without IFNγ treatment. Gray boxes reflect the absence of detection.
+g
+, FACS quantification of HLA in the primary P lesion cell line. Diagram of HLA-low and HLA-high cell isolation by FACS sorting and histograms of HLA-ABC expression of isolated HLA-low and HLA-high populations before and after IFNγ treatment.
+h
+, Expression levels of genes involved in the APPM. Green and orange boxes show their expression levels in healthy sun-exposed skin (GTEx,
+n
+= 701 samples) and MEL samples (TCGA,
+n
+= 468 samples), respectively. Connected dots represent gene expression levels in HLA-high and HLA-low cell lines treated or not with IFNγ. In box plots, the center line represents the median. The bounds of the box represent the 25th and 75th percentiles, indicating the IQR. The whiskers extend to the smallest and largest values within 1.5× the IQR from the 25th and 75th percentiles, respectively.
+i
+, Tumor reactivity of antigen-specific TCR clonotypes from MEL-4. Reactivity was assessed by CD137 upregulation of TCR-transfected primary autologous activated CD8
++
+T cells following coculture with IFNγ-treated or untreated HLA-low and HLA-high isogenic cell lines. Data are presented as the mean values ± s.d. of technical replicates (
+n
+= 2). The positivity threshold is described in the
+Methods
+. Irr_Ctrl, irrelevant TCR; mock, transfection with water. Panel
+g
+created with
+BioRender.com
+.
+Source data
+NeoDisc’s report and output datasets
+Meeting the criteria set by clinical regulations, NeoDisc generates a folder containing output files and tables, lists of all MS-identified peptides and expressed genes, the VCFs, the personalized reference proteome FASTA and a comprehensive sample-specific PDF report (Supplementary Data
+1
+) containing metadata on the samples, the version of the NeoDisc pipeline and the analysis date. The report provides graphical representations of the results and quality measures to highlight technical issues, including information about variant-calling algorithm performance, TMB, HLA typing and HLA LOH, that are useful for identifying potential sample mix-up. CNVs are annotated to highlight affected oncogenes and tumor suppressors, thereby enhancing understanding of tumor evolution. The report also offers a visual representation of gene expression levels, facilitating efficient evaluation of APPM integrity, expression profiles of mutated genes in the context of GTEx and TCGA samples, T cell inflammation status and lists of identified viruses and expressed and presented HC-TSAs and TAAs. A comprehensive summary of the immunopeptidomic analysis is also provided, including the number of canonical and noncanonical peptides identified and the respective percentages of peptides predicted as binders to the respective HLAs, peptide length distribution and deconvolved binding motifs. Overall, the report highlights key details concisely, facilitating an immediate interpretation of the results. Additionally, it offers valuable insights to support additional in-depth exploration for translational research, along with links to relevant publications to contextualize the findings.
+Discussion
+NeoDisc is an advanced computational framework designed to improve the identification and prediction of clinically relevant antigenic peptides presented on cancer cells. This platform integrates data from genomic, transcriptomic and immunopeptidomic sources to accurately identify peptides originating from mutations, TSAs, oncoviral elements and noncanonical sources. For each person and their tumor lesions, NeoDisc generates a personalized proteome reference that includes and annotates these tumor-specific alterations. These references are then used to predict clinically relevant immunogenic tumor antigens restricted to the person’s HLAs and to search the sample-matched immunopeptidomic data for naturally presented HLA-I and HLA-II bound peptides.
+A unique feature of NeoDisc is its use of ML algorithms specifically trained on a matrix of tens of features to prioritize immunogenic HLA-I neoantigens. Here, we demonstrated how this ML-based approach outperforms our traditional rule-based method and two other commonly used tools, pVACseq and pTuneos, in identifying peptides that are most likely to elicit an immune response. A particularly illuminating example of NeoDisc’s capabilities is its application to CESC-1, characterized by an exceptionally high mutational burden. NeoDisc identified 393 actionable mutations, which translated into a pool of 19,051 peptides with a predicted binding rank of ≤2%. Through rule-based prioritization, 66 HLA-I neoantigenic peptides were selected for T cell screening assays. Of these, 11 peptides were found to be immunogenic. Notably, when these peptides were reranked using NeoDisc’s ML model, six of the immunogenic peptides were positioned within the top ten candidates, underscoring the effectiveness of the ML-based prioritization for supporting the design of personalized vaccines. Additionally, NeoDisc identified two confirmed immunogenic neoantigens in the CESC-1 tumor’s immunopeptidomic data. The ML model ranked these neoantigens substantially higher compared to the other tools, which further validates NeoDisc’s superior performance in neoantigen prioritization that is critical for the development of effective cancer vaccines.
+The EBV-positive NPC-1 case highlights NeoDisc’s capability to identify and select viral antigens as potential immunotherapeutic targets through transcriptome analysis and rule-based ranking. In the tumor lesions of participant NPC-1, EBV was found to express both latent and lytic genes, indicating active viral replication. T cell reactivity assays in TILs revealed that 34 of 108 tested viral HLA-I and HLA-II peptides were immunogenic. Furthermore, in participant MEL-1’s tumor, by combining transcriptomics and immunopeptidomics, NeoDisc identified 19 expressed HC-TSAs, 18 of which were the source of 161 MS-identified HLA-bound peptides. Six peptides were confirmed immunogenic epitopes in MEL-1 TIL samples and we demonstrated that four HC-TSA peptides mediated tumor rejections. These cases further demonstrate NeoDisc’s proficiency in identifying and prioritizing tumor antigens that can elicit strong immune responses.
+NeoDisc facilitates the integration of data from various samples of the same person, offering valuable insights into tumor heterogeneity. Beyond standard methods for HLA typing, NeoDisc includes in-house developed methods for the detection of HLA-I and HLA-II LOH, supported by sample-specific WES and RNAseq data, and provides an overview of the functionality of the APPM, which are particularly useful tools in understanding the development of resistance to therapies. For example, in the MEL-2 case, NeoDisc revealed a functional APPM despite chromosomal abnormalities, including duplications of HLA alleles. Indeed, the MS immunopeptidomic data confirmed the widespread presentation of HLA-I peptides, with 34 unique HC-TSA peptides identified. mIF staining further validated ubiquitous cell-surface expression of HLA-I in the tumor cells. In contrast, in participant MEL-4,
+B2M
+LOH was detected across all of the studied tumor lesion samples, while samples from the P region also carried a
+B2M
+frameshift mutation causing a premature stop codon. From RNAseq data, NeoDisc estimated that P samples overall exhibited low T cell inflammation. Indeed, mIF staining confirmed the heterogenous exclusion of CD8
++
+T cells in the P lesion, where one quarter of the tumor cells lacked HLA-I and HLA-II expression. While multiple TAAs, HC-TSAs and mutated neoantigens were found to be expressed, be presented and mediate T cell response in the participant, their presentation on HLA-I and HLA-II were significantly lower and almost undetectable in samples containing the
+B2M
+frameshift mutation. Expansion of isogenic lines from the P lesion with remarkable differences in cell-surface HLA-I expression allowed further investigation of the impaired responsiveness to IFNγ stimulation in cells lacking functional B2M. Although multiple tumor-reactive TCRs targeting both MS-detected and predicted neoantigens were identified in this participant’s TILs, NeoDisc revealed important tumor-intrinsic heterogeneity and APPM impairment. These factors are likely to hinder effective antitumor immunity and impact the participant’s potential to respond to immunotherapy.
+Some limitations to the current study should be acknowledged. While NeoDisc effectively integrates data from multiple omics layers, the quality and depth of the input data can substantially influence the accuracy of antigen identification and prioritization. Furthermore, the components of the NeoDisc pipeline, particularly those involved in the prioritization of HLA-II restricted neoantigens, viral antigens and TSAs, were tested on a limited number of samples. As a result, while the initial results are promising, further validation on a larger and more diverse set of samples is necessary to fully establish the robustness and generalizability of these components.
+NeoDisc’s findings offer valuable insights for the exploration of the tumor immunobiology, tumor evolution and immune evasion mechanisms, for guiding participant selection for inclusion in immunotherapy trials and for the development of future therapeutic approaches. Currently, NeoDisc is being used in phase 1 clinical trials for personalized cancer vaccines
+11
+and adoptive T cell
+25
+,
+44
+therapies in Switzerland, highlighting its practical utility and potential for clinical translation. However, different regulations may apply for clinical implementation in other regions.
+Methods
+Installation and configuration of NeoDisc
+NeoDisc is available upon registration (
+https://neodisc.unil.ch/
+). A manual file, describing NeoDisc requirements and outputs, is provided with NeoDisc to guide the user through the installation and configuration process.
+DNA read alignment
+FastQ reads were aligned and processed following the Genome Analysis Toolkit (GATK)’s best practice workflow for data preprocessing for variant discovery (10.1002/0471250953.bi1110s43). Briefly, FastQ reads were aligned to the reference human genome (GRCh37) (
+https://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.13/
+) with bwa (0.7.17)
+45
+. Duplicate reads were marked and base quality scores were recalibrated with GATK (4.4.0.0)
+15
+tools (MarkDuplicatesSpark, BaseRecalibrator and ApplyBQSR). Alignment and read quality were assessed with picard tools version 3.0.0 (
+https://broadinstitute.github.io/picard/
+) (CollectAlignmentSummaryMetrics and CollectHsMetrics) and FastQC 0.11.9 (
+https://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+).
+CNV, tumor content and variant calling
+CNV and tumor content were estimated from the recalibrated BAM files with the Sequenza (3.0.0)
+36
+workflow, using matched-cancer-type CNV frequencies derived from the Pan-Cancer Analysis of Whole Genomes (PCAWG)
+46
+as weights to improve estimations. Four variant-calling algorithms (Mutect (1.1.7)
+13
+, VarScan (2.4.6)
+14
+and GATK (4.4.0.0)
+15
+tools HaplotypeCaller
+13
+and Mutect2) were applied to the recalibrated BAM files.
+The GATK HaplotypeCaller algorithm reduces the global false-positive variant call rate by relying on haplotype de novo assembly in variable regions
+47
+,
+48
+. HaplotypeCaller was run in GVCF mode on tumor and germline recalibrated BAM files separately to detect SNV and indel variants. Tumor and germline GVCFs were combined using GATK GenotypeGVCF to produce a single VCF. GATK’s best practices were followed for subsequent variant quality score recalibration and variant quality assessment. Participant-specific SNPs were defined as variants present in both tumor and germline, while tumor-specific variants were defined as SMs.
+The Mutect 1.1.7 variant-calling algorithm predicts SMs on the basis of log odds scores of two Bayesian classifiers. One classifier identifies nonreference variants in the tumor sample and the second classifier determines the tumor specificity of those variants. Read support is used for the filtering of candidate SMs, reducing next-generation sequencing (NGS) artifacts. Mutect 1.1.7 was run with default parameters and selected SMs were exported in VCF format.
+The Mutect2 variant-calling algorithm also relies on a Bayesian somatic genotyping model but this model is different from Mutect1 and it uses de novo assembly of haplotypes in variable regions. Mutect2 was run with default parameters and identified variants (SNPs and SMs) were exported in VCF format.
+The VarScan2 algorithm
+14
+relies on hard filtering of calls, making it less sensitive to bias such as extreme read coverage or sample contamination. Variants are filtered using parameters that include read quality, strand bias, coverage and frequency. VarScan2 was run in somatic mode with custom parameters (--normal-purity 1.00, --min-normal-coverage 6, --min-tumor-coverage 8, --min-tumor-coverage 8, --somatic-p-value 0.05, --strand-filter 0) and the --tumor-purity and --min-var-freq flags were set on the basis of the tumor content estimation (0.4 × tumor content and 0.2), respectively. Resulting variant (SMs and SNPs) calls were further filtered using VarScan2 fpfilter (--dream3-settings, --min-var-basequal 25, --min-ref-avgrl 70, --min-var-avgrl 70, --keep-failures) and exported in VCF format. Finally, only variants passing fpfilter were retained.
+Variant calls from GATK, Mutect1, Mutect2 and VarScan2 were combined into a single VCF that contains the union of the variants of all four callers. Ambiguous calls (that is, different calls at the same genomic coordinate) were resolved by a majority rule. In the absence of majority, calls were rejected. High-confidence variants were defined as variants identified by two or more algorithms and low-confidence variants were defined as identified by a single algorithm. Alternatively, when NeoDisc was operated in ‘sensitive’ mode, the union of all variants identified by all variant-calling algorithms was considered and annotated as high confidence. All identified variants were phased, using Whatshap (1.7)
+49
+to determine their detection on the same chromosome. This information was critical in determining whether neighboring variants affected the same transcript and necessitated their inclusion within the same peptide sequence. When GP variants were used, a generic VCF was created and used for downstream analysis.
+Clonality analysis
+Only high-confidence SM were considered. The VAF was calculated for all high-confidence SMs detected in all samples, from the BAM files, using SAMtools (1.17) mpileup
+50
+. CCF, clonal and subclonal assessments were calculated from the VAF, CNVs and tumor content, as described previously
+51
+. Zygosity annotation was derived from Sequenza analysis, where segments with one loss were annotated as LOH and other segments were annotated as heterozygous. We used LICHeE (1.0)
+52
+for phylogenetic reconstruction of cancer evolution, using all SMs identified. Trees were annotated with clonality information and with mutated genes annotated as drivers using Intogen (2016.5)
+39
+.
+RNA read alignment and gene expression quantification
+FastQ reads were aligned and counted per gene with STAR (2.7.10b)
+53
+(--runMode alignReads, --twopassMode Basic, --outReadsUnmapped Fastx, --quantMode GeneCounts, --outSAMtype BAM unsorted) on the reference human genome (GRCh37) and the GENCODE version 43 annotation. Resulting BAM files were sorted and indexed with SAMtools (1.17)
+50
+(sort, index). RSeQC (5.0.1)
+54
+(infer_experiment.py) was used to determine RNAseq data strandness if the sequencing kit used was not known or not available in the list of predefined kits. TPM, reads per kilobase per million mapped reads (RPKM), counts per million mapped reads (CPM) and upper quartile normalization (UQN) values were calculated from raw gene counts.
+HLA typing and HLA LOH analysis
+HLA typing was performed on both DNA and RNA data with HLA-HD (1.7.0)
+37
+, which required paired-end sequencing data. HLA-specific read alignments derived from HLA-HD were used to derive HLA segment-specific coverage. RNA coverage of each segment was calculated as the number of reads mapping uniquely to the segment. HLA allele-specific CNs were estimated following equations described in Van Loo et al.
+55
+and McGranaham et al.
+38
+. The log
+R
+value was calculated as follows:
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\log R={\log }_{2}\left(\frac{{{\rm{Tum}}}_{\mathrm{cov}}}{{{\rm{Gl}}}_{\mathrm{cov}}}\times M\right),$$\end{document}
+log
+R
+=
+log
+2
+Tum
+cov
+Gl
+cov
+×
+M
+,
+where Tum
+cov
+and Gl
+cov
+are the tumor and germline segment-specific coverages, respectively, and
+M
+is the multiplication factor, defined as the genome-wide tumor–germline ratio of uniquely mapped reads.
+For each HLA allele pair, the segment
+baf
+was calculated as the coverage of the first allele segment divided by the sum of the coverage of the two alleles.
+The segment CN was calculated as follows:
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{CN}}}_{{\rm{allele}}1}=\frac{\left(\;\rho -1\right)+{baf}\times {2}^{\log R}\times (2\left(1-\rho \right)+\rho \varphi )}{\rho },$$\end{document}
+CN
+allele
+1
+=
+ρ
+−
+1
++
+b
+a
+f
+×
+2
+log
+R
+×
+(
+2
+1
+−
+ρ
++
+ρ
+φ
+)
+ρ
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{CN}}}_{{\rm{allele}}2}=\frac{\left(\;\rho -1\right)-({baf}-1)\times {2}^{\log R}\times (2\left(1-\rho \right)+\rho \varphi )}{\rho },$$\end{document}
+CN
+allele
+2
+=
+ρ
+−
+1
+−
+(
+b
+a
+f
+−
+1
+)
+×
+2
+log
+R
+×
+(
+2
+1
+−
+ρ
++
+ρ
+φ
+)
+ρ
+,
+where
+ρ
+is the estimated tumor content and
+φ
+is the estimated tumor ploidy.
+For heterozygous HLA alleles,
+P
+values supporting loss events were calculated using a paired
+t
+-test on CN, log
+R
+and RNAseq coverage of segments with the matched allele and an unpaired
+t
+-test on CN with segments having equal numbers of major and minor alleles, as determined in the Sequenza segment file. A final
+P
+value supporting minor allele loss LOH
+pval
+was calculated by combining
+P
+values supporting loss events using the Fisher method.
+P
+values supporting allele presence were calculated using a paired
+t
+-test on CN, log
+R
+and RNAseq coverage of segments with the matched allele and an unpaired
+t
+-test on CN with segments having lost the minor allele, as determined in the Sequenza segment file. A final
+P
+value supporting allele presence presence
+pval
+was calculated by combining
+P
+values supporting presence events using the Fisher method.
+A sample-specific naive Bayes classifier (model A) was trained to predict CN
+allele
+, as defined from Sequenza’s sample-specific segments, from the tumor–germline coverage depth ratio and allele frequency at heterozygous sites. Model A was applied to the sample-specific heterozygous HLA allele segments and the
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\rm{{CN}}_{{allel}{e}_{{predicted}}}$$\end{document}
+CN
+a
+l
+l
+e
+l
+e
+p
+r
+e
+d
+i
+c
+t
+e
+d
+was defined as the segment median predicted CNs. Lastly, LOH events on heterozygous alleles were called if
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{array}{c}\left(\left({{\rm{CN}}}_{{\rm{allele}}}\le 0.5\left[{\rm{and}}\right]{{\rm{CN}}}_{{\rm{allele}}_{{\rm{predicted}}}}\le 1\right)\left[{\rm{or}}\right]\right.\\\left.\left({{\rm{CN}}}_{{\rm{allele}}} < 1\left[{\rm{and}}\right]{{\rm{CN}}}_{{\rm{allele}}_{{\rm{predicted}}}} < 1\right)\right)\\\left[{\rm{and}}\right]\\{{\rm{LOH}}}_{{\rm{pval}}} < 0.01\\\left[{\rm{and}}\right]\\{{\rm{LOH}}}_{{\rm{pval}}} < {{\rm{presence}}}_{{\rm{pval}}}.\end{array}$$\end{document}
+CN
+allele
+≤
+0.5
+and
+CN
+allele
+predicted
+≤
+1
+or
+CN
+allele
+<
+1
+and
+CN
+allele
+predicted
+<
+1
+and
+LOH
+pval
+<
+0.01
+and
+LOH
+pval
+<
+presence
+pval
+.
+A second sample-specific naive Bayes classifier (model B) was trained to predict CN
+total
+, as defined from Sequenza’s sample-specific segments, from the tumor–germline coverage depth ratio at all sites. Model B was applied to the sample-specific homozygous HLA alleles segments and CN
+allele
+was defined as the median predicted CN of its segments. The
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{CN}}}_{{\rm{allel}{e}}_{{\rm{confidence}}}}$$\end{document}
+CN
+allel
+e
+confidence
+score was calculated as the product of individual CN
+allele
+segment probabilities. LOH events were defined for alleles for which
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{CN}}}_{{\rm{allele}}}=0\left[{\rm{and}}\right]{{\rm{CN}}}_{{\rm{allel}{e}}_{{\rm{confidence}}}} < 0.01$$\end{document}
+CN
+allele
+=
+0
+and
+CN
+allel
+e
+confidence
+<
+0.01
+. The
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{CN}}}_{{\rm{allel}{e}}_{{\rm{final}}}}$$\end{document}
+CN
+allel
+e
+final
+was set to 0 for LOH events and to
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\max (1,{\rm{round}}({{\rm{CN}}}_{{\rm{allele}}}))$$\end{document}
+max
+(
+1
+,
+round
+(
+CN
+allele
+)
+)
+. Models A and B were trained using 80% of the data for training and 20% for testing; random_state was set to 312, priors were set to none and the sklearn GridSearchCV algorithm was used to define the var_smoothing parameter using the following grid search parameters: param_grid = [‘var_smoothing’: np.logspace(0, −9, num = 50)], scoring = ‘f1_weighted’ and refit = true. A consensus HLA haplotype was built from the results of the germline and tumor typing from DNA and RNAseq data. Lost HLA-I and HLA-II alleles are flagged by NeoDisc. By default, lost alleles are kept for downstream TSA prediction and prioritization. However, users have the option to choose whether to keep or discard these alleles using the command line. It is important to note that this choice does not impact immunopeptidomic analysis. In this study, lost alleles were discarded from the predictions, with the exception of Fig.
+4h
+, where the effect of keeping or discarding lost HLA-I alleles on the prioritization was assessed.
+Noncanonical genes
+Noncanonical genes were defined as expressed genes annotated as long intergenic noncoding RNA, lncRNA, microRNA, miscellaneous RNA, mitochondrial ribosomal RNA (rRNA), mitochondrial transfer RNA, processed pseudogene, processed transcript, pseudogene, retained intron, rRNA, rRNA pseudogene, small conditional RNA, sense intronic, sense overlapping, small nucleolar RNA, small nuclear RNA, translated processed pseudogene, unprocessed pseudogene and vault RNA in GENCODE version 38.
+TAAs from canonical and noncanonical sources and HC-TSAs
+In general, a gene expression level of >0.0 TPM was considered expressed in a given sample. Canonical and noncanonical genes (as defined above) with expression across all GTEx tissues, except testis and sun-exposed skin, with <1.0 TPM at the 90th percentile were considered as TAAs. In addition, we curated a list of immunogenic HC-TSAs by mining the literature, IEDB (
+https://www.iedb.org/
+(ref.
+9
+), as of 12 January 2022) and Cancer Antigenic Peptide Database (CAPED;
+https://caped.icp.ucl.ac.be/Peptide/list
+, as of 10 March 2022). HC-TSA source genes were defined on the basis of GTEx expression (<1.0 TPM at the 90th percentile in all tissues, except testis and sun-exposed skin), having expression > 1.0 TPM in the sample, except for
+CTAG1B
+, which was considered expressed if it was >0.0 TPM. All 8–19-mer peptide sequences derived from expressed HC-TSAs and canonical TAAs were predicted for binding to the participant HLA-I and HLA-II alleles using PRIME 2.0 (ref.
+56
+) and MixMHC2pred 2.2 (ref.
+57
+), respectively. HC-TSA and canonical TAAs derived peptides matching other sequences in the personalized healthy proteome reference were removed (with the exception of sequences derived from other HC-TSAs and canonical TAAs). Only HC-TSA and canonical TAAs derived peptides with a predicted percentage rank ≤ 0.5 or present in the curated database of immunogenic HC-TSA peptides were retained for further prioritization (see below). This restriction aims to limit the number of prioritized HC-TSA and canonical TAAs but it does not impact the detection of HC-TSA-derived and TAA-derived peptides in the immunopeptidomic data.
+Detection of viruses
+The NCBI Virus Genomes Resource database
+58
+was used to retrieve all human-specific (filtering the database by host = human) and fetch their annotated genomes and proteomes. Nonhuman viruses genomes and proteomes were retrieved from the list of all available viruses, selecting entries associated with nonhuman hosts, complete reference sequence available and available accession identifier. ART (2.5.8)
+59
+was used to simulate Illumina reads (art_illumina -ss HSXt -p -l 150 -f 4 -m 200 -s 10) from the human-specific and nonhuman viral transcript sequences. STAR (2.7.8a)
+53
+was used for the alignment and counting of the simulated reads on the human-specific viruses genomes. We calculated the viral score of each virus as follows:
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{RPKM}}}_{{\rm{vg}}}=\frac{{R}_{{\rm{vg}}}\times {10}^{9}}{{R}_{{\rm{Tot}}}\times {L}_{{\rm{vg}}}},$$\end{document}
+RPKM
+vg
+=
+R
+vg
+×
+10
+9
+R
+Tot
+×
+L
+vg
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${\rm{Viral}\;{score}}=\frac{\sum {\rm{R{{PKM}}}}_{{\rm{vg}}}}{{N}_{{\rm{vg}}}},$$\end{document}
+Viral
+s
+c
+o
+r
+e
+=
+∑
+RPKM
+vg
+N
+vg
+,
+where
+R
+vg
+is the number of reads mapped to a viral gene,
+R
+Tot
+is the total number of mapped reads,
+L
+vg
+is the length of the viral gene in base pairs and
+N
+vg
+is the number of viral genes.
+The specificity and sensitivity of the identifications were calculated by comparing viral scores of human-specific and nonhuman viral reads. We selected a threshold on the viral score (>97% sensitivity and specificity) to separate high-confidence from low-confidence viral identifications.
+Reads not mapped to the human reference genome were aligned and counted using STAR (2.7.10b)
+53
+to the human-specific viruses genomes database. Viral score, TPM, RPKM, CPM and UQN values for each viral gene were calculated from reads counts.
+Prediction of viral peptides
+We created a list of high-confidence immunogenic viral peptides from the literature and IEDB (
+https://www.iedb.org/
+(ref.
+9
+)). High-confidence peptides were defined as peptides not mapping to the human proteome. All 8–19-mers derived from high-confidence identified virus sequences, as determined from RNAseq, were predicted for binding to the participant HLA-I and HLA-II alleles using PRIME 2.0 (ref.
+56
+) and MixMHC2pred 2.0 (ref.
+57
+), respectively. NeoDisc screened all possible binding peptides across the entire protein sequence and excluded any peptide sequence matching with a personalized healthy proteome, resulting in a list of tumor-specific viral peptides.
+Creation of sample-specific proteome references
+The GENCODE version 43 reference proteome was combined with the three open reading frame translation products from methionine to stop of TAA noncanonical transcripts and the identified viral proteomes. It was then personalized by the addition of all VCF variants (SNPs and SMs) and annotated with gene expression, CNVs and variant-related features. This sample-specific proteome was subsequently used for the prediction of neoantigens, by including all high-confidence nonsynonymous SMs and phased high-confidence SNPs, and for the MS search, by including all high-confidence and low-confidence variants (SNPs and SMs). Additionally, a personalized healthy proteome reference was created by including all high-confidence nonsynonymous SNPs and it was used to filter out sequences that are not tumor specific.
+Neoantigen prediction
+All 8–19-mers predicted or MS-detected peptides covering the SM were first filtered to remove any sequences mapping to the healthy personalized proteome to assure tumor specificity. If multiple transcripts were affected by the SM, all unique sequences were considered. The 8–12-mer peptides were predicted for binding to the participant HLA-I using PRIME 2.0 (ref.
+56
+) and all 12–19-mer peptides were predicted for binding to the participant HLA-II using MixMHC2pred 2.0 (ref.
+57
+). Predicted peptides were annotated with CScape
+60
+prediction of oncogenicity, median expression in the matched healthy tissue in GTEx, median expression of the matched tumor type in TCGA, Intogen (2016.5)
+39
+gene and mutation driver information, annotated protein location from ProteinAtlas
+61
+and peptide presentation information from ipMSDB
+31
+. For each mutation, gene expression was derived from RNAseq analysis and the mutation expression was determined as the percentage of reads carrying the mutation in the BAM file, using SAMtools mpileup
+50
+. Long peptide sequences were designed by sorting annotated short peptides sequences on the basis of their predicted binding to HLA-I and HLA-II, their predicted binding rank (low to high), the number of different alleles predicted to bind the short peptide (high to low), the ipMSDB presentation value on HLA-I and on HLA-II (high to low) and the length of the peptide sequence (low to high). Optimal long peptide sequence design started with the best short peptide sequence. The sequence was sequentially expanded with the next short peptide sequences until reaching the maximum specified length. Short peptide sequences leading to a length longer than the requested length were ignored. To prevent synthesis issues, when the addition of short peptides led to problematic amino acids at the N terminus or C at the C terminus, the long peptide sequence was further extended until reaching another amino acid compatible with peptide synthesis.
+Prioritization of predicted TSAs
+When RNAseq sequencing data were available, HLA-I SNV neoantigens were prioritized with the ML-based prioritization algorithm
+10
+. Other predicted neoantigens (including frameshifts), HC-TSAs, TAAs, viral peptides and HLA-II-bound neoantigens were prioritized using specific rule-based algorithms.
+For the ML-based prioritization, HLA-I SNVs neoantigens were further annotated with NetMHCpan (4.1)
+62
+for HLA-I binding affinity prediction, NetMHCstabpan (1.0a)
+63
+for HLA-I binding stability, NetChop (3.1)
+64
+for C-terminal proteasomal cleavage, NetCTLpan (1.1)
+65
+for recognition by the TAP transporter complex, differential agretopicity indices calculated as the log(neoantigen percentage rank) − log(wild type percentage rank) and HLA-binding anchor position derived from MixMHCpred sequence motifs. Those features, in combination with features derived from MixMHCpred, PRIME, CScape
+60
+, GTEx
+66
+, TCGA, RNAseq and ipMSDB, were used to apply the ML model and prioritize predicted HLA-I SNV neoantigens.
+The rule-based approach was used for HLA-II neoantigens. First, long and short minimal epitope neoantigen sequences were sorted separately on the basis of a series of features (Extended Data Fig.
+2
+). Second, the sorted neoantigens were classified into five categories (‘A’, ‘B’, ‘C’, ‘D’ and ‘reject’) while maintaining the sequence order from the initial sorting step. Similar rule-based approaches were implemented for the prioritization of antigens from viruses and TAAs (including both HC-TSAs and canonical TSAs) but they relied on different features (Extended Data Fig.
+2
+). Only positive T cell assays in the IEDB were considered for immunogenicity.
+APPM analysis
+A list of genes involved in HLA-I and HLA-II presentation machinery pathways was selected from the Kyoto Encyclopedia of Genes and Genomes Pathway Database
+67
+. All gene expression was quantified in TCGA and GTEx. Genes with sample RNAseq expression lower than the expression in the matched GTEx tissue at the 5th percentile were considered downregulated and upregulated if their expression was greater than the 95th percentile expression in the matched GTEx tissue. In addition, genes were annotated with LOH and SM events identified from DNA data.
+Inflammation score calculation
+From RNAseq quantification data, NeoDisc derived the T cell inflammation score using the T cell inflammation signature as described in Danaher et al.
+68
+,
+69
+; nevertheless, users may use alternative tools, as the immunogenicity score has no impact on the prioritization of the antigen. This score was used to determine the T cell inflammation status, which could be noninflamed, intermediate inflamed or T cell inflamed. Furthermore, the sample inflammation signature was represented within the context of the matched cancer type from TCGA.
+Tandem MS (MS/MS) spectra conversion
+Currently, only raw files from the Orbitrap technology are supported for immunopeptidomic analysis. The Proteowizard (3.0.22132)
+70
+msconvert tool was used to convert immunopeptidomic DDA and DIA MS/MS spectra acquired on Thermo Fisher Scientific instruments (.raw) to MGF and mzML.
+Peptides identification with Comet and NewAnce
+DDA MS/MS data were converted into MGF format and were searched against the personalized MS searchable proteome with Comet (2022.01)
+71
+. Default Comet search high–high parameters were modified as follows: decoy_search = 1, peff_format = 5, precursor_tolerance_type = 0, isotope_error = 1, isotope_error = 1, max_variable_mods_in_peptide = 2, max_variable_mods_in_peptide = 2, sample_enzyme_number = 0, activation_method = HCD, digest_mass_range = 500.0 3,000.0, max_precursor_charge = 4 and spectrum_batch_size = 30,000. The following variable modifications were included in the search: methionine oxidation (
+Δ
+mass = 15.9949), N-terminal acetylation (
+Δ
+mass = 42.010565), cysteine carbamyl (
+Δ
+mass = 43.005814), carbamidomethylation of cysteine (
+Δ
+mass = 57.021464), cysteinylation (
+Δ
+mass = 119.004099), glutamine to pyroglutamatic acid (
+Δ
+mass = −17.026549) and glutamic acid to pyroglutamic acid (
+Δ
+mass = −18.010565). No fixed modifications were considered. Peptides lengths were adjusted to 8–15 aa and to 8–22 aa for HLA-I and HLA-II searches, respectively. The ‘allowed_missed_cleavage’ variable was set to 15 and 22 for HLA-I and HLA-II, respectively.
+HLA-I and HLA-II Comet identifications were filtered at a 3% group-specific false discovery rate (FDR) using NewAnce (1.7.5)
+72
+, where protein-coding, noncanonical and virus-derived peptides were separated for FDR calculation. Frameshift-derived peptides were FDR-filtered together with noncanonical peptides. Peptide spectral matches (PSMs) were merged and grouped into unique peptide sequences, mapped to the most likely protein group (protein-coding > frameshift > noncanonical > virus) and neoantigens were flagged.
+Peptide identification with FragPipe
+DDA and DIA mzML files were searched against the personalized MS searchable proteome with the FragPipe 20.0 (
+https://fragpipe.nesvilab.org/
+) pipeline, which contains DIA Umpire
+73
+, Philosopher (5.0.0)
+74
+, MSFragger (3.8)
+75
+and IonQuant (1.9.8)
+76
+. The default nonspecific HLA and nonspecific HLA DIA parameters available in FragPipe were edited as follows: addition of variable modifications (see above), removal of fixed modifications, setting Philosopher ion, PSM and peptide FDR to 0.03 and activation of group-specific FDR by setting msfragger.group_variable = 2 and adding to the Philosopher report filter the flag ‘--group’. IonQuant was turned on for peptide quantification when running in DDA only mode. Peptide lengths were adjusted to 8–15 aa and to 8–22 aa for HLA-I and HLA-II searches, respectively. HLA-I and HLA-II mzML files were searched separately. PSMs were merged and grouped into unique peptide sequences, mapped to the most likely protein group (protein-coding > frameshift > noncanonical > virus) and neoantigens were flagged.
+Combining Comet-NewAnce and FragPipe identifications
+Comet-NewAnce and FragPipe peptide identifications were combined by retaining the union of the identification. Conflicting PSMs were not reported. All peptides mapped to non-protein-coding groups were searched with L or I replacement against the basic local alignment search tool (BLAST)
+77
+nonredundant human database (downloaded using BLAST-plus (2.11.0)
+78
+on 6 April 2023). All peptides were annotated with available genomic and transcriptomic information and protein-coding peptides mapping to our list of high-confidence immunogenic HC-TSAs were annotated with literature-derived immunogenicity information. All identified peptides were predicted for binding to the participant’s HLA-I and HLA-II HLA alleles (including alleles subjects to LOH) with PRIME 2.0 (ref.
+56
+) and MixMHC2pred 2.0 (ref.
+57
+), respectively. MoDec (1.2)
+79
+was used for HLA-I and HLA-II motif deconvolution of peptides mapping to protein-coding, other (noncanonical) and viral groups. The number of motifs detected was based on the Akaike information criterion value reported by MoDec. Each motif was assigned to the participant’s HLA with the closest motif, determined as the allele with the smallest Kullback–Leibler divergence (KLD
+a
+) between the deconvoluted motif position weight matrices
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{PWM}}}_{p,i}^{m}$$\end{document}
+PWM
+p
+,
+i
+m
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{PWM}}}_{p,i}^{b}$$\end{document}
+PWM
+p
+,
+i
+b
+(
+m
+, MoDec value;
+i
+, amino acid;
+b
+, binding predictor (MixMHCpred
+56
+or MixMHC2pred
+57
+);
+p
+, position;
+l
+, peptide length for HLA-I and core length for HLA-II):
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{KLD}}}_{p}^{a}=-\mathop{\sum }\limits_{i=1}^{20}{{\rm{PWM}}}_{p,i}^{m}\times \log \left(\frac{{{\rm{PWM}}}_{p,i}^{b}}{{{\rm{PWM}}}_{p,i}^{m}}\right)$$\end{document}
+KLD
+p
+a
+=
+−
+∑
+i
+=
+1
+20
+PWM
+p
+,
+i
+m
+×
+log
+PWM
+p
+,
+i
+b
+PWM
+p
+,
+i
+m
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{KLD}}}^{a}=\frac{{\sum }_{p=1}^{l}{{\rm{KLD}}}_{p}^{a}}{l}$$\end{document}
+KLD
+a
+=
+∑
+p
+=
+1
+l
+KLD
+p
+a
+l
+Tumor-specific peptides were defined as peptides not assigned to the protein-coding group predicted to bind with a rank ≤ 2. PSM images were generated with PDV (1.8.0)
+80
+and the best fragmentation pattern as determined by NewAnce (1.7.5)
+72
+was reported. Identified tumor-specific peptides were sorted on the basis of their protein group, evidence of immunogenicity in the literature (only for HC-TSA), source gene expression and predicted binding affinity.
+Tools used for NeoDisc benchmarking
+pTuneos (1.0.0)
+19
+was run in WES mode, using matched germline and tumor WES and tumor RNAseq data. Default settings and hg19 genome assembly were used to ensure a fair comparison. Immunogenic peptide ranks were retrieved from the final_neo_model.tsv file.
+pVACtools
+20
+,
+21
+starts with a VCF file. To allow a fair comparison on the same set of mutations, a pVACtools-compatible VCF containing all the high-confidence SMs used for NeoDisc predictions and annotated with mutation and gene expression values was created. We followed the official documentation for the VCF preparation and ran pVACtools v4.0.8 on participants’ HLA-I alleles with the default settings (all prediction algorithms, -e1 8, 9, 10, 11 and 12). Immunogenic peptide ranks were retrieved from the all_epitopes.aggregated.tsv file.
+Gartner et al.’s immunogenic mutation and peptide ranks were retrieved from the original publication
+18
+.
+For LOHHLA (1.1.7)
+38
+, germline and tumor WES FastQ files, HLA-I alleles, tumor purity and ploidy as inferred by NeoDisc were used as input. Default settings were used, HLA CN estimations were retrieved from columns ‘HLA_type1copyNum_withBAFBin’ and ‘HLA_type2copyNum_withBAFBin’ in the DNA.HLAlossPrediction_CI.xls file. HLA loss events were called for the loss allele if copyNum
+withBAFBin
+< 0.5 [and] PVal
+unique
+< 0.01.
+Sample collection
+Samples used in this study were collected from participants (Supplementary Table
+3
+) screened for inclusion in phase 1 trials approved by the institutional regulatory committee at Lausanne University Hospital (Ethics Committee, University Hospital of Lausanne (CHUV)): NSCLC-1 (
+NCT05195619
+), MEL-1 (ref.
+64
+) and MEL-2 (ref.
+64
+) (
+NCT03475134
+) and CESC-1, NPC-1, MEL-3 and MEL-4 (
+NCT04643574
+). Data included in this study comprised both published and unpublished data.
+Tumor cell line generation
+Tumor cell lines were derived from fresh tumor fragments, which underwent digestion using a combination of collagenase type I (Sigma-Aldrich) and DNAse (Roche) in R10 medium (RPMI-1640 GlutaMAX (Gibco) supplemented with 10% FBS (Gibco), 100 IU per ml of penicillin and 100 μg·ml
+−1
+streptomycin (Bio-Concept)) at 37 °C for 90 min. The resulting cell suspension was harvested, passed through a cell strainer to eliminate any residual tissue fragments and then seeded in R10 medium for incubation at 37 °C with 5% CO
+2
+. The culture medium was replenished every 2–3 days and cells were subcultured upon reaching 80% confluence. For subculturing, tumor cells were gently detached using Accutase (Thermo Fisher Scientific) and split and R10 medium was completely refreshed. Cells were harvested and washed in PBS and pellets of 20 million cells were stored at −80 °C for downstream assays.
+Sample preparation, library preparation and sequencing parameters
+DNA was extracted with the commercially available DNeasy Blood and Tissue Kit (Qiagen) according to the manufacturer’s protocols. RNA was extracted by phase separation using Trizol and chloroform and centrifugation at 12,000
+g
+for 15 min. Then, the aqueous phase containing the RNA was collected, mixed with 70% ethanol and loaded on an RNeasy mini spin column from the total RNA isolation RNeasy mini kit (Qiagen). The rest of the protocol was performed according to the manufacturer’s instructions (including DNase I (Qiagen) on-column digestion). WES and RNAseq were performed at Microsynth (CESC-1 and MEL-4 tissues) or at the Health 2030 Genome Center (NSLC-1, NPC-1, MEL-1, MEL-2, MEL-3 and MEL-4 cell lines). WES libraries were prepared using the Agilent SureSelect XT Human All exome V7 kit (Microsynth), the Twist Human Core Exome kit in combination with the Twist Human Refseq kit (Genome Center, MEL-1 and MEL-2 cell lines) or the Twist comprehensive exome panel kit (Genome Center; NSLC-1, NPC-1, MEL-3 and MEL-4 cell lines). RNAseq libraries were prepared using the Illumina Truseq stranded mRNA reagents. WES and RNAseq samples were sequenced at Microsynth on the NextSeq 500/550 system or at the Genome Center on the Illumina HiSeq 4000 (MEL-1 and MEL-2cell lines) or Novaseq 6000 (NSLC-1, NPC-1, MEL-3 and MEL-4 cell lines) systems.
+Flow cytometry analysis and isolation of tumor cells by fluorescence-activated cell sorting (FACS)
+Tumor cells from participant MEL-4 were stained with anti-HLA-ABC (AF700) antibody (Biolegend, 311438; dilution of 3:100), washed and resuspended in PBS 10% FBS for FACS acquisition. Samples were acquired on a five-laser LSR-II flow cytometer (BD Biosciences). The BD FACSDiva software was used for data acquisition. FlowJo 10.9.0 (BD Biosciences) was used for data analysis.
+The isolation of tumor cells from participant MEL-4 was performed using a five-laser MoFlo Astrios EQ flow cytometer (Beckman Coulter), following cell staining with HLA-ABC AF700 (BioLegend, 311438; dilution of 3:100) and viability dye DAPI 422801 (BioLegend, dilution of 1:500). HLA-ABC
+low
+and HLA-ABC
+high
+tumor cells were sorted and then directly expanded in RPMI-1640 medium supplemented with 10% FBS and 1% penicillin–streptomycin for further analysis.
+Peptide purification
+The HLA-I and HLA-II peptides were purified according to our established protocols
+81
+. Specifically, anti-HLA-I W6/32 and anti-HLA-II HB145 monoclonal antibodies were purified from the supernatants of HB95 (American Type Culture Collection (ATCC), HB95) and HB145 cells (ATCC, HB145) using protein A Sepharose 4B (Pro-A) beads (Invitrogen) and antibodies were then crosslinked to Pro-A beads at a ratio of 5 mg of antibodies per ml of beads for HB95 and 1 mg of antibodies per ml of beads for HB145. Cell pellets and snap-frozen tissue samples were lysed in lysis buffer containing PBS with 0.25% sodium deoxycholate (Sigma-Aldrich), 0.2 mM iodoacetamide (Sigma-Aldrich), 1 mM EDTA, 1:200 protease inhibitor cocktail (Sigma-Aldrich), 1 mM PMSF (Roche) and 1% octyl-β-
+d-
+glucopyranoside (Sigma-Aldrich). Tissues were homogenized on ice in 3–5 short intervals of 5 s each using an Ultra Turrax homogenizer (IKA). Samples were left for 1 h at 4 °C and then centrifuged for 50 min at 4 °C at 75,600
+g
+in a high-speed centrifuge (Beckman Coulter, Avanti JXN-26 Series, JA-25.50 rotor) for tissues or in a table-top centrifuge (Eppendorf) at 21,000
+g
+for cell lysates. HLA immunopurification was performed using the Waters Positive Pressure-96 Processor (Waters) and 96-well single-use filter microplates with 3-µm glass fibers and 25-µm polyethylene membranes (Agilent, 204495-100). The cleared lysates were first loaded on a plate with wells containing Pro-A beads for endogenous antibody depletion, then on a second plate with wells containing anti-pan HLA-I antibody-crosslinked beads and finally through the third plate containing anti-pan HLA-II antibody-crosslinked beads. The HLA-I and HLA-II crosslinked beads were then washed separately in their plates with varying concentrations of salts using the processor. Lastly, the beads were washed twice with 2 ml of 20 mM Tris-HCl pH 8.
+Sep-Pak tC18 100 mg Sorbent 96-well plates (Waters, 186002321) were used for the purification and concentration of HLA-I and HLA-II peptides. The C18 sorbents were conditioned with 1 ml of 80% ACN (Chemie Brunschwig) in 0.1% TFA (Sigma-Aldrich) and then twice with 1 ml of 0.1% TFA and the HLA complexes and bound peptides were directly eluted from the filter plates with 1% TFA. After washing the C18 sorbents with 2 ml of 0.1% TFA, HLA-I peptides were eluted with 25% or 28% ACN in 0.1% TFA and HLA-II peptides were eluted with 32% ACN in 0.1% TFA. Recovered HLA-I and HLA-II peptides were dried using vacuum centrifugation (Concentrator Plus, Eppendorf) and stored at −20 °C.
+Liquid chromatography (LC)–MS
+Immunopeptides were resuspended in 2% ACN and 0.1% formic acid. iRT peptides (Biognosis) were spiked into in the samples (Biognosis) as recommended by the vendor and analyzed by LC–MS/MS.
+The LC–MS system consisted of an Easy-nLC 1200 (Thermo Fisher Scientific) coupled to a Q Exactive HFX MS instrument (Thermo Fisher Scientific) and/or to an Eclipse Tribrid MS instrument (Thermo Fisher Scientific). HLAs were eluted on a 450–500-mm analytical column (~8-μm tip, 75-μm inner diameter) packed with ReproSil-Pur C18 (1.9-μm particle size, 120-Å pore size; Dr Maisch) and separated at a flow rate of 250 nl min
+−1
+as described previously
+81
+.
+For DDA measurements, selection of the top 20 most abundant precursor ions was performed on the Q Exactive HFX as described
+81
+. On the Eclipse, full MS spectra were acquired in the Orbitrap (
+m
+/
+z
+= 300–1,650) with a resolution of 120,000 (
+m
+/
+z
+= 200), maximum ion accumulation time and automatic gain control (AGC) set to auto. MS/MS spectra were acquired on the 20 most abundant precursor ions with a resolution of 30,000 (
+m
+/
+z
+= 200) with an isolation window of 1.2
+m
+/
+z
+and ion accumulation time of 54 ms. The AGC was set to 5 × 10
+4
+ions, the dynamic exclusion was set to 20 s and a normalized collision energy of 30 was used for fragmentation. No fragmentation was performed for HLA-I peptides with assigned precursor ion charge states of four and above and the peptide match option was enabled.
+The DIA cycle of acquisition was performed on the HFX as described previously
+82
+. On the Eclipse Tribrid MS, the cycle of acquisitions consisted of a full MS scan from 300 to 1,650
+m
+/
+z
+with a resolution of 120,000, ion accumulation time of 60 ms, normalized AGC of 250% and 22 DIA MS/MS scans in the orbitrap. For each DIA MS/MS scan, a resolution of 30,000, a normalized AGC of 2,000% and a stepped normalized collision energy (27, 30 and 32) were used. The maximum ion accumulation time was set to auto, the fixed first mass was set to 200
+m
+/
+z
+and the overlap between consecutive MS/MS scans was 1
+m
+/
+z
+.
+For parallel reaction monitoring, synthetic peptides were ordered from Thermo Fisher Scientific as crude. After resuspension in 2% ACN in 0.1% formic acid, peptides were analyzed by pools of peptides (three in total) for a charge state of 2+ and 3+. The cycle of acquisition consisted of a full MS scan from 300 to 1,650
+m
+/
+z
+with a resolution of 60,000, ion accumulation time of 100 ms and consecutive acquisition of targeted peptide MS/MS scans (isolation window of 1.2
+m
+/
+z
+resolution of 30,000 and accumulation time of 54 ms) in the Q Exactive HFX.
+Immunogenicity assessment of TIL cultures and isolation of tumor antigen-specific TILs
+Peptides were synthetized in-house (Peptide and Tetramer Core Facility, University of Lausanne (UNIL) and CHUV) or ordered externally (Thermo Fisher Scientific). The set of peptides was then tested for immunogenicity by interrogating both clinical TILs (
+NCT03475134
+and
+NCT04643574
+) and in-house generated NeoScreen TILs using IFNγ ELISpot. The NeoScreen method for TIL expansion and cultures
+25
+involves the exposure of small tumor fragments to engineered autologous B cells and the neoantigenic peptides in the presence of interleukin 2 (IL-2) for a period of a 12–21 days (preREP). This is followed by further REP of TILs with OKT3 (anti-CD3, Miltenyi, 30 ng ml
+−1
+) in the presence of an excess of irradiated feeder cells and IL-2 for 14 days. TILs were challenged with specific peptides at 1 µM concentration in precoated 96-well ELISpot plates (Mabtech). Following 16–20 h of coculture, cells were gently harvested from ELISpot plates, which were then developed according to the manufacturer’s instructions and counted with a Bioreader-6000-E (BioSys). Positive conditions were defined as those with an average number of spots higher than the counts of the negative control (TILs alone) plus three times the s.d. of the negative control. The background level of IFNγ spot-forming units (SFU) per 10
+6
+cells by the negative control was subtracted from that of antigen-rechallenged TILs in cumulative figures. TILs retrieved from plates were centrifuged and stained to assess the upregulation of the activation marker CD137 on CD8
++
+T cells by flow cytometry (Extended Data Fig.
+3b
+). The background level of CD137 expression by the negative controls (TILs alone) was subtracted from that of antigen-rechallenged TILs in cumulative figures.
+For the isolation of tumor antigen-specific cells for participants MEL-1 and MEL-4, IL-2-deprived TILs were stimulated with tumor-specific peptides at 1 µM for 24 h at 37 °C, 5% CO
+2
+and reactive TILs were sorted on the basis of CD137 upregulation. After incubation, TILs were collected, washed and stained with anti-human CD3 (Beckman Coulter; dilution of 2:100), anti-CD8 (BD Biosciences; dilution of 3:100), anti-CD4 (BioLegend; dilution of 0.5:100), anti-CD137 (Miltenyi; dilution of 2:100) and Aqua viability dye (Thermo Fisher Scientific; dilution of 0.3:100) for 30 min at 4 °C. Antigen-specific CD8
++
+and CD4
++
+TILs were isolated by FACS using a BD FACS Melody cell sorter (BD Biosciences) and subsequently subjected to bulk TCR sequencing
+83
+. Briefly, mRNA was extracted and amplified by in vitro transcription. The resulting coding RNA was converted to single-stranded DNA using multiplex reverse transcription with a collection of
+TRAV
+-specific and
+TRBV
+-specific primers, which included unique molecular identifiers (UMIs) and Illumina adaptors. TCR sequences were then amplified by PCR (20 cycles) using a single primer pair targeting the constant region and the Illumina adaptor added during reverse transcription. A second PCR (25 cycles) was performed to add the multiplexing indices. The TCR products were purified, quantified and loaded onto MiSeq or NextSeq platforms (Illumina) for deep sequencing of the TCRα and TCRβ chains. The resulting TCR sequences were processed using custom Perl scripts to (1) group all TCR sequences coding for the same protein sequence; (2) correct for amplification and sequencing errors using 9-mer UMIs; (3) filter out out-of-frame sequences; and (4) determine the abundance of each TCR sequence. TCR sequences with a single read were excluded from further analysis.
+Antigen and tumor reactivity validation by TCR cloning
+Reactivities of TCRα–TCRβ pairs from samples MEL-1 and MEL-4 were validated by cloning into recipient T cells. The Jurkat cell line (TCR/CD3 Jurkat-luc cells (NFAT), Promega; stably transduced in-house with human CD8α–CD8β and TCRα–TCRβ knockout by clustered regularly interspaced short palindromic repeats) and activated peripheral T cells were used to validate antigen and tumor specificity, respectively
+64
+.
+Jurkat cells were electroporated using the Neon electroporation system (Thermo Fisher Scientific) and cocultured with peptide-pulsed HLA-matched APCs followed by a bioluminescence assay (an example is shown in Extended Data Fig.
+5g
+). For the luciferase assay, 2 × 10
+4
+Jurkat cells were cocultured with 4 × 10
+4
+PHA-activated CD4
++
+T cells (CD4 blastocysts) in the presence of 1 µM specific peptides in 96-well plates. After overnight incubation, the assay was performed using the Bio-Glo luciferase assay system (Promega). Luminescence was measured with a Spark multimode microplate reader (Tecan). To assess the antitumor reactivity of TCRs, 10
+5
+TCR RNA-electroporated cells were cocultured in a 1:1 ratio with 200 ng ml
+−1
+IFNγ-pretreated tumor cell lines (an example is shown in Extended Data Fig.
+3e
+). After overnight incubation, T cells were recovered and the upregulation of CD137 was evaluated by staining with anti-CD137 (Miltenyi; dilution of 2:100), anti-CD3 (Biolegend or BD Biosciences; dilution of 1:100), anti-CD4 (BD Biosciences; dilution of 3:100), anti-CD8 (Biolegend; dilution of 1:100) and anti-mouse TCRβ-constant (Thermo Fisher Scientific dilution of 2:100) antibodies and with Aqua viability dye (Thermo Fisher Scientific). Flow cytometer LSRFortessaTM (BD Bioscience) or IntelliCyt iQue Screener PLUS (Bucher Biotec) were used for the fluorescence readout and the results were analyzed with FlowJo 10 (TreeStar). For both Jurkat and activated PBMCs, the following experimental controls of TCR transfection were used: mock (transfection with water) and a control TCR (irrelevant crossmatch of a TCRα and TCRβ chain from a private TCR library).
+mIF staining
+mIF staining was performed on 4-μm formalin-fixed paraffin-embedded tissue sections on automated Ventana Discovery Ultra staining module (Ventana, Roche). Slides were placed on the staining module for deparaffinization, epitope retrieval (64 min at 98 °C) and endogenous peroxidase quenching for 8 min (Discovery Inhibitor, Roche, 760-4840, RTU). Multiplex staining consists in multiple rounds of staining. Each round includes nonspecific sites blocking (Discovery Goat IgG, Roche, 760-6008, RTU; Discovery Inhibitor, Roche, 760-4840, RTU), primary antibody incubation, secondary horseradish peroxidase (HRP)-labeled antibody incubation for 16 min (Discovery OmniMap anti-rabbit HRP, Ventana, 760-4311, RTU; anti-mouse HRP, Ventana, 760-4310, RTU; OPAL reactive fluorophore detection (Akoya Biosciences)) to covalently label the primary epitope (incubation for 12 min) and then antibody heat denaturation. The panel was optimized to look at the HLA expression on tumor and immune cells. The sequence of antibodies used in the multiplex with the associated OPAL was as follows: (1) rabbit anti-Sox10 antibody (1.2 µg ml
+−1
+, clone EP268, Cellmarque; 1 h, 37 °C), OPAL690; (2) mouse anti-human HLA-DR antibody (1 µg ml
+−1
+, DAKO; 1 h, room temperature), OPAL570; (3) mouse anti-CD11c antibody (1.5 µg ml
+−1
+, clone 5D11, Cellmarque, DAKO; 1 h, 37 °C), OPAL520; (4) mouse anti-human HLA-ABC antibody (0.1 µg ml
+−1
+, Clone EMR8-5, Abcam; 1 h, room temperature), OPAL480; (5) rabbit anti-CD8 antibody (1 µg ml
+−1
+, clone SP16, Cellmarque; 1 h, 37 °C), OPAL620; (6) rabbit anti-CD3 antibody (1.5 µg ml
+−1
+, DAKO; 1 h, 37 °C), OPAL780. Nuclei were visualized by a final incubation with Spectral DAPI (1/10, FP1490, Akoya Biosciences) for 12 min. Multiplex IF images were acquired on PhenoImager allowing whole-slide multispectral imaging acquisition (Akoya Biosciences). IF signal extractions from qptiff were performed, enabling a per-cell analysis of IF markers of multiplex stained tissue sections and counting of every cell population.
+CD8
++
+T cell infiltration assessment
+To characterize the tissue heterogeneity for a specific phenotype, we segmented the entire multispectral image into regions of interest (ROIs). ROIs were determined by dividing the image into tiles, each evaluated for cellular metrics. The size of each tile was set by an area-based criterion, typically 640,000 μm
+2
+. A shift of 2 (where the ROIs partially overlap at their centers) was applied to increase the granularity of tile positioning.
+By iteratively shifting the tile, we calculated the tissue area and CD8
++
+cell count per tile. These densities were plotted on a graph, displaying the density of CD8
++
+cells in tumor islets on the
+x
+axis and in the tumor microenvironment (TME) on the
+y
+axis. Each graph point reflects the CD8
++
+density in a particular tile, illustrating the spatial distribution of CD8
++
+cells within the samples. A threshold density of 21 CD8
++
+cells per mm² (in either tumor islets or the TME) was set to determine infiltrated, excluded or desert tumor islets.
+Reporting summary
+Further information on research design is available in the
+Nature Portfolio Reporting Summary
+linked to this article.
+Online content
+Any methods, additional references, Nature Portfolio reporting summaries, source data, extended data, supplementary information, acknowledgements, peer review information; details of author contributions and competing interests; and statements of data and code availability are available at 10.1038/s41587-024-02420-y.
+Supplementary information
+Supplementary Information
+Supplementary table legends.
+Reporting Summary
+Supplementary Tables 1–4
+Supplementary Tables 1–4.
+Supplementary Data 1
+Supplementary Data 1.
+Source data
+Source Data Figs. 2–6
+Source Data for Figs. 2–6.

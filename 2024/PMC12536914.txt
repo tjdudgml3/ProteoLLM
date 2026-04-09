@@ -1,0 +1,1572 @@
+Introduction
+Proteomics studies have discovered essential roles of proteins in complex diseases such as neurodegenerative disease [
+1
+] and cancer [
+2
+,
+3
+]. These studies have demonstrated the potential of using proteomics to identify clinical biomarkers for disease diagnosis and therapeutic targets for disease treatment. In recent years, proteomics analytical technologies, particularly tandem mass spectrometry (MS/MS)-based shotgun proteomics, have advanced immensely, thus enabling high-throughput identification and quantification of proteins in biological samples. Compared to prior technologies, shotgun proteomics has simplified sample preparation and protein separation, reduced time and cost, and saved procedures that may result in sample degradation and loss [
+4
+]. In a typical shotgun proteomics experiment, a protein mixture is first enzymatically digested into peptides,
+i.e.
+, short amino acid chains up to approximately 40-residue long; the resulting peptide mixture is then separated and measured by MS/MS into tens of thousands of mass spectra. Each mass spectrum encodes the chemical composition of a peptide; thus, the spectrum can be used to identify the peptide’s amino acid sequence and post-translational modifications, as well as to quantify the peptide’s abundance with additional weight information (
+Figure 1
+A
+).
+Figure 1
+The workflow of shotgun proteomics and benchmarking search algorithms on the CPS dataset
+A
+. The workflow of a typical shotgun proteomics experiment. The protein mixture is first enzymatically digested into peptides,
+i.e.
+, short amino acid chains up to approximately 40-residue long; the resulting peptide mixture is then separated and measured by MS/MS into tens of thousands of mass spectra. Each mass spectrum encodes the chemical composition of a peptide. Then, a database search algorithm is used to identify the peptide’s amino acid sequence and post-translational modifications, as well as to quantify the peptide’s abundance.
+B
+. Venn diagrams showing the overlap of true PSMs identified by the five database search algorithms from the
+Pfu
+CPS dataset under the FDR threshold
+q
+=
+1
+%
+(left) or
+q
+=
+5
+%
+(right).
+C
+. The FDP and power of each database search algorithm on the
+Pfu
+CPS dataset at the FDR threshold
+q
+∈
+{
+1
+%
+,
+…
+,
+10
+%
+}
+. MS, mass spectrometry; MS/MS, tandem mass spectrometry; PSM, peptide–spectrum match; FDR, false discovery rate; FDP, false discovery proportion;
+Pfu
+,
+Pyrococcus furiosus
+;
+m/z
+, mass to charge ratio; APIR, Aggregation of Peptide Identification Results; CPS, complex proteomics standard.
+Since the development of shotgun proteomics, numerous database search algorithms have been developed to automatically convert mass spectra into peptide sequences. Popular database search algorithms include SEQUEST [
+5
+], Mascot [
+6
+], MaxQuant [
+7
+], Byonic [
+8
+], and MS-GF+ [
+9
+], among many others. A database search algorithm takes as input the mass spectra from a shotgun proteomics experiment and a protein database (called the “target database”) that contains known protein sequences (called “target sequences”). For each mass spectrum, the algorithm identifies the best matching peptide sequence,
+i.e.
+, a subsequence of a protein sequence, from the database; we call this process “peptide identification”, whose result is a “peptide–spectrum match” (PSM). However, due to data imperfection (such as low-quality mass spectra, data processing mistakes, and protein database incompleteness), the identified PSMs often consist of many false PSMs, causing issues in the downstream system-wide identification and quantification of proteins [
+10
+].
+To ensure the accuracy of PSMs, the false discovery rate (FDR) has been used as the most popular statistical criterion [
+11–18
+]. Technically, the FDR is defined as the expected proportion of false PSMs among the identified PSMs; in other words, a small FDR indicates good accuracy of PSMs. To control the FDR, the standard approach is the target–decoy search, which utilizes a “decoy database” consisting of known, non-existent protein sequences (called “decoy sequences”) [
+10
+]. Two common strategies for target–decoy search are concatenated search and parallel search. The concatenated search strategy (
+Figure S1A
+) finds the best match of a mass spectrum in a concatenated database containing both target sequences and decoy sequences; hence, the match (
+i.e.
+, PSM) corresponds to either a target sequence or a decoy sequence. In contrast, the parallel search strategy (
+Figure S1B
+) finds the best match of a mass spectrum in the target database and the decoy database separately; hence, the spectrum has two best matches, one with a target sequence (
+i.e.
+, a target PSM) and the other with a decoy sequence (
+i.e.
+, a decoy PSM). Based on the target–decoy search results (regardless of being concatenated or parallel) which include target PSMs and decoy PSMs with matching scores, multiple procedures that are
+P
+value-based or
+P
+value-free have been proposed to control the FDR of a database search algorithm’s identified target PSMs [
+14
+,
+19–21
+].
+However, controlling the FDR is only one side of the story. Because shotgun proteomics experiments are costly, a common goal of database search algorithms is to identify as many true PSMs as possible to maximize the experimental output, in other words, to maximize the identification power given a target, user-specified FDR threshold (
+e.g.
+,
+1
+%
+or
+5
+%
+).
+It has been observed that, with the same input mass spectra and FDR threshold, different database search algorithms often find largely distinct sets of PSMs [
+22–26
+]. In this study, we confirmed this observation using our in-house dataset, the first publicly available complex proteomics standard (CPS) dataset from
+Pyrococcus furiosus
+(
+Pfu
+) that approximates the dynamic range of a typical proteomic experiment. We first benchmarked five popular database search algorithms — Byonic [
+8
+], Mascot [
+6
+], SEQUEST [
+5
+], MaxQuant [
+7
+], and MS-GF+ [
+9
+] — on the CPS dataset using an FDR assessment approach similar to that in [
+27
+]. Our results confirmed that these five algorithms were designed to capture unique sets of PSMs (see Results for details). Hence, it is reasonable to aggregate individual database search algorithms’ outputs to boost the power of identifying peptides from shotgun proteomics data.
+In the proteomics field, existing aggregation methods include Scaffold [
+25
+], MSblender [
+18
+], FDRAnalysis [
+28
+], iProphet [
+17
+], ConsensusID [
+16
+], PepArML [
+11
+], and a multi-stage method by Ning and his colleagues [
+29
+]. Except FDRAnalysis, which has been shown infeasible for high-throughput proteomics [
+22
+], the other six methods have at least one of the two major drawbacks: (1) limited compatibility with database search algorithms and (2) lack of guarantee for identifying more peptides under the same FDR threshold. For the first drawback, except ConsensusID, the other five aggregation methods unanimously limit the choices of database search algorithms. As for the second drawback, although empirical evidence shows that, on some datasets, these aggregation methods, except the multi-stage method by Ning et al. [
+29
+], may identify more peptides than those identified by individual database search algorithms, none of these aggregation methods is guaranteed to do so by algorithm design.
+In addition to the aforementioned aggregation methods developed for proteomics data, generic statistical methods developed for aggregating rank lists are in theory applicable to aggregating the PSM lists output by database search algorithms. However, none of these generic methods have been developed into software packages compatible with database search algorithms, nor are they guaranteed to identify more peptides given an FDR threshold (many generic methods aggregate rank lists without FDR control). Therefore, the field calls for a robust, powerful, and flexible aggregation method that allows researchers to reap the benefits of the diverse and ever-growing database search algorithms.
+Here, we proposed Aggregation of Peptide Identification Results (APIR), a statistical framework that aggregates peptide identification results from multiple database search algorithms with FDR control. Compared to the existing aggregation methods, APIR offers the following three advantages simultaneously: first, APIR is open-source and universally adaptive to database search algorithms that output PSMs with matching scores [
+e.g.
+,
+q
+-values or posterior error probabilities (PEPs)]; second, APIR is guaranteed to identify at least as many as, if not more, peptides than individual database search algorithms do; third, APIR empirically controls the FDR in simulation and real-data benchmark studies. Hence, APIR is a robust and flexible framework that enhances the power while controlling the FDR of peptide identification from shotgun proteomics data.
+Note that the framework of APIR could be easily extended to aggregate discoveries made by multiple algorithms in other high-throughput biomedical data analysis, such as differential gene expression analysis on RNA sequencing data.
+Method
+We propose APIR to aggregate the output PSMs of multiple database search algorithms. Designed to control the FDR of aggregated PSMs, APIR is a sequential framework applied to the output PSMs of individual database search algorithms. To benchmark APIR and existing database search algorithms, we also generate the first publicly available CPS dataset from
+Pfu
+to approximate the dynamic range of a typical proteomic experiment. Below we first introduce the methodology of APIR, including APIR-FDR and the sequential framework for aggregating PSMs. Then, we introduce the experimental details on how we generate the CPS dataset and use it for benchmarking purposes.
+APIR methodology
+Aside from a user-specified FDR threshold
+q
+(
+e.g.
+,
+q
+= 5%), APIR takes as input the target–decoy search results from the database search algorithms that users would like aggregate [
+10
+]. Specifically, APIR requires from each database search algorithm a list of target PSMs with matching scores and a list of decoy PSMs with matching scores. To maximize power, we recommend users to extract the entire lists of target PSMs and decoy PSMs by setting the internal FDR of each database search algorithm to 100%. Note that the target–decoy search strategy referred to herein does not include the FDR estimation procedure criticized by Gupta and colleagues [
+19
+].
+To facilitate downstream analysis, APIR also reports the master protein, the post-translational modifications, and the abundance of each identified PSM, if applicable. See
+File S1
+for details on these post-processing steps.
+APIR-FDR: FDR control on any individual search algorithm
+The core component of APIR is APIR-FDR, an umbrella FDR-control procedure for the identified target PSMs of each individual database search algorithm. APIR-FDR takes as input an FDR threshold
+q
+, a list of target PSMs with matching scores, and a list of decoy PSMs with matching scores. APIR-FDR then outputs the identified target PSMs. As an umbrella FDR-control procedure, APIR-FDR can be
+P
+value-based or
+P
+value-free, including all possible procedures that can control the FDR for the identified target PSMs of an individual database search algorithm. Below we describe three exemplar options for APIR-FDR: a
+P
+value-based option and two
+P
+value-free options.
+To facilitate our discussion, we introduce some notations. Let
+m
+and
+n
+denote the numbers of target PSMs and decoy PSMs, respectively, outputted by a database search algorithm. We denote the matching scores of target PSMs and decoy PSMs as
+T
+1
+,
+…
+,
+T
+m
+and
+D
+1
+,
+…
+,
+D
+n
+, respectively. Without loss of generality, we assume that the matching scores are positive, and a larger matching score indicates a higher chance for a PSM to be a true match. For instance, if the output of a database search algorithm contains PSMs with
+q
+-values or E-values (whose smaller values indicate more likely true matches), then we would define the negative log-transformed
+q
+-values or E-values as matching scores.
+First, a
+P
+value-based FDR-control procedure applies to both concatenated and parallel target–decoy search strategies [
+14
+]. It assumes that the matching scores of decoy PSMs and false target PSMs are independently and identically distributed, and it constructs a null distribution by pooling the matching scores of decoy PSMs
+D
+1
+,
+…
+,
+D
+n
+. Then, it computes a
+P
+value for the
+i
+-th target PSM as the tail probability right of
+T
+i
+,
+i.e.
+,
+p
+i
+=
+∑
+j
+=
+1
+n
+I
+D
+j
+≥
+T
+i
+/
+n
+,
+i
+=
+1
+,
+…
+,
+m
+. Given the FDR threshold
+q
+and the
+P
+values
+p
+1
+,
+…
+,
+p
+m
+, this procedure applies the Benjamini–Hochberg procedure [
+30
+] to set a
+P
+value threshold
+p
+thre
+(
+q
+)
+and outputs
+i
+=
+1
+,
+…
+,
+m
+:
+p
+i
+≤
+p
+thre
+q
+as the indices of the identified target PSMs.
+Second, a
+P
+value-free FDR-control procedure (as a clarification, this procedure was referred to as the target–decoy search strategy in [
+31
+], different from the terminologies that we use) also applies to both concatenated and parallel search strategies. When used with concatenated search results, for a given matching score
+x
+, this procedure counts the numbers of target PSMs and decoy PSMs with matching scores at least
+x
+as
+N
+T
+x
+=
+∑
+i
+=
+1
+m
+I
+T
+i
+≥
+x
+and
+N
+D
+x
+=
+∑
+i
+=
+1
+n
+I
+D
+i
+≥
+x
+, respectively. This procedure then estimates the FDR of target PSMs with matching scores at least
+x
+as
+FDR
+^
+x
+=
+N
+D
+x
+N
+T
+x
+.
+When used with parallel search results, the procedure needs to estimate
+π
+0
+, the proportion of false PSMs among the target PSMs. This proportion is unknown but can be conservatively estimated. This is done by examining PSMs with scores near zero and then calculating the ratio of the number of decoy PSMs to the number of target PSMs in this subset of PSMs, as outlined in [
+14
+]. With the estimated
+π
+^
+0
+, the procedure then estimates the FDR of target PSMs with matching scores at least
+x
+as
+FDR
+^
+x
+=
+π
+^
+0
+N
+D
+x
+N
+T
+x
+. Given the FDR threshold
+q
+, this procedure outputs
+i
+=
+1
+,
+…
+,
+m
+:
+FDR
+^
+T
+i
+≤
+q
+as the indices of the identified target PSMs.
+Third, an alternative
+P
+value-free FDR-control procedure is Clipper, which works for parallel search results by design (Clipper controls the FDR by contrasting two conditions, which correspond to a mass spectrum’s target match and decoy match in parallel search) [
+10
+]. In parallel search results, we assume that the first
+s
+≤
+min
+⁡
+m
+,
+n
+target PSMs can be paired one-to-one with decoy PSMs. Then, we arrange the decoy PSM indices in the way that the
+i
+-th decoy PSM shares the same mass spectrum with the
+i
+-th target PSM for
+1
+≤
+i
+≤
+s
+(note that
+s
+/
+m
+is close to 1 in most parallel search results). Clipper first constructs a contrast score
+C
+i
+=
+T
+i
+-
+D
+i
+for
+i
+=
+1
+,
+…
+,
+s
+; note that the contrast score may be defined in other forms [
+32
+]. Then, given the FDR threshold
+q
+, Clipper finds a contrast score cutoff
+C
+thre
+(
+q
+)
+=
+min
+⁡
+t
+∈
+C
+i
+:
+C
+i
+≠
+0
+:
+i
+:
+C
+i
+≤
+-
+t
++
+1
+max
+⁡
+i
+:
+C
+i
+≥
+t
+,
+1
+≤
+q
+, and outputs
+i
+=
+1
+,
+…
+,
+s
+:
+C
+i
+≥
+C
+thre
+(
+q
+)
+as the indices of the identified target PSMs, where
+i
+:
+C
+i
+≤
+-
+t
+indicates the number of
+C
+1
+,
+…
+,
+C
+s
+that are no greater than
+-
+t
+. For the
+i
+-th target PSM (
+i
+=
+1
+,
+…
+,
+s
+), Clipper estimates its FDR as
+FDR
+^
+C
+i
+=
+min
+⁡
+{
+q
+∈
+0,1
+:
+C
+i
+≥
+C
+thre
+(
+q
+)
+}
+. In comparison to the
+P
+value-free procedure outlined previously, Clipper is more conservative (owing to the “+1” in the numerator) and flexible. Notably, Clipper is similar to the aforementioned
+P
+value-free FDR-control procedure if the contrast score is defined as
+C
+i
+=
+max
+(
+T
+i
+,
+D
+i
+)
+. Compared to the
+P
+value-free FDR-control procedure outlined in the previous paragraph, Clipper has three advantages: (1) Clipper does not require the estimation of
+π
+0
+in parallel search; (2) Clipper’s estimated FDR
+FDR
+^
+C
+i
+monotonically decreases as the contrast score
+C
+i
+increases, resulting in better power in numerous instances; (3) Clipper is more flexible because its contrast score
+C
+i
+can be defined in various ways.
+The FDR-control procedures described above are just three examples. Any other procedures that control the FDR can also be used as options for APIR-FDR.
+APIR: a sequential framework for aggregating the identified target PSMs of multiple search algorithms with FDR control
+Given the FDR threshold
+q
+and the outputs of multiple database search algorithms (including all target PSMs and decoy PSMs with matching scores),
+the sequential framework of APIR identifies target PSMs (with the FDR controlled under
+q
+) by combining the outputs of these database search algorithms based on a mathematical fact: if disjoint sets of discoveries all have the false discovery proportion (FDP; also known as the empirical FDR) under
+q
+, then their union set also has the FDP under
+q
+. Hence, the sequential framework of APIR is designed to find disjoint sets of target PSMs from the outputs of multiple database search algorithms. The final output of APIR is the union of these disjoint sets, which is guaranteed to contain more unique peptides than what could be identified by a single database search algorithm.
+Suppose we are interested in aggregating
+K
+algorithms. Accordingly, the sequential approach will consist of a maximum of
+K
+rounds. Let
+W
+k
+denote the set of target PSMs output by the
+k
+-th algorithm,
+k
+=
+1
+,
+…
+,
+K
+. In round 1, APIR applies APIR-FDR to each algorithm’s output with the FDR threshold
+q
+. Denote the identified target PSMs from the
+k
+-th algorithm by
+U
+1
+k
+⊂
+W
+k
+. Define
+J
+1
+∈
+1
+,
+…
+,
+K
+to be the algorithm index such that
+U
+1
+J
+1
+contains the largest number of unique peptides among
+U
+11
+,
+…
+,
+U
+1
+K
+. We use the number of unique peptides rather than the number of PSMs because peptides are more biologically relevant than PSMs. In round 2, APIR first excludes all target PSMs output by algorithm
+J
+1
+, identified or unidentified in round 1,
+i.e.
+,
+W
+J
+1
+, from the outputs of the remaining database search algorithms, resulting in reduced sets of candidate target PSMs
+W
+1
+∖
+W
+J
+1
+,
+…
+,
+W
+K
+∖
+W
+J
+1
+.
+Then, APIR applies APIR-FDR with the FDR threshold
+q
+to these reduced sets except
+W
+J
+1
+∖
+W
+J
+1
+=
+∅
+. Denote the resulting sets of identified target PSMs by
+U
+2
+k
+⊂
+W
+k
+∖
+W
+J
+1
+,
+k
+∈
+1
+,
+…
+,
+K
+∖
+{
+J
+1
+}
+. Again, APIR finds algorithm
+J
+2
+such that
+U
+2
+J
+2
+contains the largest number of unique peptides. APIR repeats this procedure in the subsequent rounds. Specifically, in round
+ℓ
+with
+ℓ
+≥
+2
+, APIR first excludes all target PSMs output by the selected
+ℓ
+-
+1
+algorithm from the outputs of remaining database search algorithms and applies APIR-FDR. That is, APIR applies APIR-FDR with the FDR threshold
+q
+to identify a set of target PSMs
+U
+ℓ
+k
+from
+W
+k
+∖
+(
+W
+J
+1
+∪
+⋯
+∪
+W
+J
+ℓ
+-
+1
+)
+, the reduced candidate pool of algorithm
+k
+after the previous
+ℓ
+rounds, for algorithm
+k
+∈
+1
+,
+…
+,
+K
+∖
+{
+J
+1
+,
+…
+,
+J
+ℓ
+-
+1
+}
+. Then, APIR finds the algorithm, which we denote by
+J
+ℓ
+, such that
+U
+ℓ
+J
+ℓ
+contains the largest number of unique peptides. Finally, APIR outputs
+U
+1
+J
+1
+∪
+⋯
+∪
+U
+K
+J
+K
+as the set of identified target PSMs. By adopting this sequential approach, APIR is guaranteed to identify at least as many, if not more, unique peptides as those identified by a single database search algorithm; under the assumption that APIR-FDR controls the FDR for each algorithm’s identified target PSMs, APIR can control the FDR of the identified target PSMs under
+q
+. See
+Figure 2
+for an illustration of the sequential approach of APIR.
+Figure 2
+Illustration of APIR for aggregating three database search algorithms
+We use S1∼P1 to denote a PSM of mass spectrum S1 matched to peptide sequence P1. In the output of a database search algorithm, a PSM with a higher matching score is marked by a darker color. White boxes indicate PSMs missing from the output. APIR adopts a sequential approach to aggregate the three database search algorithms. In round 1, APIR applies APIR-FDR with an FDR threshold
+q
+to identify a set of target PSMs from the output of each database search algorithm. APIR then selects the algorithm whose identified PSMs contain the largest number of unique peptides, and the identified PSMs are considered identified by APIR. In this example, APIR identified the same number of PSMs from algorithms 1 and 3 but more unique peptides from algorithm 3; hence, APIR selects algorithm 3. In round 2, APIR excludes all PSMs, either identified or unidentified by the selected database search algorithm in round 1 (algorithm 3 in this example), from the output of the remaining database search algorithms. Then, APIR applies APIR-FDR with an FDR threshold
+q
+to find the algorithm whose identified PSMs contain the largest number of unique peptides (algorithm 1 in this example). APIR repeats round 2 in the subsequent rounds until all database search algorithms are selected. Finally, APIR outputs the union of the PSMs identified in each round.
+Notably, APIR specifically controls the FDR of identified target PSMs so it excludes the identified target PSMs, instead of spectra, of one algorithm in each step. In instances where different algorithms match the same spectrum to distinct peptides, APIR may identify both PSMs as valid discoveries. While at least one of these two PSMs is a false discovery, the overall FDR for the identified PSMs remains controlled under this framework.
+CPS dataset generation
+We described the experimental details of running the MS/MS analysis on a
+Pfu
+CPS sample (Catalog No. 400510, Agilent, Santa Clara, CA). The CPS sample contains soluble proteins extracted from the archaeon
+Pfu
+. All other reagents were purchased from Sigma Aldrich (Sigma Aldrich, St. Louis, MO). The fully sequenced genome of
+Pfu
+encodes approximately 2000 proteins that cover a wide range of size, pI, concentration level, hydrophobic/hydrophilic character,
+etc
+. CPS (500 μg of total protein) was dissolved in 100 μl solution containing 0.5 M triethylammonium bicarbonate (TEAB) and 0.05% sodium dodecyl sulfate (SDS). The proteins were reduced by adding 4 μl of 50 mM tris(2-carboxyethyl)-phosphine hydrochloride (TCEP) to the protein mixture, followed by incubation at 60
+°
+C
+for 1 h. The proteins were further alkylated by adding 2 μl of 50 mM methyl methanethiosulfonate (MMTS) to the protein mixture, followed by incubation at room temperature for 15 min. Then, 20 μg trypsin dissolved 1:1 in ultrapure water was added to the sample, and this was incubated overnight (16 h) in the dark at 37
+°
+C
+to enzymatically digest the proteins. The tryptic peptides were cleaned with C-18 tips (Catalog No. 87784, Thermo Fisher Scientific, Waltham, MA) following the manufacturer’s instructions. Peptides were liquid chromatography–tandem mass spectrometry (LC–MS/MS) analyzed using the UltiMate 3000 ultra-high-performance liquid chromatography (UHPLC) system (EASY-Spray column, Catalog No. ES803A, Thermo Fisher Scientific) hyphenated with the Orbitrap Fusion Lumos MS instrument (Thermo Fisher Scientific). Peptides were fragmented using low-energy collision-induced dissociation (CID) and detected with the linear ion trap detector.
+After running MS/MS analysis, we obtained the
+Pfu
+CPS dataset of 49,303 mass spectra. We then adopted an approach similar to that in [
+27
+] for benchmarking database search algorithms and aggregation methods. Specifically, we first constructed a target database by concatenating the
+Pfu
+database, the UniProt human database [
+33
+], and two contaminant databases: the CRAPome database [
+34
+] and the contaminant database from MaxQuant. In the target database construction, we removed human proteins that contain
+Pfu
+peptides (via
+in silico
+trypsin digestion). Contaminant databases consist of sequences commonly identified as contaminants in MS experiments. Given that PSMs resulting from unintended sources, such as contamination, are unavoidable in MS experiments, PSMs originating from both the
+Pfu
+database and the two contaminant databases are considered as true PSMs. Conversely, PSMs from the human database, after excluding all
+Pfu
+proteins, are considered as false PSMs. Finally, we input the 49,303 mass spectra and the target database into database search algorithms. To evaluate a database search algorithm or an aggregation method, we consider its output PSMs, peptides, and proteins as true if and only if they belong to either
+Pfu
+or the two contaminant databases. The
+in silico
+digestion was done to take out any human proteins that contain peptides that could also be derived from
+Pfu
+. The
+in silico
+digestion was performed in Python using the pyteomics.parser function from Pyteomics with the following settings: trypsin digestion, two allowed missed cleavages, and a minimum peptide length of six amino acid residues [
+35
+,
+36
+].
+Results
+To verify the motivation and demonstrate the advantages of APIR, we conducted simulation and real data studies. First, we benchmarked five popular database search algorithms — Byonic, Mascot, SEQUEST, MaxQuant, and MS-GF+ — coupled with APIR-FDR options (
+P
+value-based or
+P
+value-free) on our
+Pfu
+CPS dataset. Second, we designed simulation studies to benchmark APIR against two naïve aggregation approaches: intersection and union of the PSM sets of identified by different database search algorithms. Third, to demonstrate the power of APIR, we applied APIR to five real datasets, including our CPS dataset, three acute myeloid leukemia (AML) datasets, and a triple-negative breast cancer (TNBC) dataset. Notably, we generated two of the three AML datasets from bone marrow samples of AML patients with either enriched or depleted leukemia stem cells (LSCs) for studying the disease mechanisms of AML. Finally, we investigated and verified additional proteins found by APIR and performed differentially expressed peptide analysis on the APIR results.
+Although we focused on five database search algorithms, APIR is universally applicable to other database search algorithms such as MSFragger [
+37
+] and Open-pFind [
+38
+]. Because nearly all database search algorithms output
+q
+-values or PEPs of PSMs, we used −log
+10
+-transformed PEPs from MaxQuant and −log
+10
+-transformed
+q
+-values from the other four database search algorithms as the matching scores of PSMs to demonstrate the wide applicability of APIR.
+Benchmarking five database search algorithms on the
+Pfu
+CPS dataset
+We first benchmarked five popular database search algorithms — Byonic, Mascot, SEQUEST, MaxQuant, and MS-GF+ — on the
+Pfu
+CPS dataset. Our evaluation results in
+Figure 1B
+showed that the five individual database search algorithms indeed captured unique true PSMs in this CPS dataset at FDR thresholds of
+q
+=
+1
+%
+and
+q
+=
+5
+%
+. Notably, at
+q
+=
+1
+%
+, the number of true PSMs only identified by Byonic (
+n
+=
+2720
+) was nearly four times that identified by all five algorithms (
+n
+=
+727
+). At
+q
+=
+5
+%
+, Byonic again identified more unique true PSMs (
+n
+=
+1903
+) than that identified by all five algorithms (
+n
+=
+1416
+). Moreover, MaxQuant and MS-GF+ also demonstrated distinctive advantages: MaxQuant identified
+147
+and
+520
+unique true PSMs, while MS-GF+ identified
+153
+and
+218
+unique true PSMs at
+q
+=
+1
+%
+and
+5
+%
+, respectively. In contrast, SEQUEST and Mascot showed little advantage in the presence of Byonic: their identified true PSMs were nearly all identified by Byonic (
+Figure S2
+). Our results confirm that these five database search algorithms have distinctive advantages in identifying unique PSMs, an observation that aligns well with existing literature [
+22–26
+,
+39
+].
+In terms of FDR control, four database search algorithms — Byonic, Mascot, SEQUEST, and MS-GF+ — demonstrated robust FDR control as they kept the FDPs on the benchmark data under the FDR thresholds of
+q
+∈
+{
+1
+%
+,
+…
+,
+10
+%
+}
+. In contrast, except at small values of
+q
+such as
+1
+%
+or
+2
+%
+, MaxQuant failed the FDR control by a large margin (
+Figure 1C
+).
+To evaluate the effect of FDR-control procedures on each database search algorithm, we benchmarked two APIR-FDR options, one
+P
+value-based and the other
+P
+value-free, used with each database search algorithm. Specifically, as an exploration, if a database search algorithm uses
+P
+value-based FDR control by default, we used Clipper as an alternative
+P
+value-free option; otherwise, if the algorithm’s default FDR-control procedure is
+P
+value-free, we used the
+P
+value-based option as an alternative.
+On the
+Pfu
+CPS dataset, we examined the FDPs and power of the five database search algorithms with two APIR-FDR options for a range of FDR thresholds:
+q
+∈
+{
+1
+%
+,
+…
+,
+10
+%
+}
+. Our results in
+Figure 1C
+showed that both
+P
+value-based and
+P
+value-free APIR-FDR options achieved the FDR control and similar power when applied to the outputs of Byonic, Mascot, SEQUEST, and MS-GF+. However, for MaxQuant, the default
+P
+value-free FDR-control procedure (outlined in the Method section) failed to control the FDR under the target by a large margin. In contrast, the alternative
+P
+value-based FDR-control procedure we applied alleviated the FDR control issue of MaxQuant, with FDPs controlled under
+q
+when
+q
+>
+5
+%
+. Regarding the phenomenon that both the number of true PSMs and the FDP of MaxQuant (with
+P
+value-based FDR control) stayed unchanged as the FDR threshold
+q
+increased from
+1
+%
+to
+10
+%
+(
+Figure 1C
+), we provided a detailed explanation in
+File S1
+and
+Figure S3
+.
+We also compared the performance of the five database search algorithms with two APIR-FDR options (
+P
+value-based and
+P
+value-free) on the CPS dataset after excluding the
+1416
+shared true PSMs (identified by all five algorithms at the FDR threshold
+q
+=
+5
+%
+) from the output of each database search algorithm. Theoretically, FDR control procedures no longer guarantee to control the FDR after a subset of PSMs is removed (see
+Figure S4
+for a counterexample). Our results in
+Figure S5
+showed that that default
+P
+value-free FDR-control procedure of MS-GF+ no longer controlled the FDR.
+Based on the benchmark results above, we chose the
+P
+value-based APIR-FDR option for MaxQuant and MS-GF+, because the default
+P
+value-free FDR-control procedure of these two algorithms failed to guarantee the FDR control. For Byonic, Mascot, and SEQUEST, both the
+P
+value-based and
+P
+value-free APIR-FDR options can be used. See
+Table S1
+for details of the APIR-FDR options used with the five database search algorithms in each analysis.
+Set union and intersection operations do not guarantee to control the FDR
+In data analysis, there exists a common intuition: if multiple algorithms designed for the same purpose are applied to the same dataset to make discoveries, and all algorithms have their FDRs under
+q
+, then the intersection of their discoveries (
+i.e.
+, the discoveries found by all algorithms) should have the FDR under
+q
+[
+11
+]. However, this intuition does not hold in general. The reason is that if all algorithms find different true discoveries, then their common discoveries (
+i.e.
+, the intersection) could be enriched with false discoveries and thus have the FDR larger than
+q
+. To demonstrate this, we designed a simulation study called the shared-false-PSMs scenario, where the set intersection operation fails to control the FDR. Although intuition says that the set union operation may not control the FDR, we designed another simulation study called the shared-true-PSMs scenario, where the set union operation fails to control the FDR, for completeness.
+Under the shared-true-PSMs scenario, we designed three toy database search algorithms that tend to identify overlapping true PSMs but non-overlapping false PSMs (
+Figure 3
+A
+). In contrast, under the shared-false-PSMs scenario, we designed another three toy database search algorithms that tend to identify overlapping false PSMs but non-overlapping true PSMs (
+Figure 3B
+; see
+File S1
+for the detailed designs of the two scenarios). Under both scenarios, we first applied APIR-FDR to the output of each toy database search algorithm. Then, we aggregated identified PSMs from the three algorithms under each scenario using set intersection, set union, or APIR, and evaluated the FDR of each aggregated PSM set. The results showed that while set union failed to control the FDR in the shared-true-PSMs scenario and set intersection failed in the shared-false-PSMs scenario, APIR controlled the FDR in both scenarios (
+Figure 3C and D
+).
+Figure 3
+Simulation studies showing that neither intersection nor union of discovery sets (with controlled FDR) controls FDR
+FDR control comparison of APIR, intersection, and union for aggregating three toy database search algorithms using simulated data. Two scenarios are considered: the shared-true-PSMs scenario and the shared-false-PSMs scenario.
+A
+. and
+B
+. Venn diagrams of true PSMs and false PSMs (identified at the FDR threshold
+q
+=
+5
+%
+) on one simulation dataset under the shared-true-PSMs scenario (A) and the shared-false-PSMs scenario (B).
+C
+. and
+D
+. The FDRs of the three database search algorithms and three aggregation methods (union, intersection, and APIR) under the shared-true-PSMs scenario (C) and the shared-false-PSMs scenario (D). Note that the FDR of each database search algorithm or each aggregation method is computed as the average of FDPs on
+200
+simulated datasets under each scenario.
+These two scenarios serve as counterexamples, demonstrating that neither set union nor set intersection can control the FDR of identified target PSMs. In contrast, APIR has the theoretical FDR control.
+APIR verifies FDR control and outpowers Scaffold and ConsensusID
+To demonstrate that APIR controls the FDR by aggregating individual search algorithms on the
+Pfu
+CPS dataset, we benchmarked APIR against two existing aggregation methods, Scaffold and ConsensusID, because they are the only two aggregation methods compatible with the five database search algorithms that we used: Byonic, Mascot, SEQUEST, MaxQuant, and MS-GF+. Since database search algorithms are time-consuming to run, we first focused on the
+20
+combinations consisting of no more than three of the five algorithms, including
+10
+combinations of any two algorithms and
+10
+combinations of any three algorithms.
+Because of the trade-off between FDR and power, power comparison is valid only when FDR is controlled. Hence, for the three aggregation methods, APIR, Scaffold, and ConsensusID, we compared them in terms of both their FDPs and power on the
+Pfu
+CPS dataset. Regarding the power increase of each aggregation method over individual database search algorithms, we computed the percentage increases in the aggregated true PSMs, peptides, and proteins by treating as baselines the maximal numbers of true PSMs, peptides, and proteins identified by the five database search algorithms. For example, to aggregate Byonic and MaxQuant, based on our benchmarking results in
+Figure 1C
+, we applied Byonic (with the default
+P
+value-free FDR-control procedure) and MaxQuant (with
+P
+value-based FDR control) to identify PSMs in round 1. We calculated the percentage increase in the identified true PSMs by treating the larger of two numbers: the numbers of true PSMs identified by Byonic and MaxQuant as the baselines.
+As shown in
+Figure 4
+and
+Figure S6
+, at both FDR thresholds of
+q
+=
+5
+%
+and
+q
+=
+1
+%
+, APIR achieved consistent FDR control and power improvement over individual database search algorithms. In contrast, Scaffold controlled the FDR but showed highly inconsistent power improvement, while ConsensusID neither controlled the FDR nor had power improvement. Specifically, the FDPs of ConsensusID exceeded the FDR threshold
+q
+=
+5
+%
+by a large margin: they rised above
+15
+%
+in
+10
+out of
+20
+combinations. In summary, only APIR consistently achieves power increase over individual database search algorithms across the
+20
+algorithm combinations, an advantage that neither Scaffold nor ConsensusID offers.
+Figure 4
+Comparison of APIR, Scaffold, and ConsensusID on the CPS dataset at the FDR threshold
+q
+= 5%
+We set both the peptide threshold and the protein threshold of Scaffold to be 5% FDR. The FDPs (first column), the percentage increases in true PSMs (second column), the percentage increases in true peptides (third column), and the percentage increases in true proteins (fourth column) were computed after aggregating two or three database search algorithms out of the five (Byonic, Mascot, SEQUEST, MaxQuant, and MS-GF+). The percentage increase in true PSMs/peptides/proteins was computed by treating as the baseline the maximal number of correctly identified PSMs/peptides/proteins by individual database search algorithms in round 1 of APIR. Based on the benchmarking results in
+Figure 1C
+, in round 1 of APIR, we applied
+P
+value-free APIR-FDR to Byonic, Mascot, SEQUEST, and MS-GF+, and
+P
+value-based APIR-FDR to MaxQuant. In later rounds of APIR, we used
+P
+value-based APIR-FDR for FDR control.
+A technical note is that Scaffold cannot control the FDR of aggregated PSMs; instead, it controls the FDRs of aggregated peptides and proteins, and it requires the FDR thresholds to be input for both. Hence, strictly speaking, Scaffold is not directly comparable with APIR in terms of FDR control because APIR controls the FDR of aggregated PSMs. For a fair comparison, we implemented a variant of Scaffold, which, compared with the default Scaffold, has an advantage in power at the cost of an inflated FDR (
+File S1
+). Our results showed that this Scaffold variant demonstrated a slightly inflated FDP in
+7
+combinations at
+q
+=
+5
+%
+(FDP > 5.5% in
+Figure S7A
+) and
+12
+combinations at
+q
+=
+1
+%
+(FDP > 1.1% in
+Figure S8A
+). In terms of power, this Scaffold variant still failed to outperform the most powerful individual database search algorithm in
+8
+combinations at
+q
+=
+5
+%
+(
+Figure S7B
+) and
+10
+combinations at
+q
+=
+1
+%
+(
+Figure S8B
+).
+Moreover, we had the results of APIR combining four and five database search algorithms in Figures S9 and S10, which again confirmed the FDR control and power advantage of APIR. In addition, we examined whether APIR might inflate the peptide-level FDRs by selecting the set of identified PSMs containing the largest number of unique peptides in each round. As shown in
+Figure S11
+, among the
+52
+cases [all
+26
+algorithm combinations
+×
+2
+PSM-level FDR thresholds (
+1
+%
+and
+5
+%
+)], APIR either lowered or maintained the maximum peptide-level FDP achieved by an individual search algorithm. In other words, APIR does not inflate the peptide-level FDP.
+APIR empowers peptide identification on the AML and TNBC datasets
+We next applied APIR with the aforementioned 20 combinations of two and three algorithms to four real datasets: two in-house phospho-proteomics (explained below) AML datasets (“phospho AML-C1” and “phospho AML-C2”) that we collected from two cohorts of AML patients (which were not randomly assigned and thus not biological replicates) for studying the properties of LSCs; a published nonphospho-proteomics AML dataset (“nonphospho AML”) that also compares the stem cells with non-stem cells in AML patients [
+40
+]; and a published phospho-proteomics TNBC dataset that studies the effect of drug genistein on breast cancer [
+41
+]. Phospho-proteomics is a branch of proteomics; while traditional proteomics aims to capture all peptides in a sample, phospho-proteomics focuses on phosphorylated peptides, also called phosphopeptides, because phosphorylation regulates essentially all cellular processes [
+42
+]. See
+File S1
+for the details on how we generated “phospho AML-C1” and “phospho AML-C2”.
+On each dataset, we applied APIR at two FDR thresholds of
+q
+=
+1
+%
+and
+q
+=
+5
+%
+, and examined the percentage increases at four levels: PSM, peptide, peptide with modifications, and protein; we calculated the percentage increases in the same way as what we did for the CPS dataset. Our results in
+Figure 5
+(
+q
+=
+5
+%
+) and
+Figure S12
+(
+q
+=
+1
+%
+) showed that APIR led to positive percentage increases at two levels (PSM and peptide) on all four datasets, confirming APIR’s guarantee for identifying more peptides than individual algorithms do. At the peptide with modification level, APIR also achieved positive percentage increases across
+20
+combinations on all four datasets with only one exception: APIR fell short by a negligible
+0.1
+%
+when aggregating the outputs of Byonic, Mascot, and SEQUEST on the TNBC dataset at
+q
+=
+1
+%
+(
+Figure S12
+). At the protein level, APIR still managed to outperform individual database search algorithms for all
+20
+combinations on both phospho-proteomics AML datasets and for more than half of the combinations on the TNBC and nonphospho-proteomics AML datasets. Our results demonstrate that APIR can boost the usage efficiency of shotgun proteomics data.
+Figure 5
+Power improvement of APIR over individual database search algorithms at the FDR threshold
+q
+= 5%
+The percentage increases in PSMs (first column), the percentage increases in peptides (second column), the percentage increases in peptides with modifications (third column), and the percentage increases in true proteins (fourth column) of APIR after aggregating two or three database search algorithms out of the five (Byonic, Mascot, SEQUEST, MaxQuant, and MS-GF+) at the FDR threshold
+q
+=
+5
+%
+on the phospho AML-C1 dataset (
+A
+), the phospho AML-C2 dataset (
+B
+), the TNBC dataset (
+C
+), and the nonphospho AML dataset (
+D
+). The percentage increase in PSMs/peptides/peptides with modifications/proteins was computed by treating as the baseline the maximal number of PSMs/peptides/peptides and modifications/proteins by an individual database search algorithm in round 1 of APIR. Phospho AML-C1, phospho-proteomics acute myeloid leukemia-patient cohort 1; phospho AML-C2, phospho-proteomics acute myeloid leukemia-patient cohort 2; TNBC, triple-negative breast cancer; nonphospho AML, nonphospho-proteomics acute myeloid leukemia.
+We also applied APIR to combining four and five database search algorithms, which again confirm the power advantage of APIR (
+Figures S13 and S14
+).
+APIR identifies biologically meaningful proteins from the AML and TNBC datasets
+Next, we investigated the biological functions of the proteins missed by individual database search algorithms but recovered by APIR from the phospho-proteomics AML and TNBC datasets. We also performed additional analyses to confirm the existence of these biologically relevant proteins. Specifically, APIR adopted individual search algorithms’ mappings from PSMs to proteins. That is, APIR aggregated PSMs and mapped them to proteins based on the PSM–protein mappings output by individual search algorithms. If a PSM is assigned to more than one protein by different search algorithms, APIR outputs a master protein by majority voting (see
+File S1
+for details).
+In the phospho AML-C1 and phospho AML-C2 datasets, which contain patient samples with enriched or depleted LSCs, APIR identified biologically relevant proteins that were missed by individual database search algorithms. Specifically, in the phospho AML-C1 dataset, APIR identified 80 and 121 additional proteins (the union of the additional proteins that APIR identified from the combinations) at the FDR thresholds of
+q
+= 1% and
+q
+= 5%, respectively, from the
+20
+combinations (of two and three algorithms). These two sets of additional proteins recovered by APIR include some well-known proteins, such as transcription intermediary factor 1-alpha (TIF1α), phosphatidylinositol 4,5-bisphosphate 5-phosphatase A (PIB5PA), homeobox protein B5 (HOXB5), small ubiquitin-related modifier 2 (SUMO-2), transcription factor JUND, glypican 2 (GPC2), DnaJ homolog subfamily C member 21 (DNAJC21), and messenger RNA (mRNA) decay activator protein ZFP36L2. Here, we summarized the tumor-related functions of these well-known proteins. High levels of TIF1α are associated with oncogenesis and disease progression in a variety of cancer lineages such as AML [
+43–49
+]. PIB5PA has a tumor-suppressive role in human melanoma [
+50
+]; its high expression is correlated with limited tumor progression and better prognosis in breast cancer patients [
+51
+]. HOXB5 is among the most affected transcription factors by the genetic mutations that initiate AML [
+52–54
+]. SUMO-2 plays a key role in regulating CBX2, which is overexpressed in several human tumors (
+e.g.
+, leukemia) and whose expression is correlated with lower overall survival [
+55
+]. JUND plays a central role in the oncogenic process leading to adult T-cell leukemia [
+56
+]. GPC2 is an oncoprotein and a candidate immunotherapeutic target in high-risk neuroblastoma [
+57
+]. DNAJC21 mutations are linked to cancer-prone bone marrow failure syndrome [
+58
+]. ZFP36L2 induces AML cell apoptosis and inhibits cell proliferation [
+59
+]; its mutation is associated with the pathogenesis of acute leukemia [
+60
+]. Moreover, in the phospho AML-C2 dataset, APIR identified
+62
+additional proteins at the FDR threshold
+q
+=
+1
+%
+and
+19
+additional proteins at the FDR threshold
+q
+=
+5
+%
+, including JUND and myeloperoxidase (MPO). MPO is expressed in hematopoietic progenitor cells in prenatal bone marrow, which is considered the initial target for the development of leukemia [
+61–63
+].
+In the TNBC dataset, APIR identified
+92
+additional proteins missed by individual database search algorithms at the FDR threshold
+q
+=
+1
+%
+and
+69
+additional proteins at the FDR threshold
+q
+=
+5
+%
+. In particular, at
+q
+=
+1
+%
+, APIR uniquely identified breast cancer type 2 susceptibility protein (BRCA2) and Fanconi anemia complementation group E (FANCE).
+BRCA2
+is a well-known breast cancer susceptibility gene; an inherited genetic mutation inactivating the
+BRCA2
+gene is found in TNBC patients [
+64–69
+]. The FANC–BRCA pathway, including FANCE and BRCA2, is known for its roles in DNA damage response. Inactivation of the FANC–BRCA pathway is identified in ovarian cancer cell lines and sporadic primary tumor tissues [
+70
+,
+71
+]. Additionally, at both
+q
+=
+1
+%
+and
+q
+=
+5
+%
+, APIR identified JUND and roundabout guidance receptor 4 (ROBO4); the latter regulates tumor growth and metastasis in multiple types of cancer, including breast cancer [
+72–75
+]. We summarized the biological relevance of these proteins in
+Table 1
+.
+Table 1
+A summary of biologically relevant proteins recovered by APIR from the AML and TNBC datasets
+Dataset
+Protein
+Biological relevance
+Refs.
+Phospho AML-C1 and phospho AML-C2
+TIF1α
+High levels of TIF1α are associated with oncogenesis and disease progression in a variety of cancer lineages such as AML
+[
+43–49
+]
+PIB5PA
+PIB5PA has a tumor-suppressive role in human melanoma; its high expression has been correlated with limited tumor progression and better prognosis in breast cancer patients
+[
+50
+,
+51
+]
+HOXB5
+HOXB5 is among the most affected transcription factors by the genetic mutations that initiate AML
+[
+52–54
+]
+SUMO-2
+SUMO-2 plays a key role in regulating CBX2, which is overexpressed in several human tumors (
+e.g.
+, leukemia) and whose expression is correlated with lower overall survival
+[
+55
+]
+JUND
+JUND plays a central role in the oncogenic process leading to adult T-cell leukemia
+[
+56
+]
+GPC2
+GPC2 has been identified as an oncoprotein and a candidate immunotherapeutic target in high-risk neuroblastoma
+[
+57
+]
+DNAJC21
+DNAJC21 mutations have been linked to cancer-prone bone marrow failure syndrome
+[
+58
+]
+ZFP36L2
+ZFP36L2 induces AML cell apoptosis and inhibits cell proliferation; its mutation is associated with the pathogenesis of acute leukemia
+[
+59
+,
+60
+]
+MPO
+MPO is expressed in hematopoietic progenitor cells in prenatal bone marrow, which are considered the initial target for the development of leukemia
+[
+61–63
+]
+TNBC
+BRCA2
+BRCA2
+is a well-known breast cancer susceptibility gene; an inherited genetic mutation inactivating the BRCA2 gene can be found in people with TNBC
+[
+64–69
+]
+FANCE
+Inactivation of the FANC–BRCA pathway has been identified in ovarian cancer cell lines and sporadic primary tumor tissues
+[
+70
+,
+71
+]
+ROBO4
+ROBO4 regulates tumor growth and metastasis in multiple types of cancer, including breast cancer
+[
+72–75
+]
+Note
+: This table lists the biologically relevant proteins missed by individual database search algorithms but recovered by APIR from the AML and TNBC datasets. APIR, Aggregation of Peptide Identification Results; AML, acute myeloid leukemia; phospho AML-C1, phospho-proteomics acute myeloid leukemia-patient cohort 1; phospho AML-C2, phospho-proteomics acute myeloid leukemia-patient cohort 2; TNBC, triple-negative breast cancer; TIF1α, transcription intermediary factor 1-alpha; PIB5PA, phosphatidylinositol 4,5-bisphosphate 5-phosphatase A; HOXB5, homeobox protein B5; SUMO-2, small ubiquitin-related modifier 2; GPC2, glypican 2; DNAJC21, DnaJ homolog subfamily C member 21; ZFP36L2, mRNA decay activator protein; mRNA, messenger RNA; MPO, myeloperoxidase; BRCA2, breast cancer type 2 susceptibility protein; FANCE, Fanconi anemia complementation group E; ROBO4, roundabout guidance receptor 4.
+To further evaluate the existence of the aforementioned known proteins, we performed two analyses. First, we examined the MS/MS spectra of the PSMs corresponding to these proteins identified from the phospho-proteomics AML datasets. The results showed that the PSMs rescued by APIR are likely true positives (
+Table S2
+;
+File S2
+). The rescued PSMs fell broadly into three categories: (1) high-likelihood identifications with both accurate precursor mass and numerous fragment ions (
+40
+%
+), (2) identifications with accurate precursor mass and few (
+30
+%
+) or no fragment ions (
+10
+%
+), and (3) chimeric spectra (
+20
+%
+). Second, we examined the PSMs corresponding to these proteins identified from the phospho-proteomics AML datasets and the TNBC dataset (
+Tables S3–S5
+), and we found that these proteins all corresponded to at least one target PSM with a high matching score (from at least one database search algorithm). These results, combined with the constituent nature and biological relevance of these proteins (
+Table 1
+), suggest the likely existence of these proteins and demonstrate APIR’s potential in identifying novel disease-related proteins.
+APIR empowers the identification of differentially expressed peptides
+An important use of proteomics data is the differential expression analysis, which aims to identify proteins whose expression levels change between two conditions. Protein is the ideal unit of measurement; however, due to the difficulties in quantifying protein levels from MS/MS data, an alternative approach has been proposed and used, which first identifies differentially expressed (DE) peptides and then investigates their corresponding proteins along with modifications. Because it is less error-prone to quantify peptides than proteins, doing so would dramatically reduce errors in the differential expression analysis.
+We compared APIR with MaxQuant and MS-GF+ by performing differential expression analysis on the phospho AML-C1 dataset. We focused on this dataset instead of the TNBC dataset or the nonphospho AML dataset because the phospho-proteomics AML datasets were generated for our in-house study and thus may yield new discoveries. This analysis was conducted to demonstrate that APIR could improve the identification power by aggregating dissimilar algorithms. Since MaxQuant and MS-GF+ have identified drastically different PSMs on our real datasets (
+Figure S15
+) and are widely-used, open-source tools, we selected them as two example algorithms.
+The phospho AML-C1 dataset contains six bone marrow samples: three enriched with LSCs, two depleted of LSCs, and one control. To simplify our differential expression analysis, we selected two pairs of enriched and depleted samples. Specifically, we first applied APIR to aggregate the outputs of MaxQuant and MS-GF+ on the phospho AML-C1 dataset using all six samples. Then, we applied DESeq2 [76] to identify DE peptides from the aggregated peptides of APIR, MaxQuant, and MS-GF+ using the four selected samples. As shown in
+Figure 6
+, at the FDR threshold
+q
+=
+5
+%
+, we identified
+318
+DE peptides from
+224
+proteins based on APIR,
+251
+DE peptides from
+180
+proteins based on MaxQuant, and
+242
+DE peptides from
+190
+proteins based on MS-GF+, respectively. In particular, APIR identified
+6
+leukemia-related proteins: promyelocytic leukemia zinc finger (PLZF), serine/threonine-protein kinase BRAF, signal transducer and activator of transcription 5B (STAT5B), promyelocytic leukemia protein (PML), cyclin-dependent kinase inhibitor 1B (CDKN1B), and retinoblastoma-associated protein (RB1), all of which belong to the AML Kyoto Encyclopedia of Genes and Genomes (KEGG) pathway or the chronic myeloid leukemia KEGG pathway [
+77–79
+]. In particular, PLZF and CDKN1B were uniquely identified from the APIR aggregated result but not by either MaxQuant or MS-GF+.
+Figure 6
+Comparison of APIR with MaxQuant and MS-GF+ by differential expression analysis on the phospho AML-C1 dataset
+Venn diagram of DE proteins based on the identified peptides by APIR aggregating MaxQuant and MS-GF+, MaxQuant, and MS-GF+ in the phospho AML-C1 dataset. Six leukemia-related proteins were found as DE proteins based on APIR: PLZF, BRAF, STAT5B, PML, CDKN1B, and RB1. Notably, the phospho AML-C1 dataset contains six bone marrow samples from two patients: P5337 and P5340. From P5337, one LSC-enriched sample and one LSC-depleted sample were taken. From P5340, two LSC-enriched samples and one LSC-depleted sample were taken. In our differential expression analysis, we compared two LSC-enriched samples (one per patient) against two LSC-depleted samples (one per patient). DE, differentially expressed; LSC, leukemia stem cell.
+We next investigated the phosphorylation of the identified DE peptides of PLZF or CDKN1B. With regard to PLZF, APIR identified phosphorylation at Thr282, which is known to activate cyclin A2 [
+80
+], a core cell cycle regulator of which the deregulation seems to be closely related to chromosomal instability and tumor proliferation [
+81–83
+]. As for CDKN1B, APIR identified phosphorylation at Ser140. Previous studies have revealed that ataxia-telangiectasia mutated (ATM) phosphorylation of CDKN1B at Ser140 is important for stabilization and enforcement of the CDKN1B-mediated G1 checkpoint in response to DNA damage [
+84
+]. A recent study has shown that inability to phosphorylate CDKN1B at Serine 140 is associated with enhanced cellular proliferation and colony formation [
+85
+]. Our results, summarized in
+Table 2
+, demonstrate that APIR can assist in discovering interesting proteins and relevant post-translational modifications.
+Table 2
+A summary of biologically relevant phosphorylation sites in the DE peptides of PLZF and CDKN1B
+Protein
+Phosphorylation site
+Biological relevance
+Refs.
+PLZF
+Thr282
+Phosphorylation at Thr282 activates cyclin-A2, a core cell cycle regulator of which the deregulation seems to be closely related to chromosomal instability and tumor proliferation
+[
+80–83
+]
+CDKN1B
+Ser140
+Phosphorylation of CDKN1B at Ser140 is important for stabilization and enforcement of the CDKN1B-mediated G1 checkpoint in response to DNA damage; inability to phosphorylate CDKN1B at Ser140 is associated with enhanced cellular proliferation and colony
+[
+84
+,
+85
+]
+Note
+: The DE peptides of PLZF and CDKN1B were identified by DESeq2 [
+76
+] from the aggregated peptides by APIR from the outputs of MaxQuant and MS-GF+ in the phospho AML-C1 dataset. DE, differentially expressed; PLZF, promyelocytic leukemia zinc finger; CDKN1B, cyclin-dependent kinase inhibitor 1B.
+Discussion
+In this study, we developed a statistical framework APIR to combine the power of distinct database search algorithms by aggregating their identified PSMs from shotgun proteomics data with FDR control. The core component of APIR is APIR-FDR, an FDR-control method that reidentifies PSMs from the output of a single database search algorithm without restrictive distribution assumptions. APIR offers a great advantage of flexibility: APIR is compatible with any database search algorithms. The reason lies in that APIR is a sequential approach based on a mathematical fact: given multiple disjoint sets of discoveries, when each has the FDP smaller than or equal to
+q
+, their union also has the FDP smaller than or equal to
+q
+. This sequential approach not only allows APIR to circumvent the need to impose restrictive distribution assumptions on the output of each database search algorithm, but also ensures that APIR would identify at least as many, if not more, unique peptides as a single database search algorithm does.
+By assessing APIR on the first publicly available CPS dataset that we generated, we verified that APIR consistently improves the power of peptide identification with the FDR controlled on the identified PSMs. Our extensive studies on AML and TNBC data suggest that APIR can discover additional disease-relevant peptides and proteins that are otherwise missed by individual database search algorithms.
+We note that Ning et al. [
+29
+] developed a multi-stage method to combine PSMs identified by multiple database search algorithms, a seemingly similar framework. However, three major differences exist between APIR and the multi-stage method in [
+29
+]. First, APIR is an open-source and platform-agnostic framework that is universally compatible with all database search algorithms. In contrast, the multi-stage method is restricted to three database search algorithms: X!Tandem [
+86
+], InsPecT [
+87
+], and SpectraST [
+88
+]. Second, APIR adopts a data-driven approach to determine the combination order of database search algorithms (
+Figure 2
+). In contrast, the multi-stage method pre-determines the combination order of its three database search algorithms based on domain knowledge, making its generalization to other database search algorithms non-trivial. In particular, Ning and colleagues [
+29
+] say, “We note, however, that routine application of iterative strategies such as the one utilized in this work, especially in a high throughput environment, will require further substantial work on the development of statistical FDR estimation methods applicable to a wide range of peptide identification approaches, including subset database searching, blind PTM analysis, and genomic searches.” Hence, APIR makes contribution to the future work mentioned by Ning and colleagues [
+29
+].
+The current implementation of APIR controls the FDR at the PSM level. However, in shotgun proteomics experiments, PSMs serve merely as an intermediate to identify peptides and then proteins, the real molecules of biological interest; thus, an ideal FDR control should occur at the protein level. A fact is that FDR control at the PSM level does not entail FDR control at the protein level, because multiple PSMs may correspond to the same peptide sequence and multiple peptides may correspond to the same protein. To realize the FDR control on the identified proteins, APIR-FDR needs to be carefully modified. A possible modification would be to construct a matching score for each protein from the matching scores of the PSMs that correspond to this protein’s peptides. Future studies are needed to explore possible ways of constructing proteins’ matching scores. Once we modify APIR-FDR to control the FDR at the protein level, the current sequential approach of APIR still applies: applying the modified APIR-FDR to sequentially identify disjoint sets of proteins from the outputs of individual database search algorithms; outputting the union of these disjoint sets as discoveries.
+Notably, APIR adopts a statistical inference framework as opposed to a machine learning prediction framework for PSM aggregation. Hence, APIR is unlike existing machine learning methods (such as PepArML [
+11
+]), which could be categorized into two types. Methods of the first type require an external benchmark proteomics dataset, which contains known true PSMs and false PSMs, as the training data to train a classifier. Then, they apply the trained classifier to a new proteomics dataset to predict whether a target PSM is true or false. Their underlying assumption is that the classifier trained on the benchmark dataset is generalizable to the new dataset. However, when this generalizability does not hold (a likely scenario given the vast diversity of biological samples), their predicted target PSMs would become questionable. Methods of the second type do not rely on an external benchmark dataset but have to label a subset of target PSMs as positive or negative for training a classifier. This labeling step requires multiple arbitrary thresholds, which would affect the classifier’s prediction accuracy. In contrast, APIR requires no external training data or arbitrary labeling.
+Although the applications in this work are based on MS/MS data collected by data-dependent acquisition (DDA), APIR is also applicable to MS/MS data collected by data-independent acquisition (DIA), as long as the database search algorithms use the target–decoy search strategy. Moreover, although APIR is designed for proteomics data, its framework is general and extendable to aggregating discoveries in other popular high-throughput biomedical data analyses, including peak calling from chromatin immunoprecipitation followed by sequencing (ChIP-seq) data, differential gene expression analysis from bulk or single-cell RNA sequencing data, and differentially interacting chromatin region identification from high-throughput chromosome conformation capture sequencing (Hi-C) data [
+32
+]. For example, an extended APIR may aggregate discoveries made by popular differential gene expression analysis methods, such as DESeq2 [
+76
+], edgeR [
+89
+], and limma [
+90
+], to strengthen FDR control [
+91
+] and meanwhile increase the power.
+Supplementary Material
+qzae042_Supplementary_Data

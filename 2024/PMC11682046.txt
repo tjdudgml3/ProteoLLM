@@ -1,0 +1,597 @@
+Introduction
+A large portion of the bacterial proteome has been overlooked for as long as pipelines try to annotate genomes
+1
+. One of the usual limitations of pure genomics approaches is the lack of confidence to accurately predict that an Open Reading Frame (ORF) shorter than 100 codons (smORF) is indeed encoding a microprotein, and does not represent one of the many artifacts following the inclusion of hundreds of thousands putative sequences into the analysis, which led bioinformaticians to establish an arbitrary cutoff of 100 codons to improve the accuracy of genome annotation
+2
+,
+3
+. Furthermore, one of the reasons that may hamper smORF identification when using homology-based approaches for gene annotation is the fact that many smORFs are actually the outcome of a
+de novo
+gene birth event, which makes it unlikely for such strategy to consider them for the subsequent annotation steps
+4
+–
+7
+. The field of proteogenomics, which employs different omics techniques alongside genomics, such as transcriptomics and proteomics, has been useful for a wide array of analyses, and can also be used to support genome annotation
+8
+. Using Mass Spectrometry (MS) data to search a database containing the whole coding potential of a genome or transcriptome, different studies have reported the identification of novel bacterial microproteins encoded by smORFs using this unbiased approach
+9
+,
+10
+.
+One of the problems that surround proteogenomics analyses is their low sensitivity when compared to other methods like Ribosome Profiling, which can identify thousands of translated smORFs in some cases
+11
+–
+13
+. Although the sensitivity of Ribosome profiling is very high, the overlap of the results coming from different pipelines for downstream analysis seems to be quite small
+13
+, and finding protein evidence tends to be a difficult task
+12
+,
+14
+. Using proteomics, not only we get evidence directly at the protein level instead of the translatome, but the result is also usually more reliable than using the ribosome profiling evidence alone. Indeed, there are findings showing pervasive translation all across the transcriptome
+11
+, which could mean that, even though translation is occurring, there is no way of telling whether the protein originating from this translation event is stable or not without further experimentation. To overcome the limitations of proteomics regarding sensitivity, we gathered 680 MS experiments from different studies from our group, and used them all to search for possible smORF-encoded peptides (SEPs) that might be hidden in the proteome of
+Mycobacterium tuberculosis
+(
+Mtb
+), the etiological agent of tuberculosis. This is a straightforward but powerful approach to increase the chance of identifying novel, but rather inconspicuous sequences, simply by increasing the number of samples that might contain these microproteins. In the case of bacteria, using proteogenomics also seems to have better potential to yield good results than it does for eukaryotic genomes. One of the reasons is the much smaller genome, which results in considerably smaller databases, reducing the number of false negatives by decreasing the stringency when assessing the False Discovery Rate (FDR).
+In this study, using our recently published pipeline, µProteInS
+15
+, we were able to uncover a vast amount of novel microproteins encoded by the genome of
+Mtb
+. We also characterized microproteins sharing different degrees of confidence, and extracted meaningful biological information from the newly-uncovered sequences, such as conserved protein domains, expression and co-expression levels across different conditions. Using this open-architecture approach, we have also found evidence for smORFs coming from
+de novo
+gene birth events in mycobacterial evolution. Efforts to further annotate the genome of
+Mtb
+have improved its annotation
+16
+–
+18
+, but our large-scale proteogenomics approach overlaying different layers of multi-omics evidence should contribute to improve the annotation of smORFs specifically. Moreover, our exploratory analysis revealed that some of these smORFs seem to be embedded by genomic segments that either affect growth or are essential for bacterial survival. Thus, these novel coding sequences represent interesting candidates for future and more in-depth experimental studies that focus on the biological roles of mycobacterial microproteins.
+Results
+µProteInS discovers microproteins encoded by non-canonical small Open Reading frames (smORFs) in the genome of
+Mycobacterium tuberculosis
+µProteInS identifies novel microproteins encoded by smORFs using both the genome and the transcriptome as proteomics databases (Fig.
+1
+a). During the first step of the pipeline,
+assembly
+, we assembled the transcriptome using a reference-guided approach, which borrows aspects of a
+de novo
+transcriptome assembly, allowing the identification of both known and novel transcripts. This was done using the raw strand-specific RNA-Seq reads for the control samples from the study E-MTAB-1616. With the three-frame translation of the transcript sequences using four different start codons (ATG, ATT, GTG, and TTG), we generated a custom database from this assembly containing 76,353 putative microproteins. The database resulting from the six-frame translation of the reference genome contained 217,657 microprotein sequences. 5609 sequences inside both databases consist of already annotated proteins from UniProt, NCBI RefSeq and Mycobrowser. Both databases were used for the
+ms
+step of µProteInS, which performs the peptide search against MS data. We used 680 MS experiments to search spectral data against two custom databases, generated from the six and three-frame translations of the reference genome and the assembled transcriptome, respectively. These results, after undergoing
+postms
+, the post-processing step of µProteInS, yielded 959 microproteins in total for the genome database, and 464 for the transcriptome database, at a global FDR of 0.01.
+Fig. 1
+Proteogenomics identification of novel microproteins. (
+a
+) Proteogenomics workflow to identify and characterize novel microproteins encoded by smORFs in
+Mtb.
+The workflow incorporates µProteInS pipeline into a large-scale approach to characterize Mass Spectrometry evidence by different degrees of confidence. Following the standard µProteInS pipeline, RNA-Seq reads are used to assemble the transcriptome, then custom proteomics databases from both the genome and transcriptome are translated in silico to search for the whole coding potential of
+Mtb
+. This is done in the third mode of µProteInS, where a large number of experiments were searched and scored. The last mode validates the findings, predicting High-Confidence (HC) and non-High Confidence (nHC) spectra. The findings are then grouped and ranked into tiers regarding their level of confidence across multiple replicates, where lower tiers indicate smORFs with stronger evidence. Created with BioRender.com. (
+b
+) Number of novel smORFs identified for each Tier coming from both the genome (gORFs) and transcriptome (tORFs) databases. (
+c
+) Intersection between the results of gORFs and tORFs up to T3.
+Using the last mode of µProteInS,
+validate
+, which employs a random forest model pre-trained on manually inspected data, we classified the Peptide-Spectrum Matches (PSMs) as either High Confidence (HC) or non-High confidence(nHC). The random forest model was implemented in the pipeline to help prioritize microproteins with fragmentation spectra containing features that resemble those in the training dataset that contained enough
+y
+- and
+b
+-ions peaks to properly annotate a peptide (Supplementary Fig. 1) from the ones that were too noisy and thus had lower-confidence evidence (Supplementary Fig. 2). After this validation step, we were able to identify 46 smORFs from the genome database (gORFs) and 26 smORFs from the transcriptome database (tORFs) with at least one HC spectrum matching their encoded microproteins (HC smORFs). These microproteins are our most reliable identifications, and henceforth will be treated as our gold standard, but this does not mean that the remaining portion of the results does not contain reliable identifications. Although HC smORFs are expected to possess higher quality MS spectra, any machine learning model has limitations when generalizing to other datasets, which led us to still include peptide-spectrum matches (PSMs) that had both a q-value and posterior error probability (PEP) lower than 0.01 and appear in 3 or more replicates. Microproteins with MS evidence that passed these thresholds were considered for additional downstream analysis.
+To help prioritize the microproteins with more reliable evidence, we divided the smORFs into tiers representing decreasing degrees of confidence. Lower Tier numbers represent identifications with higher reliability (Fig.
+1
+a). There are four tiers: HC smORFs with PSMs with both a global (q-value) and local (PEP) FDR < 0.01. (T1), HC smORFs with a q-value < 0.01. (T2), and smORFs that have no PSM classified as HC by the random forest model of µProteInS (nHC smORFs) but have PSMs with both a q-value and PEP < 0.01 and appear in 3 or more replicates (T3). The rest of the smORFs, which were not considered for downstream analysis, were classified as T4. With this classification, we found 20 T1 gORFs and 16 T1 tORFs, and 26 T2 gORFs and 10 T2 tORFs (Fig.
+1
+b). This is our gold standard, but we decided to consider for the subsequent analyses all the smORFs up to T3, since the ones in this group appear in many replicates and passed the very strict q-value and PEP cutoffs, and thus can still represent important findings. T3 comprises the highest number of novel smORFs, while T4 most likely comprises artifacts that do not account for real sequences. Out of the annotated, canonical proteins from the concatenated proteome from three databases, we could identify 4,676 from the genome (83.3%), and 4364 from the transcriptome (77.8%) databases, to a total of 4,762 non-redundant proteins from both databases (84.8%). Our next analyses focus on the non-canonical part of the mycobacterial proteome that we identified in this study.
+Given the lack of alternative splicing on the bacterial transcriptome, the common approaches for bacterial proteogenomics usually rely solely on the six-frame translation of the genome for the generation of custom databases for proteomics
+9
+,
+10
+,
+19
+. This would not be ideal for eukaryotes, due to bloated databases resulting from an increased genome size, alternative splicing events, and many long, repetitive intergenic regions carrying multiple regulatory elements. In bacteria, however, the six-frame translation approach does not face these limitations. There are still advantages for investigating the transcriptome search space, nevertheless. First, it allows us to identify novel transcripts and operon organizations. Additionally, and perhaps most importantly, it adds another layer of omics evidence to the microprotein discovery and allows the quantification of smORF-containing transcripts (SCTs). Our results indicate that, even though all tORFs are in the same database as gORFs, some did not pass the FDR cutoff when using the genome database, which results in tORFs absent from the gORFs subset. This happens due to the bigger size of the genome database, which leads to more stringent FDR assessment to achieve a 1% global FDR. However, the biological question asked when performing the search is not the same. When we search the transcriptome database, we are asking which of these microproteins could be found in the transcriptional search space. Conversely, when searching the genome database, we are asking a much broader question, directed towards the whole coding potential of the genome, not affected by conditional expression. As such, further correction of the transcriptome hits to the genome size database should not be needed, and evaluation by the random forest model should help mitigate false positives.
+smORF and microprotein sequence characterization
+Seeking to understand where these smORFs differ from previously known ORFs, as this could pinpoint the characteristics that might be precluding their identification by traditional methods, we analyzed the GC content of the smORFs and the amino acid distribution of the novel microproteins, since they could present some sequence bias, as studies have shown before
+6
+,
+12
+. Indeed, many amino acids differ in their abundance among the novel sequences when compared to the annotated proteins in our reference proteome database. A few amino acids have a clear prevalence in the sequence of annotated proteins, such as valine, lysine, glutamate, leucine, aspartate, and tyrosine (Fig.
+2
+a). Lysine is of utmost importance for peptide identification by Mass Spectrometry-based proteomics, since trypsin, the most widely used enzyme for protein digestion, uses this amino acid as one of its cleavage sites
+20
+. Thus, fewer lysines result in fewer tryptic peptides, which could hamper the identification of these microproteins.
+Some amino acids are more common in the novel sequences, though, such as proline, arginine, and cysteine. This sequence bias might be one of the reasons behind the poor performance of traditional algorithms for inferring conserved protein domains from microproteins, as those models were all trained based on the current literature at the time, which mostly disregarded these short sequences. Consequently, a not-so-accurate prediction would be expected when trying to generalize from these models. The sequence length for the novel microproteins is well distributed across all tiers, and annotated proteins are enriched for longer proteins (Fig.
+2
+b). This directly affects MS detection, as longer proteins should produce more tryptic peptides, increasing the chance of finding evidence for those proteins. Indeed, the number of tryptic peptides per protein (Fig.
+2
+c) is higher for annotated microproteins (
+Kruskall-Wallis
+,
+p
+= 5.97 × 10
+−15
+.
+Dunn’s post-hoc
+,
+p
+< 0.0004). This could help explain why these were usually missed during MS characterization. This sequence bias also affects the isoelectric point of the protein (Fig.
+2
+d), one of the key physicochemical properties of a peptide for MS-based proteomics, where peptides coming from the digestion of novel microproteins tend to have a higher isoelectric point (
+Kruskall-Wallis
+,
+p
+= 4.5 × 10
+−26
+.
+Dunn’s post-hoc
+,
+p
+< 2 × 10
+−4
+).
+Fig. 2
+Characterization of smORFs and their encoded microprotein sequences across multiple tiers. (
+a
+) Amino acid distribution of the novel smORFs and annotated genes, normalized by total amino acid number in each tier per 100. (
+b
+) Percentage distribution of microprotein sequence lengths (in amino acids) across each subset. (
+d
+) Distribution of isoelectric points of the tryptic peptides coming from
+in silico-
+digested unannotated and annotated microproteins. (
+e
+) Percentage of smORFs from each tier with a Ribosome Binding Site (RBS) upstream of their start codon. The RBS classification (“Absent”, “Present. Low to moderage binding”, and “Present. Strong binding.” are relative to the binding strength of the smORF-containing transcript (SCT) and the 3’ end of the rRNA. For (
+c
+) and (
+d
+) Kruskal-Wallis
+P
+< 0.001, p-values for Dunn’s Post hoc are shown as exact values on top of the box plots.
+Ribosome-binding sites (RBS) are necessary for translation initiation in many mRNAs, and in bacteria they may appear multiple times in the same polycistronic transcript, located upstream of different ORFs. We sought to check which of the smORF-containing transcripts (SCTs) carried an RBS, as this would increase their chance of being translated. To do so, we extracted the 21 nucleotides upstream from each smORF in their respective SCTs and checked the free energy level resulting from the binding of this sequence to the 3’ end of the 16 S rRNA of
+Mtb.
+In general, RBS are more prevalent in annotated smORFs (Fig.
+2
+e). In fact, when using the thresholds defined by Starmer et al. (2006)
+21
+, we found out that only a small portion of the novel smORFs carry an upstream sequence that could be classified as an RBS. This is not surprising, as ORFs lacking a Shine-Dalgarno sequence are very common in the transcriptome of mycobacteria. Moreover, even in eukaryotes, the Kozak sequence seems to be absent for many smORFS in their transcripts
+22
+.
+Microproteins contain conserved protein domains
+We identified a variety of protein domains (Supplementary Data 1) with different functions searching all the sequences with InterPro. The vast majority of the novel microproteins have at least one intrinsic disorder domain, having up to 30 domains on T1 smORFs. This represents 61% of all domains from this Tier. On T2, we found 25 out of a total of 33 domains to have intrinsic disorder whilst 41 out of 74 total domains where intrinsically disordered on T3, showing a 21% decrease of intrinsic disorder domain prediction out of all domains comparing the last two tiers. Simultaneously, we found several other domains in these tiers, such as signal peptides, with 5, 2 and 12 in Tiers 1, 2 and 3, respectively. Interestingly, we found four prokaryotic membrane lipoprotein lipid attachment site profiles as well as up to 22 signal peptide domains in all Tiers, with 8 of them being from T1 smORFs. We also identified a cleavage site and a tRNA translation domain in Tiers 1 and 3, respectively. To identify the presence of any transmembrane helices within the new microproteins, we searched sequences from Tier 1 up to Tier 3 using TMHMM as predictor. We identified up to 12 transmembrane helices in T1-3, as well as 18 internal helix domains identified by Psortb. Out of those domains, 6 smORFs had helix domains from both Psortb and TMHMM. Additionally, we found two superfamily domains,
+PHA03253
+and
+PRK15313
+superfamily in T2 and T3. Interestingly, gORF_68556 T1 had a variety of domains: two predictions for transmembrane helices, three standard secretory signal peptides from three different regions, a signal peptide, a cleavage site, and the only membrane lipoprotein lipid attachment site profile domain. The GO analysis suggested the involvement of novel microproteins in remarkable biological processes such as defense response to bacterium, cell killing and metabolic or biosynthetic processes, among others. The majority of cellular components were cellular anatomical entities (43), followed by extracellular regions (11) and intracellular (5) membrane/membrane-bound organelle (5). We also identified 5 smORFs with binding molecular functions. Using Psortb, we found that the majority of final localization predictions were extracellular, with up to 37 smORFs having this prediction, followed by 26 cytoplasmic membrane and 11 cytoplasmic. Interestingly, when running CELLO, we found up to 177 extracellular predictions, 62 cytoplasmic, 22 membrane and also 4 periplasmic localization predictions.
+Genomic and transcriptomic landscape of the mycobacterial non-canonical smORFome
+Novel smORFs overlap the genomic loci of annotated genes and essential regions for bacterial survival.
+Overlooked outside viruses until recently, overlapping genes have growing evidence to be more common than initially thought, as 27% of prokaryotes coding sequences (CDS) seem to overlap another CDS
+23
+. Indeed, almost all the unannotated smORFs from tiers 1 to 3 overlap an annotated region in the genome (Supplementary Data 2), while only 2.77% are found within intergenic regions. We defined any smORF within 500 bp up or downstream from an annotated gene as an upstream ORF (uORF) or downstream ORF (dORF), respectively. This is important as we are predicting sequences from the genome as well, so it is still possible to classify an overlap for a smORF that could not be found within the transcriptome assembly. The rarity of smORFs within intergenic regions is probably due to the compact genome of
+Mtb
+, where most genes are very close to one another. The majority of overlapping cases comprise smORFs that are nested out of frame, nested in the opposite strand, or overlapping an annotated gene (Fig.
+3
+a). All of the overlapped regions in the genome were CDS, one of which is annotated as a pseudogene, overlapped by gORF 94,851. There are findings showing dORFs might enhance the translation of their canonical ORFs found within the same transcript
+24
+, which makes the novel dORFs especially interesting for studying translational regulation in bacterial polycistronic operons.
+Fig. 3
+smORF neighborhood in the genome. (
+a
+) Classification of smORFs regarding their neighboring and overlapping regions in the genome. Each line represents a reading frame, purple rectangles represent annotated genes, cyan rectangles represent smORFs, and the arrows inside the boxes represent whether their coding sequences are in the forward or reverse strand. (
+b
+) Bar plot showing the distribution of annotated genes by operon size. (
+c
+) Bar plot showing the number of non-canonical smORFs by operon size. Operon size is denoted based on the number of annotated genes they contain. (
+d
+) Number of novel smORFs in transcriptional units with a single annotated gene (monocistronic) and in operons with 2 or more annotated genes (polycistronic).
+After overlaying our results with the datasets from DeJesus et al.
+25
+, which contain evidence for gene essentiality based on a saturated transposon mutagenesis technique, we found out that 39 smORFs from tier 1 to 3 (Supplementary Table 1) are present in both annotated and unannotated genomic segments predicted to be essential or to affect bacterial growth (Supplementary Fig. 3) This represents a rich source of biologically relevant, potentially druggable smORFs.
+Most smORFs share operons with annotated genes
+Aiming to further understand the biological roles of the novel smORFs and their encoded microproteins, we ran Operon-mapper
+26
+to predict operons that contained already known genes. Afterwards, we mapped the coordinates of each novel smORF from tiers 1 to 3 and checked which ones are located inside these predicted operons. This is useful when trying to infer functions for novel microproteins, as it is known that genes sharing the same operon usually have related biological roles
+27
+. Hence, even though most microproteins possess only intrinsic disorder domains, it is still possible to contribute to their annotation by investigating their neighboring regions in the genome. Overall, monocistronic transcriptional units are the most common, with a decreasing distribution towards longer operons (Fig.
+3
+b). Novel smORFs are more common in operons with few (1–2) annotated ORFs, but a few are still present in longer operons, sharing the transcript with as much as 11 other genes. (Fig.
+3
+c). The vast majority of both gORFs and tORFs (94.42%) share a mRNA with another known ORF, while only 10 smORFs were found in a novel transcript that does not contain any annotated CDS (Fig.
+3
+d). This trend seems to be common in eukaryotes as well, as more than 76% of the novel sequences found by Martinez et al.
+12
+also seem to be found in known transcripts. Our data also shows that transcripts that would otherwise be predicted as monocistronic by Operon-mapper also carry a smORF. Specifically, 71 smORFs were found within a transcript.
+Fig. 4
+Genomic and transcriptomic landscape of novel smORFs. (
+a
+) Circos plot representing the novel smORFs in a genomic context. The first ring, from edge to center, contains purple-colored bars that represent the coordinates of annotated transcripts. In the second ring, smORFs are represented as blue bars. The third ring contains bars representing the number of homologous sequences in closely related bacteria for smORFs in the same coordinates. The fourth section contains peaks representing the TPM values of both known and novel transcripts in that region. The center of the plot contains links connecting smORFs and annotated genes that are co-expressed after treatment with Isoniazid using public RNA-Seq datasets. (
+b
+) Heatmap of differentially expressed SCTs upon nutrient starvation of
+Mtb
+(
+c
+) Heatmap of differentially expressed SCTs during macrophage infection by
+Mtb
+.
+Mtb
+control refers to the bacterium grown in standard medium, without infecting the macrophages. Only SCTs with a padj < 0.05 and a log2FoldChange > 1 were included in the heatmaps. SCT = smORF-containing Transcript, TPM = Transcript per Million.
+predicted to contain only one CDS. With the identification of these novel smORFs, we can now classify these once monocistronic transcripts as polycistronic. Interestingly, tORF 72,141 is present in the same region as the prophage-like element phiRv2. This prophage segment, along with phiRv1, is thought to be responsible for the low-level lysis that
+Mtb
+shows in culture
+28
+. tORF 72,141 shares this operon with many prophage genes, namely Rv2654c, Rv2655c, Rv2656c, Rv2657c, Rv2658c, and Rv2659c. As all the functions of these CDSs are related to the prophage biology, we can infer that this novel smORF is so as well.
+After the identification of the novel microproteins encoded by smORFs, we wanted to understand how they are distributed and interconnected across the mycobacterial genome. To illustrate this, we generated a Circos plot showing the locations of the novel smORFs in a genome-wide level (Fig.
+4
+a). The plot tells us that the smORFs are not clustered in a specific region, but widespread across the genome of the bacterium, sometimes filling gaps in its few intergenic regions. The third ring also shows the overall level of conservation of these smORFs in closely related bacteria, suggesting strong evidence for
+de novo
+gene birth events. The links in the center of the plot also show how important and interconnected these novel sequences are for the transcriptome, as they represent evidence of co-expression between one smORF and an annotated gene, suggesting strong co-regulation of smORFs and canonical genes.
+SCTs are differentially expressed upon antibiotic treatment, bacterial starvation, and macrophage infection.
+We sought to characterize smORFs that are up or down regulated during bacterial starvation, in comparison to exponentially grown cultures. To do so, we gathered the raw files from E-MTAB-1616 (Ref
+29
+). and performed a differential expression analysis at the transcript level. We found out that many SCTs are regulated in these conditions (Fig.
+4
+b, Supplementary Data 3). tORF 87,698, for example, is located nested in another reading frame of the transcript that encodes the two-component system sensor histidine kinase MtrBIt is present in a region whose deletion results in a Growth Defect
+25
+(Supplementary Table
+1
+). Therefore, it seems important for bacterial growth, especially in nutrient-lacking conditions. Moreover, Houghton et al. has shown that Rv2660c, which is at that same locus as tORF 72,141, but in the opposite strand, is up-regulated during starvation and infection, and its transcript is expressed solely on strains that carry the prophage overlapping its region in their genome. The transcript that carries tORF 72,141 is also found up-regulated during nutrient starvation (
+DESeq2
+,
+log2Foldchange
+= 2.81,
+n
+= 3) in the RNA-Seq dataset used in this study (Fig.
+4
+b), suggesting a positive correlation with their findings. Therefore, just like Rv2660c is described to be a useful biomarker during bacterial starvation, this novel smORF might also play a similar role
+30
+. To gather insight into smORFs that are important for virulence, we also performed a differential expression analysis using data from dual RNA-Seq of THP-1 macrophages infected with
+Mtb
+(Fig.
+4
+c). We found evidence for the differential expression of 26 smORFs (Supplementary Data 4), indicating this set of tORFs plays a role during infection.
+To better integrate multi-omics datasets, we downloaded RNA-Seq reads from a study
+31
+deposited on Gene Expression Omnibus (GEO), accession number
+GSE166622
+, in which
+Mtb
+was exposed to a variety of antibiotics. Subsequently, we mapped the reads to a fasta file containing the nucleotide sequences of our transcriptome assembly and performed a differential expression analysis for the different antibiotics treatment, which included isoniazid, rifampicin and pyranizoic acid, and then filtered the results to include SCTs only (Fig.
+5
+a). After exposure to isoniazid for 72 h, tORF 92,330 has the highest log2FoldChange among smORFs (
+DESeq2
+,
+log2FoldChange
+= 3.22,
+n
+= 6), and tORF 33,916 has the highest log2FoldChange after exposure to rifampicin during 24 h (
+DESeq2
+,
+log2FoldChange
+= 8.69,
+n
+= 6) and 72 h (
+DESeq2
+,
+log2FoldChange
+= 20.37,
+n
+= 6). tORF_3622 could act during the early response for rifampicin (
+DESeq2
+,
+log2FoldChange
+= 1.55,
+n
+= 6). tORF 288 is differentially expressed upon exposure to Rifampicin for 72 h (
+DESEq2
+,
+log2FoldChange
+= 1.10,
+n
+= 6) and is particularly interesting as it shares an operon with GyrA and GyrB, which are known to have mutations associated with multi-drug resistant isolates
+32
+. Complete data of differentially expressed tORFs upon exposure to antibiotics is available on Supplementary Data 5.
+To gather further insight into the role of smORFs in antibiotic resistance, we reanalyzed RNA-Seq data from multi-drug resistant clinical isolates (Supplementary Data 6). Specifically, they were resistant to Isoniazid, Rifampicin, and Streptomycin (Fig.
+5
+b). Our results show that 9 smORFs are differentially expressed in the clinical isolates (
+DESeq2
+,
+n
+= 2) (Fig.
+5
+c). 8 out of the 9 smORFs are also differentially expressed in our analysis of strains exposed to three antibiotics (Fig.
+5
+a). Out of these, tORF_99968 is present in an essential region in the genome. This smORF is thus regulated in multi-resistant clinical isolates (
+DESeq2
+,
+log2FoldChange
+= -1.3,
+n
+= 2), differentially expressed upon treatment with antibiotics, and essential for bacterial survival, representing a very strong candidate for further studies in antibiotic resistance and drug development.
+Co-expression of SCTs with known genes
+Next, we sought to understand how these novel smORFs are connected to the rest of the transcriptome. To do so, we performed a co-expression analysis, which allows us to infer a correlation between the expression of two different genes based on similarities in their transcript expression level across multiple conditions. We then inferred a network (Fig.
+6
+) based on the positive correlations we found in these datasets (Supplementary Data 7), for which we selected only the SCTs and their first neighbors in the network to represent in Fig.
+6
+. In contrast to looking directly at the smORFs sequences to infer their function, we decided to investigate the genes that are co-expressed with the SCTs in the network, as their functions are very likely similar or related to those in the same network, especially for those that act as a gene hub, defined as a gene with high connectivity and very likely to play a biological role. Additionally, we intersected these results with the differential expression analysis of
+Mtb
+exposed to different antibiotics (Fig.
+5
+a), and colored the nodes in the network according to the antibiotics that resulted in differential expression for the smORF or annotated gene in that node. As shown in Fig.
+6
+, the SCTs are part of larger networks, whose nodes represent genes with known biological roles. Most genes in the network are regulated upon exposure to antibiotics, and some hubs have collective response to the same group of antibiotics, suggesting very tight regulation of antibiotic resistance mediated by both smORFs and canonical genes. For example, tORF 79,117 is co-expressed with rpoB, a gene related with resistance to Rifampicin
+33
+. In our analysis, rpoB is differentially expressed upon exposure to Rifampicin (
+DESeq2
+,
+log2FoldChange
+= 1.49,
+n
+= 6) exclusively. The co-expression of tORF 79,117 with rpoB along with tORF 69,185 in the same network suggests strong evidence for their role in antibiotic resistance.
+Fig. 5
+Differentially expressed SCTs upon antibiotic treatment. (
+a
+) Volcano plots showing SCTs that are differentially expressed in one of the time points for each antibiotic compared to control. Red dots denote a SCT that has a padj < 0.05 and a log2FoldChange > 1, and named smORFs depict the ones with a log2FoldChange > 2. (
+b
+) Schematic illustrating the approach of the study from which we reanalyzed RNA-Seq data of clinical isolates multi-resistant to the antibiotics rifampicin, isoniazid, and streptomycin. (
+c
+) Heatmap showing differentially expressed SCTs from clinical isolates multi-resistant to antibiotics. Includes only novel smORFs with a padj < 0.05 and an absolute log2FoldChange > 1 (SCTS: smORF-Containing Transcripts, padj < adjusted p-value for multiple hypothesis testing).
+smORFs are widespread across the genome of closely related bacteria and provide evidence for
+de novo
+gene birth events
+Comparative genomics has been traditionally used to annotate functional genomic sequences, and is highly dependent on the principles described by Kimura (1983)
+34
+. Said theory does not undermine Darwinian selection, but highlights another important aspect of molecular evolution, where most silent changes in the DNA and protein sequences are not adaptive in nature but are in fact the result of random drift of neutral or nearly neutral mutants. Therefore, it is expected that most functional protein sequences share a degree of conservation across other species, especially when put into constraint as a result of purifying selection.
+To gather insight into the evolution of the mycobacterial smORFome and identify which ones are conserved and thus more prone to be functional, we first identified which organisms from the Actinobacteria group have the potential to encode protein sequences with a certain degree of similarity to the novel microproteins (Supplementary Data 8). As shown in Fig.
+7
+a, a wide array of bacteria from this phylum have at least one sequence homologous to one of the novel smORFs, whereas genera that are evolutionarily closer to Mycobacterium possess a higher number of homologs, as expected. Excluding
+Mtb
+, the Mycobacterium genus has homologs in the genome of its species for 99 smORFs, while the recently renamed
+Mycolicibacterium
+holds 41 homologs in total.
+Fig. 6
+Co-expression networks of smORFs and annotated genes. The networks show smORFs and their first neighbors that are co-expressed with at least one smORF (
+adjusted p-value (padj)
+< 0.05,
+Pearson correlation
+> 0.9) after exposing
+Mtb
+to a variety of antibiotics (RNA-Seq data from the study
+GSE166622
+,
+n
+= 6 per condition. Conditions: Isoniazid, Rifampicin and Pyranizoic Acid treatment). smORF nodes are represented as diamonds, annotated genes with a gene name are represented as an elipse, and annotated genes with no assigned gene name are depicted with a rectangle. The fill color of the nodes shows the genes are differentially expressed upon exposure to Isoniazid, Rifampicin, Pyrazinoic Acid, or any combination of them, based on results shown in Fig.
+5
+a. Created with Cytoscape
+64
+.
+Outside Mycobacteriaceae, the genera
+Nocardia
+and
+Rhodococcus
+have homologous sequences for 32 and 33 smORFs spread across the genome of their species, respectively. If we delve deeper into the Mycobacteriaceae family (Fig.
+7
+b), there is clear evidence for the conservation of smORFs in other genera, such as
+M. canettii
+and
+M. orygis
+, which possess the highest number of homologous sequences. While some of these sequences share similarity with annotated sequences in these closely related species, most of them have yet to be properly annotated in their genomes. Interestingly,
+M. smegmatis
+, which is widely used as a model for studying tuberculosis, has no homologous sequences in its genome for any of the smORFs from T1 and T2, and only four for the T3 smORFs. A possible explanation for this would be the high discrepancy between the number of annotated genes in the two species, since the genome of
+M. smegmatis
+has 6938 genes against the 4173 from the much smaller genome of
+Mtb
+35
+, many of which are responsible for its virulence, whereas
+M. smegmatis
+does not cause tuberculosis in humans. The tree also provides some insight into smORFs that are potentially important for virulence, as some of them are conserved in many pathogenic bacteria. Most mycobacteria in the tree are pathogenic (Fig.
+7
+b), and the number of both unannotated (Fig.
+7
+c) and annotated (Fig.
+7
+d) homologs normalized by the number of pathogenic and non-pathogenic bacteria is much higher for the pathogenic ones. This suggests that these conserved microproteins might be significantly more important for pathogenic mycobacteria. Furthermore, a common trend in recent studies is the prevalence of smORFs coming from
+de novo
+gene birth events
+4
+–
+6
+, where no conservation is found for the novel sequences, but there is still evidence for their translation. Together, this data suggests the importance of not undermining smORFs that are not conserved in other species, which led us to include all smORFs that are exclusive to
+Mtb
+and we could find evidence at the protein level for. Furthermore, genes that are unique to
+Mtb
+could represent a subset of smORFs that play an important role in its success as a pathogenic bacterium.
+Conclusion
+Using our recently published pipeline, we were able to uncover a considerable amount of novel microproteins that had yet to be annotated in the genome and proteome of
+Mtb.
+By including an extensive number of replicates, we classified the novel microproteins by degrees of confidence, and revealed the differences in the sequence composition of microproteins from different tiers. The annotation process of novel smORFs is usually made difficult by the absence of conserved protein domains and the prevalence of many intrinsic disorder regions, which was the pattern seen in our data, but also supported by many other studies. By overlaying multiple omics datasets, we evaluated the behavior of the novel smORFs at the transcript level across different conditions, which helped annotate these novel sequences. Moreover, using this multi-omics approach, we highlighted microproteins that are differentially regulated upon antibiotic treatment, which could be useful for studies focusing on resistance mechanisms and on the development of new anti-TB drugs. Many smORFs are also present in essential regions and are part of gene clusters with important biological functions. We believe our approaches can help establish a workflow to explore in-depth the function and crosstalk of any novel short sequences. Moreover, our analyses can help select which smORFs and microproteins should have higher priority when performing in vitro and in vivo experiments to further characterize the hidden microproteome of
+Mtb.
+Fig. 7
+Phylogenetic analysis of novel microproteins. (
+a
+) Unrooted phylogenetic tree inferred from high-quality 16 S rRNA of Actinobacteria that have at least one tBlastn or Blastp hit for one of the novel microproteins. Bars around the tree depict the number of homologs in that genus. (
+b
+) Matrix showing the level of conservation for the novel microproteins across Mycobacteria (
+Mycobacterium
+and
+Mycolicibacterium).
+Each microprotein in the matrix has bars on the right indicating the number of annotated (purple) or unannotated (cyan) homologs for one of the smORFs identified in this study. Species with a pink name are pathogenic, and species with a black label are non-pathogenic. (
+c
+) Number of unannotated homologs identified by tblastn in mycobacteria normalized by the number of pathogenic or non-pathogenic species. (
+d
+) Number of annotated homologs identified by blastp in mycobacteria normalized by the number of pathogenic or non-pathogenic species. Created with Evolview (
+https://www.evolgenius.info/evolview/
+).
+Methods
+Data acquisition
+We downloaded the raw RNA-Seq reads in .fastq format for the Array Express studies E-MTAB-1616
+29
+and E-MTAB-5287
+36
+, as well as from the study
+GSE166622
+31
+from Gene Expression Omnibus (GEO). All strains are H37Rv unless specified otherwise. E-MTAB-1616 consists of 50 bp-long, single-end, strand-specific reads from a library of coding RNA from starved and exponentially grown
+Mtb
+cultures. E-MTAB-5287 reads are paired-end and 300 bp-long, obtained from macrophages infected with
+Mtb.
+The study
+GSE166622
+from GEO consists of paired-end reads from
+Mtb
+exposed to a variety of antibiotics. We have also collected data from clinical isolates 8462, 94,789, and reference strain H37Rv from the study PRJNA600079 deposited in NCBI Sequence Read Archive (SRA) originated from Tang et al.
+37
+.
+Protein extraction, in solution digestion and LC-MS/MS
+We grew
+Mtb
+H37Rv strains in 50 mL liquid medium (7H10 with OADC) at 37 °C until an optical density (OD600) of 0.5–0.7 and washed cellular pellets twice using 10 mM Tris HCl pH 8.0. Cells were resuspended in 1 mL of the same buffer containing protease inhibitor cocktail (Promega, USA), and then transferred to 2 mL lysing matrix B tubes containing 0.1 mm diameter silica beads (MP Biomedicals, USA). We then disrupted the cells using a L-Beader 3 (Loccus, Brazil) at a speed setting of 4000 rpm, 10 cycles of 30 s each, cooling between cycles. The supernatants were filtered through 0.22 mM Millex Durapore (Millipore, USA). Some supernatants were filtered through 0.22 mM Millex Durapore (Millipore, USA), and triton X-114 (Sigma-Aldrich, USA) extraction was carried out to obtain detergent and aqueous fractions as described previously
+38
+. Proteins were then precipitated with chloroform/methanol method
+39
+. Protein pellets were resuspended in 100 mM tris HCl pH 7.0 (buffer A) containing 8 M urea, and digested with a protocol adapted from Klammer and MacCoss (2006) (Ref
+40
+). Briefly, disulfide bonds were reduced in 5 mM dithiothreitol (DTT) for 20 min at 37 °C and then cysteines were alkylated in 25 mM iodoacetamide (IAM) for 20 min at room temperature in the dark. Urea was diluted to 2 M with 100 mM Tris HCl pH 7.0, trypsin was added at mass ratio of 1:100 (trypsin: protein) and the sample was incubated overnight at 37 °C. Formic acid was added (5% v/v, final concentration). Peptides were separated on an in-house made 20 cm revere-phase (5 μm ODSAQ C18, Yamamura Chemical Lab, Japan) using a nanoUPLC (nanoLC Ultra 1D plus, Eksigent, USA) connected to a LTQ-XL Orbitrap Discovery hybrid instrument (Thermo Fisher Scientific) through a nanoeletrospray ion source (Thermo Fisher Scientific). The flow rate was set to 300 nL min
+−1
+in a 60-, 120-, 240- or 360-minutes reverse-phase gradient. The mass spectrometer was operated in a data-dependent mode, with full MS1 scan collected in the Orbitrap, with m/z range of 400–1600 at 30,000 resolution. The eight most abundant ions per scan were selected to CID MS2 in the ion trap.
+Reference-guided transcriptome assembly
+Prior to the assembly, we performed the quality control of every RNA-Seq read used in the study using FastQC
+41
+, to remove adapter contamination. We chose to run cutadapt and either perform a soft trimming for read quality when needed, or no trimming at all, as hard-trimming has been shown to negatively affect transcriptomics analysis
+42
+. Afterwards, we used
+assembly
+, the first mode of µProteInS, to perform a reference-guided transcriptome assembly. Briefly, we used as input to the pipeline the reference
+Mtb
+genome (NC 000962.3), a GTF annotation file, and the .fastq files containing the control RNA-Seq reads from the study E-MTAB-1616. Then, reads were aligned to the reference genome using HISAT2
+43
+with the --dta flag. The resulting .sam alignment files were converted to sorted .bam files with the software Samtools
+44
+. These sorted files were used as input for StringTie
+45
+, along with the GTF annotation file. The minimum transcript length was set to 30 nucleotides. This was done for every replicate and, afterwards, we ran StringTie with the --merge flag, to generate a non-redundant, final set of transcripts that were stored in a GTF file.
+Generation of custom databases for proteomics
+To generate a database containing all possible smORFs that are encoded by the transcriptome assembled in the previous step, we used the
+database
+mode of µProteInS. This part of the pipeline runs gffread
+46
+with the -w parameter to generate a fasta file containing the spliced-exon sequences that are extracted from the genome based on their coordinates in the GTF file that was generated during the transcriptome assembly. These sequences correspond to each transcript and are translated to the three-reading frames using the specified start codons. We used ATG, ATT, GTG, and TTG, as these are known to be the most likely ones to initiate translation in mycobacteria
+47
+. This mode also takes the same reference genome fasta file that was used during the transcriptome assembly and translates it to the six reading frames using the same set of start codons. Lastly, µProteInS appends the provided proteomes to the predicted databases and adds a tag to each entry from this proteome to signal that it is annotated. We used a concatenated proteome from NCBI RefSeq, Uniprot, and Mycobrowser to be truly comprehensive when excluding annotated proteins. To be even more restrictive, we performed a blastp search against NCBI RefSeq database for the H37Rv strain of
+Mtb
+, and removed microproteins that had 100% identity and query coverage, i.e. a perfect match. Sequences added to their database after the search may be similar to the novel smORFs.
+Bottom-up label free proteomics
+We fed µProteInS third mode,
+ms
+, with 680 MS experiments in the mzML format. The pipeline uses MS-GF +
+48
+as the search engine. We specified the following parameters: precursor mass tolerance of 20 ppm, isotope error range between 0 and 1, CID as fragmentation method, 2 tolerable termini (includes semi-tryptic peptides), peptide length between 6 and 40 amino acids, LCQ/LTQ as instrument, and Cysteine carbamidomethylation as a fixed modification. We performed the post-processing of the search using
+postms
+, the fourth mode of µProteInS, which uses Percolator
+49
+to assess the FDR. Throughout the pipeline’s workflow, global FDR cutoffs of 1% at both the PSM and Peptide levels are applied, and any peptide that matches an annotated protein that is present in the reference annotation files is removed from the subsequent analyses. FDR assessment was done in groups of files based on their experimental settings. Since this is not a quantitative proteomics analysis, the replicates are used to identify smORFs in a qualitative and binary approach, rather than using the spectral counts coming from different conditions to infer differences in protein expression. To quantify smORFs, analyses were done at the transcript level using RNA-Seq data. To confirm that no annotated proteins were mistakenly identified as novel, we performed a Blastp search against NCBI RefSeq database for
+Mtb
+H37Rv strain, with an E-value cutoff of 0.01, optimized search for short sequences, and the filter for low complexity regions disabled. We then proceeded to remove any novel microprotein that had at least a hit with both 100% identity and query coverage, i.e., a perfect match.
+Definition of start codon priority and RBS detection
+RBS were predicted using Free2Bind
+21
+, and the most likely smORF for a stop codon with multiple alternative start codons was selected based on µProteInS selection criteria. First, priority is given to smORFs starting with an ATG. If there are multiple smORFs with the canonical start codon, they are sorted by length and the longest one is given priority. Next, they are sorted by the amount of free energy resulting from the binding to the upstream region of that start codon to the 3’ end of the 16 S rRNA of
+Mtb
+, where lower free energy levels represent an RBS with stronger binding capacity, thus more likely to be translated. Finally, the pipeline checks if a Mass Spectrometry peptide is matching one microprotein coming from a smORF with an alternative start that is more upstream and not matching the other short smORFs, even if they were given priority before.
+Prediction of high-confidence PSMs
+To check for strongly reliable evidence of microproteins encoded by smORFs, we employed
+validate
+, the fifth and last mode of µProteInS to predict spectra of high quality. Briefly, this mode applies a pre-trained random forest model named Spectrum Forest, which was trained on manually inspected and curated Mass Spectrometry data, to identify features of a PSM that are related to those of a high-quality PSM. Each PSM is then assigned a classification based on the machine learning prediction, and a result file is generated, containing only HC smORFs. For full description of the implementation of Spectrum Forest, see Suplementary material of De Souza et al. (2022)
+15
+.
+Hierarchical classification of smORFs and microproteins
+To classify smORFs and their microproteins into different Tiers with varying degrees of confidence, where higher Tiers represent microproteins with lower confidence, we used the following criteria: microproteins with at least one HC spectrum classified by the Spectrum Forest model and a Posterior Error Probability (PEP) from the Percolator output < 0.01 were classified as Tier 1 (T1). Microproteins with at least one HC spectrum and spectra with PEP > 0.01 were classified as Tier 2 (T2). Microproteins with no HC spectrum (nHC) predicted by Spectrum Forest, but for which we found spectra with PEP < 0.01 and were found in 3 or more MS replicates with a global FDR (q-value) < 0.01 were classified as Tier 3 (T3). The remaining microproteins were classified as Tier 4 (T4) and were not considered for downstream analysis. All microproteins have at least one spectrum that does not match any annotated protein with a q-value < 0.01.
+Gene overlapping and operon prediction
+To identify the regions overlapped by the novel smORFs in the genome, we used a custom python script to intersect the smORF coordinates in the genome with the reference GFF file from NCBI. We then classified the novel smORFs based on its reading frame, its strand, and how much of the canonical ORF it overlapped. Novel smORFs that overlapped the annotated ORF completely in the same reading frame, extending the original sequence, were classified as ‘Overlapping in-frame’. smORFs partially overlapping an annotated ORF in another reading frame were classified as ‘Overlapping out-of-frame’. If the smORF overlapped partially but in another strand, it was classified as ‘Overlapping opposite strand’. If on the same strand, different reading frame, and completely nested within the coordinates of the annotated ORF, the smORF was classified as ‘Nested out-of-frame’. If the smORF was completely nested within the annotated ORF but in another strand, regardless of reading frame, it was classified as ‘Nested opposite strand’. smORFs with no overlap but that were located in the vicinity of annotated genes, up to 500 bp upstream or downstream of the ORF, were classified as either upstream ORF (uORF) or downstream ORF (dORF), respectively. Lastly, smORFs further than 500 bp from other annotated genes were classified as intergenic. To predict operons in the genome of
+Mtb
+, we used Operon-mapper
+26
+using the GFF file from NCBI as input. Then, using a custom python script, we intersected the coordinates of the smORFs with the genes in predicted operons.
+Function prediction
+To predict conserved protein domains, we used the microprotein sequences from T1 to T3 as input for InterPro
+50
+,
+51
+and CDD
+52
+. To predict cellular localization, we used Psortb
+53
+. To predict transmembrane and signal peptide domains, we ran TMHMM
+54
+, Phobius
+55
+and SignalP
+56
+with default parameters. Afterwards, to infer the Gene Ontology from the sequence, we ran CELLO
+57
+and DeepGoWeb
+58
+.
+Differential expression analysis
+We used the same assembly generated with the first mode of µProteInS to look for SCTs that might be differentially expressed in multiple conditions. First, we renamed each SCT in the fasta file to include the names of each tORF it carries, to improve visualization and interpretation of the results. The following steps were done for all samples from the downloaded RNA-Seq studies. E-MTAB-5287 was the only one that required an additional step, where we aligned the reads to the human genome (GRCh37) and kept only reads that did not map to it, which should be coming from the transcriptome of
+Mtb
+. We then indexed the
+Mtb
+transcriptome using the genome as decoy, as described in Salmon documentation, and ran Salmon in quant mode with the flag—validateMappings
+59
+. We created a file containing the read counts from each one of the output quant.sf files from Salmon and, prior to normalization, excluded low read counts that matched the following criteria: genes with less than 3 samples with normalized counts greater or equal to 5. Then, we used DESeq2
+60
+to perform the differential gene expression analysis at the transcript level. After normalization, we excluded transcripts that did not carry a smORF from Tiers 1 to 3. Afterwards, we applied a cutoff for an adjusted p-value (padj) of 0.05, and for a Log2FoldChange of 1. Next, we applied a regularized log transformation to the DESeq2 results, and plotted them into a heatmap using the package pheatmap (
+https://www.rdocumentation.org/packages/pheatmap/versions/1.0.12/topics/pheatmap
+) and into volcano plots.
+Co-expression analysis
+Using the same file containing raw counts from the differential expression analysis, we used the EBSeq R package
+61
+to get a median normalized matrix. Then, for each possible combination, we performed a pairwise Pearson correlation analysis using the R package Psych
+62
+. Afterwards, we selected gene pairs with a padj < 0.05 and an absolute Pearson correlation > = 0.9 and used them as input for the igraph
+63
+package, to calculate metrics such as degree and betweenness centrality for each gene pair. To put it simply, degree is calculated based upon the number of connections a node makes, and betweenness centrality measures how many times a specific node is used as a path to connect two or more other nodes. In the network, each node corresponds to a gene, be it annotated or novel, and the edges correspond to a correlation between the expression level of two different nodes across different conditions. We then visualized the network and node files in Cytoscape
+64
+, where we selected an organic layout and manually adjusted the networks to improve visualization. We then colored the nodes in the network based on whether those genes were differentially expressed upon exposure to antibiotics based on the RNA-Seq datasets from
+GSE166622
+.
+Conservation analyses of smORFs in closely related species within the Actinobacteriaceae family
+To build the unrooted phylogenetic tree and its matrix containing all homologous sequences, we performed three sets of Blast searches. To look for annotated conserved sequences, we ran Blastp using the microproteins sequences encoded by smORFS from T1 to T3 as query and searched the non-redundant NCBI database twice - once restricting the search to Actinobacteria (taxid:201174) and excluding Mycobacteriales (taxid:85007), and then restricting the search to Mycobacteria and excluding
+Mtb
+(taxid:1773). We set the E-value cutoff to 0.001 and filtered out hits with a BitScore < 50. As the low complexity filter sometimes negatively affects the number of hits for smORFs, undermining the number of conserved sequences
+6
+, we turned it off for the searches. To check for unannotated conserved sequences, we ran tBlastN using the same parameters and database restrictions. Next, we extracted the species from the entries of each blast hit that had a complete genome and downloaded their 16 S rRNA sequences from the Silva database
+65
+, which collects high-quality ribosomal sequences for many different organisms. Subsequently, we performed a multiple sequence alignment using MAFFT
+66
+with default parameters and used this as input for PhyML
+67
+to reconstruct the unrooted phylogenetic tree from the 16 S rRNA sequences. To generate the matrix containing conservation information for each species in the tree (Fig.
+7
+b) and the bars for the Actinobacteriaceae tree (Fig.
+7
+a), we used EvolView
+68
+. For each smORF that had a hit in the blastP search, we added a purple-colored bar to the matrix, and a a cyan-colored box for each smORF that did not have a blastP hit but had a tBlastN hit for the species of the corresponding leaf in the tree. For the bars in Fig.
+7
+a, we added the absolute numbers of smORFs homologs in the genomes of each species. Full genera for the species in the tree are provided in Supplementary Data 8.
+Statistical analyses
+For each comparison that required statistical inference, we used the Python package SciPy (
+https://scipy.org/
+) to perform the analyses. First, we checked for a Gaussian distribution for each group using the Shapiro-Wilk test. Since our tests rejected H0 and thus had a non-parametric distribution, we used the Kruskal-Wallis test followed by Dunn’s post hoc adjusted for multiple hypothesis testing with Benjamini-Holchberg correction. We then added statistical significance annotations to the plot using the python package Statannotations (
+https://github.com/trevismd/statannotations
+).
+Electronic supplementary material
+Below is the link to the electronic supplementary material.
+Supplementary Material 1
+Supplementary Material 2
+Supplementary Material 3
+Supplementary Material 4
+Supplementary Material 5
+Supplementary Material 6
+Supplementary Material 7
+Supplementary Material 8
+Supplementary Material 9
+Supplementary Material 10

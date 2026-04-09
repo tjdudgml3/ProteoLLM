@@ -1,0 +1,836 @@
+Background
+In the past few decades, the decline of semen quality
+1
+and the increased childbearing age
+2
+have threatened the reproduction of the global population. The advent of
+in vitro
+fertilization (IVF) technologies was developed to address this issue and has since revolutionized the field. Since the first delivery in 1978,
+3
+over 8 million babies have benefited from IVF technologies. One-sixth of childbearing couples worldwide are seeking to conceive through IVF.
+3
+Despite its great achievement, the success rate of IVF is still relatively low and unsatisfactory. The clinical pregnancy rate of IVF varies across different ethnic groups, ranging from approximately 30% to 40%, and the live birth rate is even lower.
+4
+These relatively modest success rates can be attributed to multiple factors, including patient-specific characteristics, treatment protocols, and environmental conditions. In addition, the current IVF technology requires the extensive involvement of clinicians and embryologists in decision making. Although many decisions are based on a strong evidence base, most clinical decisions still rely heavily on the subjective experience of doctors, which greatly increases the uncertainty and reduces the reproducibility of the IVF process.
+Recent advances in artificial intelligence (AI) have revolutionized many medical fields, providing objective, standardized, and efficient methods to assist clinical decision making. The breakthroughs in different AI technologies have also brought about innovations in processing medical data in various modalities. Conventional machine learning (ML) has long been widely applied to structured medical data, such as prognosis prediction based on patients’ examination and medication information.
+5
+Since the 2010s, with the emergence of deep convolutional neural networks (CNNs), AI models’ performance has reached a level comparable to that of human doctors in the analysis and processing of medical images, especially in pathology
+6
+and radiology.
+7
+The recently emerged large language model (LLM) technology has shown remarkable capabilities in the analysis of electronic medical records and medical texts and is even capable of performing logical diagnostic reasoning.
+8
+Foundational models for omics and biological data demonstrate tremendous potential in mutation prediction and omics data analysis.
+9
+Moreover, multi-modal AI models that combine biological, clinical, behavioral, and environmental data are advancing personalized care, real-time disease monitoring, digital trials, and virtual health support.
+10
+Given the limitations of current IVF procedures and the immense potential of AI technology, many studies are exploring the development of AI models for various aspects of IVF clinical decision making. The large amount of medical data accumulated in IVF practice, such as structured health record data and embryo monitoring images, provides a valuable foundation for existing AI research. Through rational design and thorough validation, AI models have great potential to enhance the success rate of IVF technology in clinical applications and promote the development of personalized medicine.
+Overview of IVF cycles
+An IVF cycle typically includes pre-treatment assessment, ovulation induction and egg retrieval, sperm retrieval and preparation, fertilization, embryo culture, embryo transfer, and pregnancy test.
+11
+Most steps require the participation of doctors or embryologists in assessment and decision making, such as selecting the time and dose of ovarian stimulation, choosing the appropriate sperm and eggs, and selecting the best embryos for transfer. Although multiple factors such as maternal age, clinical diagnosis, embryo quality, and endometrium receptivity can affect IVF outcome, the embryo itself is the main contributor and the major predictor for successful pregnancy.
+12
+,
+13
+Historically, to achieve satisfactory IVF outcomes, several embryos were transferred in one cycle with an unacceptably high rate of multiple pregnancies, thus raising complications for mothers and children. Nowadays, single embryo transfer (SET) is recommended in most clinics due to the minimization of multiple pregnancy risks as well as serious medical, social, and financial implications.
+14
+,
+15
+In IVF cycles, embryos will be transferred and/or frozen according to the individual patient’s conditions. The success in the freeze-thaw cycle but failure in the fresh cycle implied that the most viable embryo was not chosen first in the same cohort of embryos.
+16
+This possibility highlights the importance of embryo selection, although factors such as uterine receptivity and hormonal status may also affect the outcome. The selection of the most competent embryo is still one of the chief challenges in the field of IVF.
+17
+It is generally recognized that embryo selection is based on morphology assessment, time-lapse microscopy (TLM) scoring, pre-implantation genetic testing (PGT) after embryo biopsy, or the metabolites/biomarkers in the spent culture medium (CM). Among these methods, PGT is an invasive assay, and the rest are non-invasive assays. At present, most AI models for IVF are constructed based on data obtained from these methods. The following sections present the characteristics of various techniques and the corresponding studies related to AI applications.
+A brief introduction to AI technology in medicine
+AI refers to computational methods that enable machines to perform tasks that typically require human intelligence. In the medical field, AI involves the use of data-driven techniques to analyze extensive clinical information, including patient records, medical imaging, and clinical trial data.
+18
+,
+19
+These methods are used to generate insights, support diagnoses, predict outcomes, and assist in treatment decisions.
+20
+Key subfields of AI include ML, in which algorithms learn patterns from data, and deep learning, a subset of ML using multi-layered neural networks to automatically learn features from raw inputs (
+Table 1
+). Based on the differences in the learning process, ML can be classified into supervised learning, unsupervised learning, and reinforcement learning. In supervised learning, the model is trained on labeled data, meaning that each input in the training dataset has a corresponding target or label. The goal of supervised learning is to learn a mapping from the input data (such as embryo images) to the output labels (such as pregnancy and live birth results), which can be used for prediction on new, unseen data. This approach is analogous to teaching the model using correct answers, enabling it to answer similar questions in the future. Commonly used supervised learning methods include support vector machines (SVMs),
+21
+random forests (RFs),
+22
+and eXtreme Gradient Boosting (XGBoost).
+23
+In unsupervised learning, the model is given data without explicit labels or target values. The goal is to discover patterns, clusters, or other useful information within the data without prior knowledge of what the labels should be. For example, researchers have applied principal-component analysis (PCA)
+24
+to examine the capability of embryo implantation potential prediction using morphokinetic data.
+25
+Because the computational cost of these methods is relatively low, to achieve the best performance researchers usually apply multiple algorithms to build the prediction model in their studies.
+26
+Table 1
+Glossary of key terms in AI
+Term
+Abbreviation
+Definition
+Artificial intelligence
+AI
+the field of computer science that creates systems capable of performing tasks that typically require human intelligence, such as learning, problem solving, and decision making
+Machine learning
+ML
+a subset of AI that enables systems to learn from data, identify patterns, and make predictions or decisions without being explicitly programmed to perform those tasks
+Deep learning
+DL
+a subset of machine learning that uses neural networks with many layers (deep neural networks) to model and understand complex data
+Representation learning
+–
+a type of deep learning where the goal is to automatically discover useful representations or features of the data that can be used for further learning tasks
+Transfer learning
+–
+a deep-learning technique where a model trained on one task is reused for another, often related, task. This is especially useful when there are limited data for the new task but an abundance of data available for a similar task. The idea is to leverage knowledge (e.g., learned features or parameters) from a pre-trained model on a related task and apply it to a different, but similar, task
+Neural network
+–
+computational models inspired by the human brain that are used to recognize patterns. They consist of interconnected nodes or neurons that process information
+Convolutional neural network
+CNN
+a type of deep-learning model used primarily for image analysis and recognition tasks
+Recurrent neural network
+RNN
+neural networks designed to handle sequential data, particularly useful for time-series data and natural language processing
+Support vector machine
+SVM
+a type of supervised learning model used for classification and regression tasks
+Random forest
+RF
+an ensemble learning method that operates by constructing a multitude of decision trees during training and outputting the class that is the mode of the classes (classification) or mean/average prediction (regression) of the individual trees
+eXtreme gradient boosting
+XGBoost
+a machine-learning algorithm that is used for classification and regression tasks. It builds models in an additive manner, like other boosting methods
+Principal-component analysis
+PCA
+a statistical procedure that uses an orthogonal transformation to convert a set of observations of possibly correlated variables into a set of values of linearly uncorrelated variables called principal components
+Federated learning
+FL
+a machine-learning approach that enables collaborative learning across multiple decentralized devices or servers holding local data samples, without exchanging them
+Explainable AI
+XAI
+a subfield of AI focused on creating systems whose actions can be easily understood by humans
+Model generalization
+–
+the ability of a machine-learning model to perform well on unseen data by extracting general patterns from the training data
+Bias
+–
+in AI, bias refers to the prejudice in a model’s predictions due to an unbalanced or non-representative training dataset
+Dataset shift
+–
+a situation where the distribution of data in the training set differs from the distribution in the test set or real-world application
+Interpretability
+–
+the ability to understand the reasons behind a model’s predictions or decisions
+AI technology has long been applied in medicine; however, the recent rise of AI has been largely driven by the successful employment of deep learning. Deep learning is a subset of ML in AI that involves the use of neural networks with multiple layers to model and understand complex data.
+27
+The term “deep” emphasizes the depth of the neural network architecture, which typically consists of many interconnected layers of neurons that process and transform the input data through a series of weighted computations. Unlike traditional ML algorithms, deep learning requires less feature engineering, as it can learn representations from raw data. Deep learning excels in tasks such as image and speech recognition, due to its ability to process high-dimensional data. The trend points toward more sophisticated architectures such as CNNs
+28
+for image analysis (e.g., embryo images and pathology images), recurrent neural networks (RNNs)
+29
+for sequence data (e.g., electrocardiograms), and Transformer models
+30
+for natural language processing (e.g., electronic health records). Recent developments have also expanded the learning paradigms within deep learning. Weakly supervised learning enables models to learn from coarse or incomplete labels, such as slide-level pathological diagnoses, which reduces the need for labor-intensive pixel-level annotations while still supporting accurate predictions.
+31
+Self-supervised learning, including generative approaches, leverages unlabeled data by creating predictive tasks within the data itself—such as reconstructing missing clinical features or restoring corrupted medical images—allowing models to learn rich biomedical representations without manual labeling.
+32
+Overall, these methods typically require a large amount of data and substantial computational power for model training.
+In the context of IVF, these AI techniques can be employed to analyze the complex and diverse data from the IVF process, such as clinical records, embryo monitoring images, time-lapse videos, and omics data from embryo culture. By leveraging AI tools, there is potential to enhance the understanding of IVF procedures and improve the chances of successful outcomes. Earlier reviews have discussed the application of AI in various IVF procedures,
+33
+,
+34
+its performance compared to that of embryologists,
+35
+and related ethical considerations.
+36
+Here, we will explore recent advancements in the application of AI in IVF from the perspective of data modality, encompassing structured health record data mining, biomedical image analysis, and omics data analysis (
+Figure 1
+; see also
+Table S1
+). We will also explore innovative opportunities presented by emerging uses of AI in IVF, such as multi-modal models, foundation models, federated learning (FL), and medical AI agents. Furthermore, we address current limitations and discuss directions for further research, including the challenges of current AI models in IVF clinical application, regulatory and safety issues, and the need for interdisciplinary research. Ultimately, this review seeks to provide a detailed and up-to-date understanding of the role of AI in IVF to inform and guide future research and practice in this field.
+Figure 1
+Current data modalities and potential tasks for AI in IVF
+Current applications of AI in IVF
+This review now provides an overview of recent applications of AI in IVF and organizes current studies into three main categories based on the primary data modality used for modeling, namely, structured health record data, medical images and videos, and omics data. For each data modality, we discuss the characteristics of the data, the applied IVF tasks, and the performance of various AI models, emphasizing the evolving trend of AI technology for different data modalities.
+Structured health record data mining in IVF with AI/ML models
+Structured health record data, characterized by its organized tabular format (e.g., numerical values and categorical codes), has been the cornerstone of AI-driven IVF research since the 1990s. These data, typically organized as electronic health records or embryological databases, include patient demographics (e.g., age, body mass index [BMI], and hormonal profiles), treatment parameters (e.g., gonadotropin doses and embryo morphology scores), and outcome metrics (e.g., live birth and complications). Their structured nature enables direct compatibility with classical statistical methods and ML algorithms, making them indispensable for hypothesis-driven research and clinical decision support. Early pioneers like Kaufmann et al. demonstrated the potential of neural networks to predict pregnancy outcomes using basic features such as patient age, oocyte yield, and embryo transfer status, achieving cost-effective decision support.
+37
+Over the past two decades, advancements in ML have expanded the scope of structured data applications, addressing diverse clinical tasks across the IVF workflow.
+The early application of AI in IVF coincided with the dominance of statistical models, reflecting the limited computational power and small datasets of the era. Logistic regression and Cox proportional hazards models were favored for their transparency and alignment with hypothesis-driven research. For instance, Dhillon et al.’s multi-variable logistic regression model identified age, BMI, and ethnicity as key predictors of live birth (area under the receiver-operating characteristic curve [AUROC]: 0.62),
+38
+while Morales et al. utilized Bayesian classifiers to predict embryo implantation with 71% accuracy, based on manually annotated morphological features.
+39
+These models thrived on structured data’s tabular format, which inherently supported regression frameworks. However, their linear assumptions often failed to capture complex interactions, such as the non-linear relationship between maternal age and ovarian reserve decline, prompting the adoption of more flexible approaches.
+As IVF datasets grew in size and dimensionality (e.g., multi-cycle records and expanded biomarker panels), tree-based ensemble methods like RFs and gradient-boosting machines (GBMs) gained prominence. These algorithms excelled at handling nonlinear relationships and feature interactions without requiring explicit specification—a critical advantage for modeling multi-faceted outcomes like live birth, which depend on interconnected factors ranging from embryo quality to endometrial receptivity. Blank et al.’s RF model,
+40
+incorporating 32 embryonic and clinical variables, demonstrated superior performance in implantation prediction compared to earlier statistical models. Similarly, Raef et al. achieved 90% accuracy in embryo selection using RF classifiers trained on 1,360 embryos, highlighting gonadotropin dosage as a pivotal predictor.
+41
+The interpretability of ensemble methods, through feature importance rankings, further cemented their clinical utility. For example, Xi et al.’s XGBoost model linked elevated BMI and antimüllerian hormone (AMH) levels to twin pregnancy risks, providing actionable insights for SET protocols.
+42
+By the 2010s, the integration of domain knowledge with algorithmic flexibility became a hallmark of IVF AI research. Hybrid models combined feature engineering—guided by embryological expertise—with advanced ensembles to address hierarchical decision making in IVF. Chavez-Badiola et al., for instance, fused morphological annotations with patient age in an SVM framework, achieving AUROCs of 0.75–0.77 for pregnancy prediction.
+43
+Meanwhile, Yuan et al. demonstrated that incorporating morphokinetic parameters (e.g., blastocyst expansion timing) into GBM models could non-invasively predict euploidy (area under the curve [AUC]: 0.88), rivaling the accuracy of invasive PGT for aneuploidy (PGT-A).
+44
+This era also saw the emergence of task-specific architectures. For example, Qiu et al.’s XGBoost-based live birth predictor incorporated maternal features such as endometrial thickness,
+26
+while Li et al.’s LightGBM model prioritized estrogen levels at trigger timing.
+45
+Despite these innovations, the reliance on manual feature curation (e.g., embryo fragmentation scores) remained a bottleneck, foreshadowing the shift toward automated feature extraction in subsequent imaging-based AI.
+The details of the studies reviewed herein are summarized in
+Table 2
+. Early research efforts were primarily focused on predicting outcomes using limited and sparse features.
+37
+,
+39
+However, with the advent of more sophisticated ML methods (like XGBoost), studies have increasingly utilized richer datasets and a broader range of features. This evolution has enabled more diverse clinical outcome predictions and enhanced the optimization of embryo selection while mitigating risks such as twin pregnancies.
+40
+,
+41
+,
+44
+Operational tasks, such as sperm retrieval prediction and ovarian stimulation dosing, benefited from logistic regression’s simplicity, whereas complex endpoints such as live birth increasingly demanded ensemble approaches (
+Figure 2
+). Notably, all models relied heavily on expert-curated features, whether hormonal thresholds
+38
+or morphokinetic timings,
+46
+highlighting the enduring role of domain knowledge in structuring AI inputs. Yet performance ceilings (AUCs <0.85 in most studies) and inter-center variability (e.g., Li et al.
+45
+vs. Chavez-Badiola et al.
+43
+) persist (
+Figure 3
+; see also
+Table S1
+), suggesting that structured data alone may be insufficient to model the full biological complexity of IVF outcomes.
+Table 2
+AI studies for IVF using structured health record data
+Study
+Description
+Dataset
+Model architecture
+Performance
+Morales et al., 2008
+39
+propose a model to predict the implantation occurrence to select the most promising embryos
+retrospective clinical data of 189 embryos from 63 cases. The final input data includes 20 structured features
+Bayesian classification model
+the semi-naive Bayes classifier obtained the best accuracy with a correct classification of the 0.714
+Ma et al., 2011
+47
+using leptin and artificial neural networks (ANNs) to predict sperm retrieval results
+retrospective medical records of 280 men with NOA (non-obstructive azoospermia). Twelve factors were curated as the input variables
+ANN
+ANN1 had the largest area under the curve with an AUC of 0.832
+Olivennes et al., 2011
+48
+individualizes recombinant human FSH (r-hFSH) doses with patient characteristics
+clinical data from 1,378 patients, of which four were identified as predictive markers: basal FSH, BMI, age, and antral follicle count (AFC)
+linear model
+–
+Uyar et al., 2015
+49
+predict the implantation outcome of individual embryos using a machine-learning method
+the study dataset included 2,453 embryos transferred at day 2 or day 3 after intracytoplasmic sperm injection. Each embryo was represented with 18 clinical features and a class label
+naive Bayes model
+the naive Bayes model provided the best accuracy of 0.804
+Dhillon et al., 2016
+38
+develop and validate a predictive model to estimate the live birth chance of embryos
+medical records of 9,915 patient who underwent their first fresh non-donor cycle of IVF
+linear model
+the AUC of the final prediction model for odds of live birth was 0.62
+Milewski et al., 2017
+25
+investigate the potential of morphokinetic parameters for predicting implantation using AI
+retrospective morphokinetic parameters of time-lapse records from 610 embryos
+ANN
+the model demonstrated a good performance with an AUC of 0.75
+Blank et al., 2019
+40
+develop and compare machine-learning models for predicting the implantation potential of a transferred embryo
+retrospective data from 1,052 patients and 32 variables were extracted as final input
+random forest
+the AUC of the RF model is 0.74
+Qiu et al., 2019
+26
+develop a model to predict live birth chance prior to the first IVF treatment using clinical data
+retrospective clinical data from 7,188 women who underwent their first IVF treatment. Final predicted features include age, AMH, BMI, duration of infertility, previous live birth, previous miscarriage, previous abortion, and type of infertility
+logistic regression, random forest, SVM, XGBoost
+the XGBoost model demonstrated an area under the ROC curve of 0.73 on the validation dataset, outperforming other machine-learning algorithms in terms of calibration
+Bori et al., 2020
+46
+characterize morphodynamic embryo features that have the potential to predict the implantation outcome and serve as input data for an ANN model
+morphodynamic parameters and conventional morphokinetic parameters from 637 patients
+ANN
+the best model achieved an AUC of 0.77
+Chavez-Badiola et al., 2020
+43
+develop and evaluate different machine-learning classifiers for pregnancy prediction with morphometric and non-morphometric data
+retrospective data from 211 patients
+probabilistic Bayesian, SVM, deep neural network, decision tree, random forest
+in database A, SVM achieved the best performance with an AUC of 0.77. In database B, random forest achieved the best performance with an AUC of 0.75
+Letterie and Mac Donald, 2020
+50
+develop AI models for day-to-day decision making during ovarian stimulation
+the retrospective database contains 2,603 cycles with 7,376 visits for training. An additional 556 distinct cycles were used for validation
+not reported
+the model demonstrates high accuracy in the following tasks: 0.92 for deciding whether to continue or stop treatment, 0.96 for triggering and scheduling oocyte retrieval or canceling the cycle, 0.82 for adjusting the dose of medication, and 0.87 for determining the number of days for follow-up
+Raef et al., 2020
+41
+develop a computational model for predicting the implantation outcome following an embryo transfer cycle
+retrospective data from 500 patients and 1,360 transferred embryos, including 82 features
+naive Bayes model, neural network,
+k
+-nearest neighbors (kNN), SVM, random forest, decision tree
+random forest model achieved the best performance with an AUC of 0.937
+Xi et al., 2021
+42
+develop machine-learning models for pregnancy prediction and embryo selection
+retrospective data from 9,211 patients with 10,076 embryos and final input includes 19 features
+XGBoost
+the model achieved averaged AUCs of 0.7945, 0.8385, and 0.7229 for SET pregnancy, double embryo transfer (DET) pregnancy, and DET twin risk, respectively
+Shen et al., 2022
+51
+develop AI models to predict the embryo transfer outcome of recurrent implantation failure
+recurrent implantation failure dataset (
+n
+= 45,921) from the Human Fertilization and Embryology Authority (HFEA) database containing 44 features
+random forest, gradient-boosted decision tree (GBDT), AdaBoost, MLP (multi-layer perception)
+the AdaBoost and GBDT models achieved the best performances with AUCs of 0.813 and 0.903 for groups A and B, respectively
+Zhang et al., 2022
+52
+develop a machine-learning model to predict live-birth occurrence of natural-cycle IVF using cycle records
+57,558 retrospective records from the HFEA database
+decision tree, linear discriminant, logistic regression, naive Bayes, SVM, ANN, bagged tree, AdaBoost, GentleBoost, LogitBoost, RUSBoost, RSM (random subspace method)
+ANN and LogitBoost achieved the best performances with AUCs of 0.794 and 0.79 for the machine-learning group and ensemble learning group, respectively
+Yuan et al., 2023
+44
+develop a model to predict blastocyte euploidy and live births by integrating morphokinetic parameters, morphological parameters, and clinical parameters
+retrospective records of 1,396 blastocysts from 83 patients
+logistic regression
+the model achieved an AUC of 0.879 for euploidy prediction
+Li et al., 2023
+45
+develop a machine-learning model that predicts the outcomes of pregnancies following IVF using clinical features
+the dataset included records of 840 patients who underwent ART, and input data contained 19 features
+XGBoost, LightGBM, kNN, naive Bayes, random forest, decision tree
+best performance was achieved by LightGBM with an accuracy of 0.905
+Wang et al., 2024
+53
+use machine-learning methods to develop predictive models of pregnancy complications in women who conceived with IVF
+retrospective clinical data from 14,732 patients
+logistic regression, decision tree, naive Bayes, SVM, random forest, gradient boosting
+the predictive performance before treatment reached maximum AUCs of 0.66, 0.66, and 0.6, respectively, for pre-eclampsia, placental complications, and postpartum hemorrhage for the first cycle
+Figure 2
+Tasks and model archetypes across the IVF cycle
+Figure 3
+Overview of AI studies in IVF
+This scatterplot summarizes AI studies in IVF cited in the main text. Studies are arranged by sample size (log scale) and the performance reported by the authors (AUC or accuracy), grouped by the main modality (shape) and the main IVF tasks (color) that the studies applied.
+Biomedical image analysis in IVF with AI/ML models
+The integration of AI into biomedical image analysis has profoundly reshaped the landscape of IVF, introducing unprecedented objectivity and precision into clinical workflows. From static embryo morphology to dynamic developmental timelines, AI models now decode intricate patterns within medical images that elude human perception, addressing long-standing challenges in embryo selection, maternal health profiling, and developmental monitoring. This section explores how AI leverages diverse imaging modalities—each with unique biological and clinical significance—to enhance IVF outcomes.
+Static embryo imaging: Automating embryo assessment
+Static embryo images, captured via optical microscopy, have historically formed the basis of embryo selection through manual grading systems such as the Gardner criteria. These systems assess blastocyst expansion, inner cell mass (ICM) integrity, and trophectoderm (TE) cohesion but suffer from significant inter-observer variability, with studies reporting as low as 17.4% consistency among embryologists.
+54
+CNNs, particularly architectures like ResNet50,
+55
+have emerged as transformative tools, extracting subtle morphological features—such as blastomere fragmentation patterns or TE cell alignment—that correlate with developmental potential. For instance, Chen et al.
+54
+demonstrated the feasibility of automated grading using 171,239 annotated images, achieving 75.36% accuracy in blastocyst assessment. Beyond traditional grading, Miyagi et al.
+56
+linked blastocyst images to live birth probabilities (AUC: 0.64–0.88) through maternal age-stratified models, while ERICA
+57
+and STORK-A
+58
+predicted embryo ploidy status non-invasively (AUC: 0.70–0.76), reducing reliance on invasive pre-implantation genetic testing (PGT-A). The interplay between embryo competence, endometrial receptivity, and developmental kinetics necessitates multi-modal AI models that synthesize diverse data streams. Liu et al.
+59
+applied a multi-modal model, fusing CNN-extracted image features with clinical parameters like endometrial thickness to predict live birth. This integrated approach achieved an AUC of 0.77, significantly outperforming image-only models, which had an AUC of 0.70. Despite these advances, static images inherently lack temporal context, limiting their ability to detect dynamic anomalies such as irregular cleavage timings or compaction delays. Furthermore, performance plateaus (AUC < 0.85) suggest that even the most sophisticated CNNs cannot fully encapsulate the biological complexity of embryo viability. Moreover, it is important to highlight that models trained on subjective embryologist annotations risk perpetuating human biases, thereby necessitating outcome-driven training paradigms that directly link image features to clinical endpoints such as live birth.
+Maternal ultrasound: Evaluating maternal health
+While embryo competence is critical, successful implantation equally depends on maternal factors, particularly endometrial receptivity and ovarian response. Ultrasound imaging, traditionally reliant on qualitative assessments of endometrial thickness and follicle count, has evolved into a quantitative science through AI-driven radiomics. Liang et al.
+60
+demonstrated that 3D ultrasound-derived follicle volume (optimal cutoff: 0.5 cm
+3
+) outperformed conventional 2D methods in predicting mature oocyte yield, with a multi-layer perceptron model further enhancing hyper-response prediction. Similarly, Fjeldstad et al.
+61
+combined CNNs with clinical data to predict endometrial receptivity (AUC: 0.63), although performance remained modest compared to multi-modal approaches. The fusion of ultrasound radiomics—such as gray-level co-occurrence matrices encoding endometrial texture—with patient history, as exemplified by Liang et al.
+62
+(AUC: 0.83), underscores AI’s capacity to unify maternal and embryonic predictors, enabling personalized transfer timing. However, challenges persist in standardizing image acquisition across different ultrasound devices and operators. Variability in probe angles, gain settings, and resolution settings limits multi-center generalizability. These limitations highlight the need for robust, device-agnostic AI models that prioritize biological signal over technical noise.
+Time-lapse microscopy: Capturing developmental dynamics
+TLM, which captures continuous embryo development in stable culture conditions, provides a spatiotemporal lens into morphokinetic events: pronuclear fading, cleavage synchrony, and blastocoel expansion. Despite initial enthusiasm, clinical adoption has been hampered by inconsistent scoring systems and equivocal randomized controlled trial (RCT) outcomes, with some studies reporting no significant improvement in pregnancy rates compared to conventional methods.
+63
+,
+64
+,
+65
+,
+66
+However, AI improves TLM’s potential by automating the detection of temporal biomarkers. Khosravi et al.
+67
+achieved near-perfect blastocyst grading (AUC: 0.98) using Google’s Inception model on 50,000 TLM images, while Tran et al.
+68
+predicted fetal heart pregnancy from videos (AUC: 0.93) across 10,638 multi-center embryos, demonstrating superior generalizability. For aneuploidy prediction, Huang et al.
+69
+linked temporal irregularities—such as delayed blastulation—to chromosomal abnormalities (euploid prediction algorithm model: AUC 0.80), offering a non-invasive alternative to PGT-A. Technical innovations in spatiotemporal modeling further enhance TLM’s utility. Kragh et al.
+70
+combined CNNs with RNNs to grade blastocysts (AUC: 0.66), while Duval et al.
+71
+harmonized data from diverse TLM systems (e.g., EmbryoScope vs. Geri) using 3D CNNs (AUC: 0.73). iDAScore v.2.0,
+72
+trained on 181,428 embryos from 22 clinics, addresses data heterogeneity but reveals modest performance (AUC: 0.62–0.71), underscoring the need for standardized TLM annotation protocols and prospective validation. Wang et al.
+73
+advanced the multi-modal integration paradigm with IVFormer, a Transformer-based model integrating 41,279 static images and 2,136 TLM videos (AUC: 0.85). These models mitigate the “blind spots” of single-modality systems, distinguishing, for example, euploid embryos with poor receptivity from those with optimal morphology but suboptimal kinetics.
+Other medical images: Extending AI into underexplored domains
+In addition to mainstream embryo and endometrial imaging, AI is increasingly applied to specialized imaging data across reproductive medicine, addressing tasks such as sperm analysis, endometrial evaluation, and label-free embryo profiling. In male factor infertility, semen video images were widely used for sperm assessment. Valiuškaitė et al.
+74
+automated sperm motility assessment via region-based CNNs (R-CNNs) with 91.77% detection accuracy, while Lee et al.
+75
+achieved precise sperm segmentation using U-Net (F1 score: 93.3%). For endometrial health, Li et al.
+76
+diagnosed receptivity using deep learning on histology images (100% accuracy), offering a non-invasive alternative to biopsies. Label-free technologies like EVATOM,
+77
+which combine artificial confocal microscopy with ML, further eliminate staining artifacts, profiling embryo viability through intrinsic biophysical properties (F1 score: 0.95). While these innovations showcase AI’s versatility, most studies remain at the proof-of-concept stage, with small sample sizes (<100 patients) and limited external validation. Prospective multi-center trials are essential to translate technical promise into clinical impact.
+AI models have made significant inroads into the field of biomedical image analysis in IVF (
+Table 3
+). The AUC, a key metric for evaluating model performance, has generally ranged between 0.63 and 0.93,
+68
+,
+72
+with some studies reporting AUCs as high as 0.98,
+67
+indicating a high level of predictive accuracy (
+Figure 3
+; see also
+Table S1
+). The field is transitioning from isolated single-modality models to integrated frameworks that mirror the biological complexity of IVF. Early SVM-based approaches,
+78
+limited by manual feature engineering, have given way to 3D CNNs and transformers that autonomously decode spatiotemporal patterns (
+Figure 2
+). Multi-center retrospective studies significantly improve the models’ robustness, yet performance gaps between training and external validation datasets highlight the “reproducibility crisis” in medical AI. Meanwhile, the demand from clinicians for interpretability is driving hybrid architectures—such as attention-guided transformers—that link AI decisions to biologically explainable features, such as TE cell cohesion or endometrial texture.
+Table 3
+AI studies for IVF using medical images
+Study
+Description
+Dataset
+Model Architecture
+Performance
+Santos Filho et al., 2012
+78
+propose a method for image segmentation and classification of human blastocyst images to automate grade embryos
+93 images of different blastocysts
+SVM
+the development classifier achieved accuracies of 0.67, 0.46, and 0.92 for grade 2, grade 3, and grade 4, respectively. For ICM classification, the accuracy was 0.67 and 0.82 for grade B and grade C. For TE classification, the accuracy achieved was 0.53 and 0.92 for grade B and grade C
+Petersen et al., 2016
+79
+develop an applicable morphokinetic algorithm to predict the implantation potential of embryos transferred on day 3
+retrospective embryo time-lapse video morphokinetic parameters from 3,275 day-3 transferred embryos and 11,218 day-5 transferred embryos in 24 clinics
+DT
+the model predicted blastocyst development with an AUC of 0.745 and blastocyst quality with an AUC of 0.679
+Khosravi et al., 2019
+67
+propose an AI approach based on deep neural networks to predict embryo quality to assist embryo selection
+time-lapse images from 10,148 embryos
+CNN
+at the image level, the model achieved an average AUC of 0.987
+Tran et al., 2019
+68
+validate the deep-learning model IVY for the prediction of the implantation potential of human pre-implantation embryos
+time-lapse videos of 10,863 embryos from 8 clinics
+deep learning
+the model’s performance for predicting fetal heart pregnancy achieved an average AUC of 0.93 in 5-fold cross-validation
+Kragh et al., 2019
+70
+propose a deep-learning method to automatically grade the morphological appearance of human blastocysts from time-lapse imaging
+time-lapse images from 8,664 embryos
+CNN, RNN
+the model achieved an accuracy of 0.652, 0.696, and 0.656 for predicting ICM, TE, and implantation, respectively
+Chen et al., 2019
+54
+develop a deep-learning method with a large microscopic embryo image dataset to automatically grade embryos
+171,239 static images from 16,201 embryos
+CNN
+the model achieved an accuracy of 0.753 for all three grading categories, 0.962 for blastocyst development, 0.91 for ICM quality, and 0.844 for TE quality
+Miyagi et al., 2019
+56
+develop AI classifiers in images of blastocysts to predict the probability of achieving a live birth
+static images of 5,691 blastocysts
+CNN
+the accuracy of the AI model is 0.72 for all age groups
+VerMilyea et al., 2020
+80
+develop and validate an AI model to predict embryo viability with images captured by optical light microscopy
+static images of 8,886 embryos from 11 clinics
+CNN
+the combined accuracy of the model is 0.64
+Bormann et al., 2020
+81
+propose a deep convolutional neural network for embryo selection by predicting implantation outcome with static embryo images
+static images of 742 embryos at 113 h post insemination
+CNN
+the model achieved an accuracy of 0.9 in choosing the highest-quality embryo available
+Chavez-Badiola et al., 2020
+57
+develop and validate the AI model, ERICA, for predicting embryo ploidy
+1,231 static embryo images
+CNN
+ERICA obtained an AUC of 0.74 for predicting ploidy
+Kan-Tor et al., 2020
+82
+Develop a fully automated classifier for blastulation and implantation prediction using time-lapse video
+raw video files of >6,200 blastulation-labeled and >5,500 implantation-labeled embryos
+CNN
+the model achieved the AUCs of 0.79 and 0.7 for blastulation and implantation prediction, respectively
+Valiuškaitė et al., 2020
+74
+propose a CNN-based method for the evaluation of sperm head motility in human semen videos
+semen videos from 85 participants
+CNN
+the model achieved 0.918 accuracy of sperm head detection, and the Pearson correlation between actual and predicted sperm head vitality was 0.969
+Huang et al., 2021
+69
+propose a deep-learning model to predict embryo ploidy status based on time-lapse data
+the training set includes time-lapse videos of 1,803 blastocytes from 469 PGT cycles. The external validation set includes 523 time-lapse videos from 155 PGT cycles
+CNN (3D ResNet)
+the performance of predicting euploid on the testing dataset achieved an AUC of 0.8
+Sawada et al., 2021
+83
+develop and validate an AI model for the prediction of live births based on embryo images
+14,000 time-lapse images from 470 embryos
+attention branch network
+the AUC for predicting live birth by the AI system was 0.64
+Ci et al., 2021
+84
+propose an end-to-end deep-learning model for identifying ploidy status through raw time-lapse video
+690 time-lapse videos
+CNN (two-stream inflated 3D ConvNet)
+the model achieved an AUC of 0.74 from the test dataset
+Berntsen et al., 2022
+85
+develop and evaluate an AI model for embryo selection by predicting implantation outcomes
+retrospective time-lapse videos from 115,832 embryos
+3dCNN + LSTM
+the model sorted known implantation data (KID) embryos with an AUC of 0.67 and all embryos with an AUC of 0.95
+Lee et al., 2022
+75
+develop a machine-learning algorithm to detect rare human sperm using bright-field (BF) microscopy for non-obstructive azoospermia patients
+35,761 image patches captured by bright-field microscopy
+CNN
+the model achieved F1 scores of 0.933 and 0.852 for sperm-only samples and microTESE samples
+Nagaya and Ukita, 2022
+86
+apply positive-unlabeled learning on a deep CNN model to improve the reliability for predicting live birth
+643 time-lapse videos
+positive unlabeled learning on CNN
+the best model achieved an AUC of 0.654
+Liang et al., 2022
+60
+propose a deep-learning model with 3D ultrasound to aid in the assessment of oocyte maturity, timing of HCG administration, and the individual prediction of ovarian hyper-response
+3D ultrasound data from 515 IVF cases
+CNN (3D U-Net)
+the best model achieved an accuracy of 0.89 in predicting ovarian hyper-response
+Barnes et al., 2023
+58
+propose an AI model, STORK-A, to predict embryo ploidy status with time-lapse videos and clinical data
+time-lapse images from 10,378 embryos
+CNN
+STORK-A predicted an accuracy of 0.693 in predicting aneuploid vs. euploid embryos, 0.74 in predicting complex aneuploidy vs. euploidy and single aneuploidy, and 0.776 in predicting complex aneuploidy vs. euploidy
+Theilgaard Lassen et al., 2023
+72
+propose a deep-learning model, iDAScore v.2.0, for the evaluation of human embryos incubated for 2, 3, and 5 or more days by predicting implantation using time-lapse video
+time-lapse videos of 181,428 embryos from 22 clinics
+3dCNN
+the model achieved AUCs of 0.621–0.707 depending on the day of transfer
+Duval et al., 2023
+71
+develop AI models for predicting pregnancy with clinical data and time-lapse video
+metadata and time-lapse video of 9,986 embryos from 14 fertility centers
+3dCNN, XGBoost
+the hybrid model achieved the best performance with an AUC of 0.73
+Liu et al., 2023
+59
+propose a multi-modal blastocyst evaluation method using both blastocyst images and the patient couple’s clinical features to predict live birth outcomes of human blastocysts
+embryo static image and clinical data from 17,580 blastocysts
+CNN
+the model achieved an AUC of 0.77 for live birth prediction
+Li et al., 2023
+76
+employ a deep-learning algorithm to predict the chance of pregnancy with endometrial histology images
+endometrial histology from 61 patients
+CNN
+the model yielded an accuracy of 0.778 in predicting pregnancy outcome
+Liang et al., 2023
+62
+develop a multi-modal fusion model based on ultrasound-based deep-learning radiomics combined with clinical parameters to evaluate endometrial receptivity and predict the occurrence of clinical pregnancy
+ultrasound images and clinical data from 240 patients
+VGG
+the AUC of the proposed model for pregnancy prediction was 0.825
+Goswami et al., 2024
+77
+propose a machine-learning assisted embryo health assessment tool utilizing an optical quantitative phase imaging technique called artificial confocal microscopy (ACM)
+quantitative phase imaging data from 152 embryos
+3dCNN
+the best model achieved an AUC of 1 for embryo viability assessment
+He et al., 2024
+87
+develop a non-invasive embryo evaluation method that combines non-invasive chromosomal screening (NICS) and the Timelapse system using AI
+184 time-lapse videos
+logistic regression, LightGBM, XGBoost, CatBoost, and random forest
+the NICS-Timelapse model achieved an AUC of 0.94 on blastocyst prediction
+Fjeldstad et al., 2024
+61
+propose an endometrial receptivity AI model using ultrasound images and clinical features to predict implantations
+79,602 ultrasound images from 40,910 patients
+deep learning
+the model attained the best performance with an AUC of 0.631
+Wang et al., 2024
+73
+propose a generalized multi-modal model for embryo grading, ploidy prediction, and live birth prediction using time-lapse videos, embryo images, and clinical data
+the datasets include 41,279 embryo images and 2,136 embryo time-lapse videos
+Transformer
+the best model achieved AUCs of 0.811 and 0.854 for ploidy prediction and live birth prediction, respectively
+Omics data analysis in IVF with AI/ML models
+Omics technologies that encompass genomics, proteomics, metabolomics, transcriptomics, and epigenomics offer a multi-dimensional lens into the molecular underpinnings of embryo viability, maternal receptivity, and developmental competence. By analyzing high-throughput omics data from spent culture media, cumulus cells, or maternal biofluids, these approaches aim to identify non-invasive biomarkers predictive of IVF outcomes. However, the clinical translation of omics-driven AI models faces challenges rooted in data sparsity, technical heterogeneity, and biological complexity. This section synthesizes advancements across key omics domains, critically evaluating their potential to refine embryo selection and personalize treatment protocols (
+Table 4
+).
+Table 4
+AI studies for IVF using omics data
+Study
+Description
+Dataset
+Model Architecture
+Performance
+Liang et al., 2019
+88
+modeling Raman metabolic footprint for embryo ploidy identification using machine-learning methods
+1,107 Raman spectra of metabolic footprint from 123 embryo cultures
+kNN, random forest, XGBoost, stacking analysis
+the stacking method demonstrated the best performance with an accuracy of 0.959
+Chen et al., 2022
+89
+develop a predictive model of pregnancy outcome with methylation profiles in cumulus cells using machine-learning approaches
+methylation data from 24 cumulus cell samples
+logistic regression, random forest, SVM
+the logistic regression model achieved the best performance with an AUC of 0.97
+Luan et al., 2022
+90
+modeling lipidomics data for spontaneous abortion prediction using machine-learning methods
+1,346 lipidomic profiles from 43 patients
+Gaussian Bayesian model, decision tree, neural network, kNN, SVM
+the best model obtained an average AUC of 0.97
+Zhan et al., 2023
+91
+develop AI-based models to select embryos using embryos’ DNA methylation profiles
+whole-genome bisulfite sequencing for biopsied trophectoderm cells from 160 patients
+gradient-boosting decision tree
+the model achieved an AUC of 0.8 in the independent test set
+Cabello-Pinedo et al., 2024
+92
+develop and validate machine-learning models with metabolomics data from embryo culture media and evaluate their accuracy in predicting embryonic implantation potential
+270 metabolome profiles from embryo culture media
+fusion machine-learning models
+the model achieved an accuracy of 0.853 on the validation set
+Shen et al., 2024
+93
+analysis and modeling of microRNA profiles during the peri-implantation period to predict biochemical pregnancy loss
+30 miRNA profiles from maternal plasma
+elastic net regression model, random forest
+random forest model achieved the best performance with an AUC of 1 on the validation set
+Metabolomics: Bridging cellular activity and embryo potential
+Metabolites, as end products of cellular processes, offer a low-dimensional yet functionally rich snapshot of embryo physiology.
+94
+Early studies by Seli et al. demonstrated the potential of proton nuclear magnetic resonance (
+1
+H NMR) and Raman spectroscopy to predict implantation potential from CM metabolites, achieving sensitivities of 75%–88%.
+95
+,
+96
+ML models such as linear regression and RFs have since been applied to integrate metabolomic profiles with embryologic parameters. For instance, Cabello-Pinedo et al.
+92
+and Cheredath et al.
+97
+combined CM metabolites (e.g., pyruvate and lactate) with morphokinetic data to predict implantation outcomes using ML methods, although small sample sizes (
+n
+= 34–69) limited generalizability. Lipidomic profiling by Luan et al.
+90
+linked serum sphingomyelins and diglycerides to miscarriage risk, achieving an AUC of 0.97 via Gaussian Bayesian models. Notably, a randomized trial by Hardarson et al.
+98
+(
+n
+= 327) found no improvement in pregnancy rates using near-infrared (NIR) spectroscopy-based metabolomics, underscoring the discordance between technical promise and clinical efficacy. Recent efforts to predict chromosomal abnormalities have shown more encouraging results: Liang et al.
+88
+achieved 95.9% accuracy in aneuploidy detection using Raman spectroscopy and ensemble ML (
+k
+-nearest neighbors, XGBoost) on 87 CM samples. Nevertheless, systematic reviews conclude that metabolomics alone has failed to consistently improve IVF outcomes,
+99
+likely due to confounding factors such as medium composition and culture conditions.
+MicroRNAs and epigenomics: Molecular biomarkers for embryo evaluation
+MicroRNAs (miRNAs), small non-coding RNAs regulating post-transcriptional gene expression,
+100
+have emerged as promising biomarkers in maternal plasma and culture media. Shen et al.
+93
+identified a six-miRNA signature (e.g., miR-181a-2-3p and miR-9-5p) predictive of biochemical pregnancy loss using SVM classifiers on plasma samples from 30 IVF patients. The study highlights AI’s capacity to decode subtle molecular shifts associated with adverse outcomes, yet their clinical adoption is hampered by limited cohort sizes (
+n
+= 30) and the biological noise inherent in biofluid analyses.
+DNA methylation, a key epigenetic regulator of embryogenesis, has been leveraged to predict IVF outcomes through non-invasive or minimally invasive approaches.
+101
+Chen et al.
+89
+analyzed methylation patterns in cumulus cells from intracytoplasmic sperm injection (ICSI)/IVF patients, identifying 338 differentially methylated CpG sites associated with pregnancy success. ML models (SVM, RF, and logistic regression) trained on these markers achieved exceptional AUCs (0.88–0.97), suggesting that epigenetic profiling may complement traditional morphology. The PIMS-AI model,
+91
+integrating whole-genome methylation data with decision trees, further demonstrated clinical potential by predicting live birth (AUC: 0.80–0.90) and outperforming PGT-A in embryo discriminability. These advances, however, rely on invasive cell sampling and costly sequencing, limiting scalability.
+The integration of omics data into IVF AI models faces three formidable barriers. First, most studies suffer from small sample sizes (
+n
+< 100) and lack independent validation cohorts, increasing the risk of overfitting (
+Figure 3
+; see also
+Table S1
+). Second, technical heterogeneity in omics platforms (e.g., NMR vs. mass spectrometry) and culture protocols complicates cross-study comparisons. Finally, the cost and invasiveness of omics profiling (e.g., cumulus cell biopsy) limit routine use. Non-invasive alternatives like CM miRNA detection or serum lipidomics remain exploratory. Future research must prioritize large-scale, prospectively validated multi-omics studies, leveraging AI not only for prediction but also to elucidate causal biological mechanisms. As costs decline and non-invasive sampling matures, omics-driven AI may ultimately deliver on its promise: a precision medicine paradigm where embryo selection is guided not by morphology alone but by a symphony of molecular signatures.
+Innovative opportunities: Emerging uses of AI
+The transformative potential of AI in IVF extends beyond incremental improvements in prediction accuracy. It redefines how clinicians interact with data, collaborate across institutions, and personalize treatment strategies. Emerging AI paradigms such as multi-modal models, foundation models with pre-training strategies, privacy-preserving FL, and medical AI agents are poised to address long-standing challenges in data heterogeneity, patient confidentiality, and clinical decision making (
+Figure 4
+). These innovations not only enhance technical capabilities but also align with ethical imperatives in reproductive medicine.
+Figure 4
+Emerging AI opportunities in IVF
+Multi-modal models: Advancing personalized treatment in IVF
+The growing accessibility of biomedical data from large biobanks, electronic health records, medical imaging, wearables, and the reduced cost of genome and microbiome sequencing has paved the way for multi-modal AI solutions that better capture the complexity of embryo development.
+10
+In IVF, the journey from initial consultation to embryo transfer involves multiple stages, each generating distinct types of data. Clinical data, including patient demographics, medical history, and hormonal profiles, are collected at the outset. Imaging data from ultrasound scans and time-lapse microscopy of embryo development provide visual insights, while omics data from spent CMs, cumulus cells, or maternal biofluids offer molecular-level information on embryo viability and maternal receptivity. By integrating these diverse data sources, multi-modal AI models can offer a more holistic understanding of the IVF process, thereby improving the accuracy of success predictions and enabling more tailored treatment plans. For instance, studies have shown that models combining image data with clinical metadata could achieve significantly higher performance than models using image only.
+56
+,
+59
+Feature analysis suggests that maternal clinical features, including maternal age, AMH, BMI, oocyte age, total gonadotropin dose intake, number of embryos generated, number of oocytes retrieved, and endometrium status, are informative for increasing prediction accuracy.
+59
+,
+73
+Current AI models lack the integration of omics data and image data, which is a promising direction for further research.
+102
+By integrating diverse data types, AI models can achieve a more holistic understanding of embryo development, thus improving the robustness of predictive models and enhancing their accuracy in predicting IVF success.
+The integration of multi-modal data also addresses data sparsity and imbalance issues commonly encountered in IVF datasets. Certain data types may be more readily available or easier to collect than others; for example, clinical and imaging data are typically more accessible than omics data. By integrating multiple data sources, these models can compensate for the limitations of single-modality datasets, providing more robust and reliable predictions. Another pattern of jointly employing multi-modal AI is to predict the correlated clinical outcomes. However, these methods may be less economical, less widely available, or demand specialized equipment or invasive procedures.
+8
+PGT and many other biopsy tests are such modalities, whereas the imaging technology usually has the advantage of being non-invasive and easy to capture. Numerous studies have applied AI to predict the PGT results from embryo images or time-lapse videos.
+58
+,
+87
+In the future, this idea can be expanded into other informative biomarkers or clinical features that are difficult to capture.
+The integration of multi-modal data in IVF has the potential to revolutionize the way we conduct clinical trials and personalize treatment plans through the development of digital clinical trials and digital twins. Digital clinical trials, which leverage wearable devices and digital health technologies, offer an alternative approach to overcoming traditional barriers in clinical research. These trials can significantly reduce the time and cost associated with participant recruitment and retention while enhancing the granularity and real-time monitoring of trial outcomes. In the context of IVF, digital clinical trials can utilize data from wearable sensors to monitor physiological parameters such as heart rate, sleep patterns, and physical activity, providing continuous and detailed insights into the patient’s health status. This rich data can be combined with clinical, imaging, and omics data to create a comprehensive profile of each patient. By integrating these diverse data sources, digital clinical trials can enable automatic phenotyping and subgrouping, which are essential for adaptive trial designs that can modify interventions in real time based on ongoing results. Digital twins, on the other hand, represent a cutting-edge application of AI that can significantly advance personalized medicine in IVF. A digital twin is a virtual replica of a patient, created using a combination of multi-modal data. By leveraging advanced AI algorithms, digital twins can simulate various treatment scenarios and predict their outcomes with high precision, thereby enabling clinicians to tailor treatment plans to individual patients. In IVF, a digital twin could model the response of an embryo to different culture conditions, predict the likelihood of implantation based on the patient’s unique genetic and physiological profile, and even simulate the impact of various hormonal treatments on embryo development. Moreover, digital twins could also facilitate the development of new IVF technologies. By simulating the effects of CMs or advanced imaging techniques on embryo viability, researchers could accelerate the validation and adoption of these innovations. This would not only enhance the precision of IVF treatments but also pave the way for more personalized and effective fertility care.
+Federated learning: Collaborative intelligence with privacy preservation
+FL has emerged as a cornerstone of ethical AI in medicine, enabling multi-center collaboration without compromising patient privacy.
+103
+By training models on decentralized data—where raw patient records remain local—FL addresses the dual challenges of data scarcity and confidentiality. Unlike traditional ML that relies on centralized datasets, FL allows participating institutions to share only locally computed model updates (e.g., weight gradients and summary statistics) rather than sensitive patient-level data, preserving data sovereignty while leveraging diverse global data to enhance algorithmic performance.
+The broader medical field has demonstrated FL’s potential. For instance, FL has enabled multi-institutional AI models to integrate clinical data across regions and populations, significantly improving diagnostic generalizability.
+104
+Applications include breast density classification
+105
+and tumor imaging analysis,
+106
+where FL achieved state-of-the-art results without direct data sharing. However, persistent federations introduce challenges to trust: model updates may inadvertently encode statistical patterns of raw data, posing privacy risks. Studies show that even without explicit data sharing, adversaries could reconstruct sensitive attributes (e.g., genetic markers) through gradient-inversion attacks. To mitigate this, privacy-preserving techniques such as differential privacy and multi-key homomorphic encryption, combined with rigorous participant auditing, are critical for secure FL deployment.
+In IVF, FL’s advantages are particularly compelling. Reproductive medicine involves highly sensitive data (e.g., embryonic genomic sequences and hormonal profiles) for which centralized data pooling faces legal and ethical barriers. FL allows fertility centers to collaboratively refine embryo selection models or ovarian response prediction algorithms while maintaining local data isolation, bypassing cross-border data-transfer compliance risks and improving model robustness through large, diverse datasets. Future advancements in FL for IVF must balance the privacy-utility-efficiency triad. For example, lightweight encryption protocols could reduce computational overhead, while FL optimization algorithms tailored to longitudinal embryo data may enhance predictive accuracy. Additionally, cross-institutional trust frameworks (e.g., blockchain-based auditing) could ensure traceability of model updates and enable detection of malicious actors. This approach aligns with ethical healthcare data governance and paves the way for scalable, privacy-conscious AI infrastructure in precision reproductive medicine.
+Foundation models: Unlocking the potential of unlabeled data
+The advent of foundation models has revolutionized the way we approach data-driven tasks. These models, trained on vast amounts of unlabeled data using self-supervised learning, can capture intricate patterns and relationships that are often overlooked by traditional methods. By leveraging the power of transfer learning, a foundation model can be fine-tuned for different IVF-related tasks, such as predicting embryo viability, optimizing treatment protocols, and enhancing the accuracy of genetic screening. This approach not only improves the efficiency of data utilization but also enhances the robustness and generalizability of AI models in IVF applications. For instance, Transformer-based architectures like IVFormer,
+73
+pre-trained on 41,279 embryo images and 2,136 time-lapse videos, demonstrate superior performance in euploidy ranking (AUC: 0.81) by learning hierarchical representations of developmental morphology. Pre-training strategies such as contrastive learning and self-supervision are particularly impactful in IVF, where labeled datasets are scarce.
+Another crucial aspect of utilizing foundation models in IVF is the potential application of biological foundation models. For instance, the success of AlphaFold in protein-structure prediction suggests that similar approaches could be adapted for disease-driven mutation prediction,
+107
+which may have implications for understanding genetic factors affecting IVF outcomes. Additionally, the development of transcriptomics foundation models holds promise for enhancing prediction accuracy using transcriptome data,
+108
+potentially improving the assessment of embryo viability and other critical aspects of the IVF process. Furthermore, by training on diverse omics data, multi-modal foundation models can be developed to uncover subtle biological mechanisms and perform
+in silico
+perturbation, which is useful for supporting personalized medicine.
+109
+While these applications are still in the realm of future research, they highlight the broad potential of foundation models to contribute to IVF studies by providing better representations of complex biological data.
+The idea of building foundation models for IVF can address the challenge of data scarcity and heterogeneity. In many cases, IVF datasets are limited in size and vary significantly across different clinics and populations. Foundation models, with their ability to learn from large-scale unlabeled data, can help bridge this gap by providing a more robust and generalizable framework for model training and validation. Furthermore, different foundation models excel in representing different types of data, which makes them also particularly well suited for multi-modal data integration in IVF research. Unlike the approaches that directly employ single multi-modal datasets or models, constructing multi-modal models based on foundation models offers more stable and accurate representations of different data modalities.
+Medical AI agents: Redefining patient-centric care
+Medical AI agents, powered by LLMs, represent a transformative force in healthcare, offering enhanced capabilities for clinical decision making, patient interaction, and administrative efficiency.
+110
+,
+111
+These agents, which can function autonomously or assistively, leverage the vast processing power and adaptability of LLMs to provide personalized and efficient care. In recent years, LLMs have shown significant potential in various medical applications, from clinical question answering to the generation of medical records and notes.
+112
+For instance, models like GPT-4 and Med-PaLM 2 have demonstrated the ability to engage in conversation and provide information on a wide range of medical topics, including fertility treatments. In the context of IVF, GPT-4 could be fine-tuned with specific knowledge about fertility treatments to offer immediate accurate responses to common patient questions, enhancing patient understanding and reducing anxiety. Med-PaLM 2,
+113
+,
+114
+a medical-specific LLM, could assist clinicians in making informed decisions by analyzing patient data and medical literature, providing evidence-based recommendations for personalized IVF treatment plans. For example, it might suggest the most suitable timing for hormone administration or the optimal culture conditions for embryo development, based on the latest research and the patient’s unique circumstances.
+Building on these capabilities, the development of coordinated AI agents for advancing healthcare presents a new paradigm in medical AI.
+115
+This opens up a wealth of opportunities within medicine and healthcare, ranging from clinical workflow automation to multi-agent-aided diagnosis. LLM-based agentic systems can significantly enhance the capabilities of stand-alone LLMs by incorporating external modules, such as perception modules to interact with multi-modal input (e.g., images and audio), memory modules to store long-term memory, and action modules to execute actions for different tasks. These systems retain the original functions of LLMs while fostering new capabilities, such as tool use and multi-agent collaboration. In the context of IVF, such agents could automate parts of the clinical workflow, such as scheduling appointments, monitoring patient health, and providing real-time insights based on the analysis of medical records and imaging data. This could lead to more efficient and personalized care, ultimately improving patient outcomes. As these technologies continue to evolve, they are likely to play an increasingly important role in the future of IVF and reproductive medicine, optimizing the pipeline of IVF to improve success rates and enhance patient management and overall treatment experience.
+The convergence of multi-modal models, foundation models, FL, and medical AI agents heralds a new era in IVF, one defined by collaborative intelligence, patient-centric personalization, and ethical scalability. Pre-trained multi-modal architectures will soon enable “IVF digital twins,” simulating individual embryo-endometrial interactions to optimize transfer timing. Federated ecosystems could unify fragmented omics databases, revealing biomarkers of recurrent implantation failure. Meanwhile, LLMs may evolve into virtual embryologists, guiding patients through emotionally fraught decisions with empathy grounded in clinical evidence. Yet technical breakthroughs alone are insufficient. Clinician trust, cultivated through interpretable AI (e.g., attention maps linking methylation sites to blastocyst grading), remains pivotal. Institutions must invest in AI literacy programs while regulators accelerate approval pathways for validated tools. As these pillars align, AI will transcend its role as a predictive tool, becoming an indispensable partner in treating infertility.
+Limitations and challenges for translational research
+Limitations of the current AI model in IVF clinical application
+In the pursuit of enhancing the success rates of IVF, AI has emerged as a promising tool. However, the application of AI in this context is not without its limitations, particularly concerning the generalization of models and potential biases within data. One of the primary concerns is the ability of AI models to perform accurately across diverse populations. Current AI models, often trained on limited datasets, may not generalize well to populations that differ significantly from the training data in terms of demographic characteristics or environmental factors. The AI models used in IVF, such as those discussed in the literature reviews by Güell
+116
+and Rolfes et al.,
+36
+are primarily trained on retrospective data from specific clinics or regions. This can lead to models that are tailored to the particular biases present in those datasets, which may not reflect the global diversity of patients undergoing IVF treatment. For instance, if a model is trained primarily on data from patients of a certain ethnicity, it may not accurately predict outcomes for patients of other ethnicities. This lack of generalizability can result in suboptimal treatment strategies and potentially exacerbate existing health disparities. Moreover, biases in the data used to train AI models can have significant implications for the fairness and effectiveness of IVF treatments. Biases may arise from various sources, such as imbalanced representation of different groups in the training data, historical biases in medical practice, or even the way data are collected and annotated. Besides, male and female embryos display different morphokinetic parameters.
+117
+,
+118
+AI models may involve these parameters implicitly during IVF outcome prediction, resulting in sex-ratio bias. These biases can manifest in the AI model as an overemphasis on certain characteristics or an under-representation of others, leading to biased predictions and potentially unfair treatment recommendations.
+To address these concerns, it is crucial for future research to focus on the development of AI models that are trained on large, diverse, and representative datasets. This includes ensuring that the data encompasses a wide range of patient characteristics and clinical scenarios. Additionally, rigorous validation methods, such as cross-validation and testing on independent datasets, should be employed to assess the generalizability of AI models. Furthermore, efforts should be made to identify and mitigate biases in the data collection and annotation processes. This may involve the use of transparent and explainable AI models that allow for the inspection of factors influencing the model’s predictions. By promoting transparency and addressing biases, AI models can be refined to provide more equitable and effective support for IVF treatments across different populations. Future research must prioritize the development of AI models that are not only accurate but also fair and representative of the diverse populations they aim to serve.
+Transparency and trustworthiness are also critical factors. Some studies employing AI-based approaches encounter the “black box” effect because of their complexity and, in certain cases, the utilization of proprietary algorithms.
+102
+This is a widespread issue for AI tools utilized in medicine; however, it can be mitigated by opting for interpretable and transparent models, which can contribute to minimizing hidden biases.
+119
+The black-box nature of some AI algorithms makes it difficult to understand how they arrive at their predictions, which can be a barrier to clinical acceptance. Although the decision is finally made by the embryologists, there is often an over-reliance on automation.
+120
+As a result, AI indeed risks replacing human decision making in practice. Some methods are being attempted to enhance the interpretability of the model. The BlastAssist pipeline
+121
+was developed to measure a comprehensive set of interpretable features of human embryos, including fertilization status, cell symmetry, degree of fragmentation, developmental timing, and blastocyst expansion rate. It demonstrated performance on par with or superior to human experts in various tasks. To further address the problem, researchers need to focus on explainable AI (XAI) techniques. XAI aims to make AI’s decision-making process understandable, thereby increasing trust in AI-assisted IVF applications. One approach to achieving this is by using model-agnostic methods such as local interpretable model-agnostic explanations (LIME), which explain the predictions of any classifier in a faithful and locally accurate manner. Additionally, techniques like DeepLIFT (deep learning important features) can help in understanding which features the AI model deems important for its predictions. Techniques such as layer-wise relevance propagation (LRP) can also attribute the AI’s predictions to specific embryo features, shedding light on which characteristics are deemed most significant for implantation potential. Perturbation methods can further verify AI’s reliability by testing its responses to slight modifications in data, ensuring that predictions are based on genuine patterns rather than spurious correlations.
+119
+,
+122
+Clinical evaluation of AI tools in IVF is another area that requires attention. The lack of high-quality multi-center RCTs evaluating AI tools in IVF must be acknowledged.
+123
+In a multi-center, randomized, double-blind, non-inferiority trial, the iDAScore deep-learning algorithm was evaluated for embryo selection in IVF against standard morphological assessment.
+124
+The study involved 1,066 patients across 14 clinics, with the primary outcome being the clinical pregnancy rate. The iDAScore group showed a clinical pregnancy rate of 46.5% compared to 48.2% in the morphology group, failing to demonstrate non-inferiority. A unique contribution was the significant reduction in evaluation time by iDAScore, requiring only 21.3 s on average. The findings suggest that while deep learning may not yet surpass standard methods, it offers potential time-efficiency gains in IVF processes. Although the algorithm is specific to the EmbryoScope incubator and there is a higher-than-expected pregnancy rate in the control group, the study serves as a valuable case demonstrating the non-inferiority of the AI model. The study protocol by Correa et al.
+125
+outlines a non-inferiority trial to personalize the first dose of follicle-stimulating hormone (FSH) for IVF/ICSI patients using an ML model named IDoser. The trial is designed to include 236 first-cycle IVF and/or ICSI patients, randomized 1:1 across two arms, with the primary outcome being the number of metaphase II oocytes retrieved. The unique contribution of this trial is its all-patient inclusive approach, differing from previous models that focused on younger, normo-ovulatory women. Many AI researchers concluded that their models outperform individual embryologists in embryo quality assessment based on their validation; however, most models still require rigorous RCTs to verify their performance. Moreover, the endpoints for embryo selection during model construction include various outcomes such as clinical pregnancy, embryo heartbeat, or live birth, which also poses challenges for comparing the performance between different models.
+Addressing regulatory and safety issues
+The integration of AI into IVF procedures introduces a new set of regulatory and safety challenges that must be carefully navigated to ensure the well-being of patients and the ethical integrity of the practice. A primary concern is the safety of AI-assisted IVF treatments, which involve not only the immediate physical safety of patients but also the long-term health outcomes for children conceived through these methods.
+Safety considerations are paramount, and these include the need for rigorous testing and validation of AI tools within clinical settings. As highlighted in an editorial in
+The Lancet Digital Health
+,
+123
+there is a scarcity of concrete medical evidence supporting the efficacy of AI in IVF. This underscores the necessity for high-quality RCTs to evaluate the safety and effectiveness of AI-assisted IVF methods before they can be approved by regulatory bodies and implemented in clinical practice. The absence of such trials, as noted in the editorial, is a significant gap that must be filled to advance the field. Long-term health outcomes are another critical area of focus. While AI-assisted IVF has the potential to improve success rates, there is a need for comprehensive follow-up studies to assess the health of children conceived through these methods. As noted in the editorial, assisted reproductive technology (ART) has been associated with adverse outcomes in children and adolescents, such as cardiovascular dysfunction. Therefore, it is imperative to monitor and research the long-term health of children born through AI-assisted IVF to ensure that these treatments do not inadvertently introduce new risks.
+Besides, as the field progresses toward multi-center studies, concerns regarding data safety and privacy have come to the forefront. The nature of AI necessitates the aggregation and analysis of vast datasets, which often contain sensitive patient information. Ensuring the protection of these data is paramount, as breaches could lead to significant ethical and legal ramifications. One potential solution to these challenges is the implementation of FL.
+126
+By enabling local data processing and only sharing model updates, FL upholds data privacy standards and facilitates collaborative research while maintaining regulatory compliance. However, the adoption of FL is not without its challenges. Technical barriers, such as ensuring consistent data pre-processing and managing the computational requirements across different centers, must be addressed to enable successful FL employment.
+To address these challenges, a multi-faceted approach is required. This includes the development of stringent regulatory guidelines that mandate thorough testing and transparency in AI algorithms used in IVF. Additionally, ethical oversight committees should be involved in the design and implementation of AI tools to ensure that they align with established bioethical principles. Furthermore, international collaboration and data sharing can help to build a more robust evidence base for the long-term health outcomes associated with AI-assisted IVF. By adopting a proactive stance, the medical community can harness the benefits of AI while minimizing potential risks, ultimately working toward the best interests of patients and their future children.
+The complexity of IVF and the multi-faceted nature of AI applications in this field call for interdisciplinary research. Collaboration between biologists, data scientists, clinicians, ethicists, and other stakeholders is essential to overcome current limitations and explore new frontiers in reproductive technology. By pooling expertise, the field can advance more effectively and responsibly.
+Conclusions
+In conclusion, integrating AI into IVF represents a major advancement in reproductive medicine, offering the potential to enhance embryo selection, optimize treatment strategies, and increase the success rates of IVF cycles. The literature reviewed here has showcased the diverse applications of AI, from structured health record data mining to the analysis of biomedical images and omics data, each contributing to a more nuanced understanding of embryo viability and IVF outcomes. While the current AI models have demonstrated promising results, there remains a need for further research to address the challenges of model generalization, data biases, and the lack of transparent and explainable AI systems. The path forward necessitates rigorous clinical trials, interdisciplinary collaboration, and a focus on developing AI models that are not only accurate but also ethically and equitably applied across diverse populations (
+Figure 5
+). As AI continues to evolve, its role in IVF is poised to transform reproductive healthcare, providing patients and clinicians with advanced tools to navigate the complex journey toward successful conception.
+Figure 5
+Overview of the progress, opportunities, and challenges for AI in IVF
+RCTs, randomized controlled trials.
+Acknowledgments
+This study was funded by the
+National Natural Science Foundation of China
+(grants
+T2522008
+,
+82522048
+, and
+62272055
+), the
+10.13039/501100012166
+National Key R&D Program of China
+(no.
+2022YFF0705004
+), the
+New Cornerstone Science Foundation
+through the XPLORER PRIZE, the Young Elite Scientists Sponsorship Program by
+CAST
+(
+2021QNRC001
+), and the
+Macao Young Scholars Program
+(
+AM2023024
+). Figures were designed using resources from
+Flaticon.com
+.
+Author contributions
+Conceptualization, Y.G., G.W., and X.L.; investigation, Y.G., K.W., Y. Yuan, T.G., and Y.W.; writing – original draft, Y.G. and K.W.; writing – review & editing, Y.G., K.W., Y. Yuan, Y.W., T.G., Y. Yang, L.-S.M., R.L., and G.W.; visualization, Y.G.; supervision, L.-S.M., R.L., X.L., and G.W.
+Declaration of interests
+The authors declare no competing interests.

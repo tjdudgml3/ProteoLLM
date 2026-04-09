@@ -1,0 +1,1713 @@
+Background
+Gliomas are primary malignant brain tumors with a typically bad prognosis, accounting for 80% of malignancies in the brain [
+1
+]. Due to their large heterogeneity, gliomas encompass different cancer types, where each type possesses distinct characteristics that influence patient prognosis and therapeutic options. The World Health Organization (WHO) Classification of Tumors of the Central Nervous System (CNS) has been changing throughout the years. In the most recent version of the WHO CNS tumor classification [
+2
+], the glioma types are classified mainly based on the sample’s molecular profiles instead of histological features. Gliomas in adults are characterized by three types: astrocytoma, oligodendroglioma, and glioblastoma [
+2
+]. The latter exhibits a wildtype status for the IDH genes, and it is the most common and aggressive type, with a median survival of only 14 months [
+3
+]. Conversely, oligodendrogliomas and astrocytomas present mutations in at least one IDH gene, being molecularly distinguished by the presence/absence of the combined loss of the short arm chromosome 1 and the long arm of chromosome 19 (1p/19q codeletion), respectively [
+2
+].
+Studying gliomas on a molecular level is essential for understanding the biological mechanisms behind these brain tumors, ultimately advancing cancer medicine. Omics data comprise various layers of biological information, e.g. genomics (DNA sequences), transcriptomics (RNA transcripts), proteomics (protein abundances), methylomics (DNA methylation level), and metabolomics (metabolite profiles). This type of data is increasingly available with technological advances, e.g., through high-throughput RNA sequencing (RNA-seq) and protein mass spectrometry. Typically, omics data is a matrix of variables (e.g. genes) and samples. In gene expression data, for example, each entry represents the expression level of a particular gene in a particular sample. These datasets are often high-dimensional, making it challenging to derive meaningful insights.
+Network science is highly recognized in the field of cancer research to study the complexity of diseases and extract relevant biological information [
+4
+–
+6
+]. Biological networks help to explain the disease by studying the interactions between biological entities such as genes. For example, genomics mutations data is analyzed by leveraging biological interaction networks to discover genetic drivers in cancer [
+7
+–
+9
+]. To identify altered pathways, differential network analysis examines differences between group-specific molecular interaction networks, e.g. between cancer and healthy groups [
+10
+,
+11
+]. From transcriptomics data, gene co-expression networks can be constructed, where the nodes represent genes that are connected with an edge if the corresponding genes are significantly co-expressed in the RNA-seq dataset across different samples. Inferring and analyzing these networks for specific cancer types can uncover key network genes as potential biomarkers for diagnostic and therapeutic purposes [
+12
+–
+14
+].
+Network inference methods attempt to identify dependencies between variables. The simplest way to construct a network from omics data is to use pairwise association measures, such as Pearson’s correlation coefficient, which then represent the edge weights in the graph. However, this approach cannot distinguish between direct and indirect effects, resulting in dense and poorly interpretable networks. To overcome this, conditional dependencies, or partial correlations, can be employed that capture only direct interactions between two variables by taking into account the influence of all other variables so that that indirect effects do not create a link in the network. The most commonly used are Gaussian Graphical Models (GGMs), which assume normally distributed variables. The network structure is inferred from the inverse covariance matrix, representing direct dependencies [
+15
+]. In omics data, the number of samples is often much smaller than the number of variables, making statistical modelling difficult due to the risk of overfitting. The graphical lasso method estimates the structure of an undirected GGM by applying a lasso penalty to the inverse covariance matrix [
+15
+,
+16
+]. Another approach to GGM estimation is based on Bayesian methods, which can also be used to construct directed causal networks [
+15
+]. Learning Bayesian networks typically involves algorithms that explore possible network structures and identify the most probable structure from the data [
+17
+]. To get reliable results, this method is often combined with constraints from prior biological knowledge [
+15
+]. A key property of Bayesian Networks is that they are acyclic, which can be problematic for modeling gene networks, as these may contain feedback loops [
+18
+].
+This study aims to investigate the molecular complexity of gliomas at the transcriptome level. We developed a comprehensive network-based framework that integrates network discovery and analysis to reveal causal relationships. The goal is to identify potential biomarkers or pathways that could improve our understanding of glioma heterogeneity. For this, we utilize the graphical lasso method to discover gene co-expression networks as it introduces sparsity to the network structure and does not rely on any additional information. To infer causal networks, we estimate the Jacobian matrix of the underlying biological system by a method that allows to infer causality by using the covariance from sample data and information about the network structure [
+19
+,
+20
+]. The Jacobian matrix of a dynamical system describes how the system responds to small perturbations, here showing how small changes in the expression of one gene affect the expression of other genes. The estimated Jacobian matrix provides insights into the directional influences among genes, from which we construct a directed network. In this work, we explore the promising combination of the graphical lasso method, which provides insights on the underlying network structures, with Jacobian estimation to infer potential causal relationships in gene expression data.
+Identifying important groups of genes in these networks can help uncover biomarkers and explore new treatment options aimed at these genes. In network analysis, centrality measures rank nodes based on their connections and position in the network. These metrics can identify genes of biological importance in the networks [
+21
+,
+22
+], with each centrality measure reflecting a different notion of a gene’s role in the network. For example, the degree, or strength in weighted networks, is the sum of edges connected to a node [
+23
+]. In gene networks, well-connected genes may play a central role in biological processes. Eigenvector centrality extends this concept by considering not only the direct connections a node has but also the importance of the nodes it is connected to [
+24
+], highlighting genes that exert a broader influence over the network rather than just locally within their immediate neighbors. Closeness centrality calculates how close a node is to all other nodes in the network, by measuring the shortest path lengths between all pairs of nodes [
+25
+]. Genes with high closeness centrality can interact quilckly with other genes across the network, suggesting potential roles in regulatory or signaling pathways. The betweenness centrality, on the other hand, quantifies the extent to which a node lies on the shortest paths between other nodes [
+25
+], where a high betweenness centrality indicates that a gene acts as a bridge between different groups of related genes in the network. We focus on strength, eigenvector, and closeness centrality because these measures emphasize different aspects of a gene’s connectivity and influence within the network, such as the number and quality of connections and proximity to other nodes. Betweenness centrality captures a gene’s role as an intermediary between different parts of the network, which refers to a property that is not central to our analysis. Community or modularity detection in biological networks are crucial for uncovering functional relationships between genes, by grouping together nodes that reflect shared roles or behaviors within the network. Stochastic Block Models (SBMs) offer a probabilistic approach by fitting a model to the existing network structure to recover the community structure in the graph [
+26
+,
+27
+].
+Exploring modularity, hubs and shortest paths in biological networks is crucial for understanding their structure and function [
+28
+]. We use strength, eigenvector and closeness centrality as well as modularity detection by SBMs to identify groups of important genes in the networks for glioblastoma, astrocytoma and oligodendroglioma. To explore the pathways and functions these genes are involved in, we perform KEGG (Kyoto Encyclopedia of Genes and Genomes) and Gene Ontology (GO) enrichment analysis on the selected genes in each glioma type. Enrichment analysis helps understanding the biological significance of gene sets. While KEGG provides a resource for linking genes to metabolic and signaling pathways, GO categorizes genes based on their molecular functions and processes.
+The use of these tools allows us to determine whether the genes identified in our study are already known as potential drivers of other cancers or diseases, and if they can be considered therapeutic targets. Beside this, we also explore whether they can capture the heterogeneity between glioma types as potential diagnostic biomarkers. As patients may respond differently to treatments, patient stratification is critical for precision medicine approaches, ensuring that patients with similar characteristics receive the most effective treatments, adapted to their specific type of tumor. For grouping the patients, we build on another type of network that can be constructed from omics data. In patient similarity networks, patients are represented as nodes and the similarities between them as edges connecting the nodes. These networks are used for clustering patients into groups with similar molecular characteristics, which may be indicative of common underlying biological mechanisms in a disease. We employ spectral clustering of patient similarity networks based on the gene expression data of the selected genes, and evaluate how much the resulting clusters are in agreement with the diagnosed glioma types.
+In a previous study, Martins et al. [
+29
+] explored the capability of applying network discovery and clustering techniques to glioma data. Glioma patients were grouped according to 2016-WHO classification guidelines, and undirected networks were used to perform variable selection before applying the K-means clustering. The results pointed out some inconsistencies between clusters and 2016-WHO classes, fostering further studies based on the new 2021-WHO diagnostic label assignments, which we use here.
+This study presents a comprehensive network-based approach to glioma patient data to investigate the complex gene expression profiles in glioma patient data, leading to the identification of potentially important genes and patient stratification. For this, RNA-seq glioma data from The Cancer Genomics Atlas (TCGA) were used, with patients grouped according to the updated 2021-WHO glioma types [
+30
+]. From these vast datasets, the variables (i.e., genes) were preselected using the corresponding TCGA proteomics dataset containing a set of proteins in the major biochemical pathways in cancer, i.e., the genes encoding for the proteins present in the proteomics dataset were retained for further analysis. A gene co-expression network for each tumor type was constructed using the graphical lasso method to reveal the interplay of genes in each glioma type. Next, the obtained network structure was used to infer causality among genes through the Jacobian matrix estimation, a crucial step providing insights into the direction of gene interactions. Centrality measures and modularity detection were then applied to the constructed networks to identify central genes as potential biomarkers of each glioma type. As a final step, spectral clustering was applied to patient similarity networks based on the selected variables from the gene networks to stratify patients into distinct groups and evaluate whether these patient groups matched the clinically diagnosed glioma types.
+Materials and methods
+Gene co-expression networks via graphical lasso
+The graphical lasso is a statistical method for estimating the graphical structure in a Gaussian graphical model. It is particularly useful in high-dimensional scenarios where the number of variables is higher than the number of samples, as it induces sparsity in the model. The objective is to find a sparse graph that represents the conditional independence structure among the variables by applying a lasso penalty to the inverse covariance matrix. Suppose
+n
+multivariate normal observations of dimension
+p
+, and let
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{\Sigma }$$\end{document}
+Σ
+and
+S
+be the empirical and theoretical covariance matrix, respectively. The graphical lasso, first implemented by Friedman et al. [
+16
+], estimates the inverse covariance matrix
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{\Theta } = \varvec{\Sigma }^{-1}$$\end{document}
+Θ
+=
+Σ
+-
+1
+by solving the optimization problem
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \max _{\varvec{\Theta }} \left( {\log \det \varvec{\Theta } - \text {tr}(S \varvec{\Theta }) - \lambda ||\varvec{\Theta }||_1}\right) , \end{aligned}$$\end{document}
+max
+Θ
+log
+det
+Θ
+-
+tr
+(
+S
+Θ
+)
+-
+λ
+|
+|
+Θ
+|
+|
+1
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+is the regularization parameter and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$||\varvec{\Theta }||_1$$\end{document}
+|
+|
+Θ
+|
+|
+1
+is the L1 norm of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{\Sigma }^{-1}$$\end{document}
+Σ
+-
+1
+(sum of the absolute values of all its elements).
+If element
+ij
+in the estimated inverse covariance matrix
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{\Sigma }^{-1}$$\end{document}
+Σ
+-
+1
+is zero, then variables
+i
+and
+j
+are conditionally independent [
+16
+]. The non-zero elements quantify the sign and strength of the direct relationship between the corresponding pair of variables, while controlling for the influence of all other variables. The inverse covariance matrix thus provides information about the partial correlation structure of the nodes [
+15
+].
+To avoid overfitting when the number of variables is higher than the number of samples, the regularization term induces sparsity in the model by pushing entries in the inverse covariance matrix to zero. A larger value of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+enforces more sparsity. Here, the Stability Approach to Regularization Selection (StARS) is used for selecting the regularization parameter
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+. StARS measures the stability of network topology in the estimated graphical model across different subsamples of the data. The idea is that the graph structure should be stable if the chosen regularization parameter is appropriate. The method repeatedly draws subsamples from the dataset, fits a graphical lasso model for each subsample, and tracks how often each edge appears across the subsamples. For each
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+, StARS calculates the variability in edge selection across the subsamples and selects the smallest value of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+such that the instability remains below a threshold. In this way
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+is optimized to use the minimum necessary regularization to ensure the network’s reproducibility under random sampling [
+31
+].
+Causal discovery by Jacobian reconstruction
+Inferring causality from observed correlations, i.e., moving from undirected to directed networks, is a key challenge. In omics studies, it holds the promise to unveil relevant links driving tumorigenesis. When a system is subject to some noise, it is possible to employ the theory of stochastic processes showing that correlations emerging from samples can be interpreted as a ‘signature’ of the underlying deterministic system [
+19
+]. This leads to a relationship between the covariance of the samples and the system’s Jacobian matrix, which is derived according to Steuer et al. [
+19
+] and Barter et al. [
+20
+] as follows.
+The Jacobian matrix of a dynamical system describes how the system responds to perturbations. Given a system of
+N
+variables defined by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{X} = (X_1,...,X_N)^{\mathrm T}$$\end{document}
+X
+=
+(
+X
+1
+,
+.
+.
+.
+,
+X
+N
+)
+T
+, their response to small fluctuations around an equilibrium can be approximated as
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \frac{\text {d}}{\text {d}t} \varvec{X} = \textbf{J} \varvec{X}, \end{aligned}$$\end{document}
+d
+d
+t
+X
+=
+J
+X
+,
+with the Jacobian
+J
+of dimension
+N
+. The system with noise can be modeled by the Langevin-type equation
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \frac{\text {d}X_i}{\text {d}t} = \sum _j J_{ij} X_j + \sqrt{2D_i} \xi _i(t), \end{aligned}$$\end{document}
+d
+X
+i
+d
+t
+=
+∑
+j
+J
+ij
+X
+j
++
+2
+D
+i
+ξ
+i
+(
+t
+)
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\xi _i(t)$$\end{document}
+ξ
+i
+(
+t
+)
+is Gaussian white noise, with zero mean and unit variance and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$D_i$$\end{document}
+D
+i
+is the mean amplitude of the fluctuations of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$X_i$$\end{document}
+X
+i
+. By using the corresponding stationary Fokker-Planck equation for the probability distribution, the Lyapunov equation is obtained [
+32
+]
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \textbf{J} \varvec{\Gamma } + \varvec{\Gamma } \textbf{J}^T = -2 \textbf{D}, \end{aligned}$$\end{document}
+J
+Γ
++
+Γ
+J
+T
+=
+-
+2
+D
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{\Gamma }$$\end{document}
+Γ
+is the covariance matrix with entries
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Gamma _{ij} = \langle X_i X_j \rangle$$\end{document}
+Γ
+ij
+=
+⟨
+X
+i
+X
+j
+⟩
+and
+D
+is the fluctuation matrix, describing the internal noise of the system.
+Based on this systematic relationship, it is possible to recover the deterministic system by inferring the system’s Jacobian matrix from the sample data, if additional knowledge about the system is available [
+19
+].
+Note that the Jacobian matrix is generally non-symmetric, whereas the covariance matrix is always symmetric. This leads to a number of constraints in the Lyapunov equation that is lower than the degrees of freedom of the Jacobian, making it impossible to determine causality from correlation alone. However, if additional information, such as the topology of interactions, is available, the full Jacobian can be reconstructed. Barter et al. [
+20
+] proposed an algorithm to solve the Lyapunov equation for
+J
+, by considering additional constraints. Specifically, it is needed to set
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$J_{ij} =0$$\end{document}
+J
+ij
+=
+0
+for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$N(N-1)/2$$\end{document}
+N
+(
+N
+-
+1
+)
+/
+2
+pairs of nodes
+i
+and
+j
+, forcing the absence of the corresponding variable relations [
+20
+].
+Biomarker selection through node centrality
+Centrality measures in network analysis are used to identify the most important nodes within a network. There are various measures that each offer different perspectives on a node’s importance based on its connections and position within the network structure. Here, the strength, eigenvector and closeness centralities are used, which are both calculated from a non-negative adjacency matrix
+A
+describing relations among a set of
+N
+nodes with centralities
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$c_1,...,c_N$$\end{document}
+c
+1
+,
+.
+.
+.
+,
+c
+N
+.
+The strength of a node is quantified by summing the weights of the edges the node
+i
+is connected to [
+23
+]
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} c_i = \sum _j A_{ij}. \end{aligned}$$\end{document}
+c
+i
+=
+∑
+j
+A
+ij
+.
+With strength centrality, it is presumed that a node with significant or several interactions has a higher level of importance in the network.
+In the eigenvector centrality, the sum of a node’s connections is calculated, whereby each connection is weighted by the other node’s centrality
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \lambda c_i = \sum _j A_{ij} c_j, \end{aligned}$$\end{document}
+λ
+c
+i
+=
+∑
+j
+A
+ij
+c
+j
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+is a constant required so that the equations have a non-zero solution. This equation can be expressed in matrix notation
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \lambda \varvec{c} = \textbf{A} \varvec{c}, \end{aligned}$$\end{document}
+λ
+c
+=
+A
+c
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+and
+c
+represent, an eigenvalue and the associated eigenvector of the matrix
+A
+, respectively. Among the possible eigenvalues of
+A
+, the leading one (i.e., the eigenvalue with the largest real part) is considered, since its eigenvector is guaranteed to have positive entries [
+33
+]. Then, the
+N
+components of the leading eigenvector represent the centralities of each node. In this concept of centrality, the importance of a node is proportional to the importance of its neighboring nodes, creating a recursive relationship where connections to highly central nodes enhance a node’s own centrality [
+24
+].
+Closeness centrality measures the proximity of a node to all other nodes in a network. Let
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\text {d}(j,i)$$\end{document}
+d
+(
+j
+,
+i
+)
+be the shortest path distance between node
+i
+and
+j
+, then the closeness centrality of node
+i
+is defined by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} c_i = \frac{1}{\sum \limits _{j \ne i} \text {d}(j,i)}. \end{aligned}$$\end{document}
+c
+i
+=
+1
+∑
+j
+≠
+i
+d
+(
+j
+,
+i
+)
+.
+Nodes with high closeness centrality can quickly interact with all others due to shorter path lengths [
+25
+]. In networks where the edges have weights corresponding to the strength of relationships, the distances can be represented as the reciprocal of the weights
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$d_{ij} = 1/A_{ij}$$\end{document}
+d
+ij
+=
+1
+/
+A
+ij
+so that higher weights (stronger relationships) translate into shorter distances.
+In directed networks, it must be distinguished between outward and inward centrality. Outward centrality quantifies the influence of a given node over the network, while inward centrality reflects how much a node is influenced by the others [
+34
+]. With an adjacency matrix where rows reflect the out-degrees and columns the in-degrees of nodes, outward strength centrality is calculated by summing over the rows and inward strength centrality is computed by summing over columns. For eigenvector centrality, outward centrality calculates the right eigenvector of
+A
+, satisfying
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda \varvec{c} = \textbf{A} \varvec{c}$$\end{document}
+λ
+c
+=
+A
+c
+while inward centrality calculates the left eigenvector, satisfying
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda \varvec{c}^t = \varvec{c}^t \textbf{A}$$\end{document}
+λ
+c
+t
+=
+c
+t
+A
+[
+34
+]. Consequently, outward centrality can be calculated similarly to undirected networks and inward centrality is calculated based on the transpose of
+A
+. For closeness centrality in directed networks, out-closeness is calculated by measuring the paths from node
+i
+to all other nodes and in-closeness is calculated by considering paths from all other nodes to node
+i
+. For this study, outward centrality was calculated, following the notion that genes that exert a high influence over the network could be potentially important drivers in the disease process.
+Modularity detection by Stochastic Block Models
+In modularity detection, the task is to organize a network into modules, or communities, by grouping nodes that have a similar role in the network. This can be regarded as a way to select groups of functionally related genes instead of focusing only on single nodes. Stochastic Block Models (SBMs) provide a probabilistic approach for this purpose [
+26
+].
+An SBM is a generative model that is based on a structure of
+N
+nodes divided into
+B
+groups. The partition is given by a vector
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{b}$$\end{document}
+b
+, where each entry
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$b_i \in \{ 1,...,B\}$$\end{document}
+b
+i
+∈
+{
+1
+,
+.
+.
+.
+,
+B
+}
+defines the group membership of node
+i
+. Given the partition of the nodes
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varvec{b}$$\end{document}
+b
+, the idea is to generate a network in which the nodes are grouped accordingly, by maximizing the probability
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\textbf{A}|\varvec{b})$$\end{document}
+P
+(
+A
+|
+b
+)
+, where
+A
+is the adjacency matrix. The probability
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\textbf{A}|\varvec{b})$$\end{document}
+P
+(
+A
+|
+b
+)
+determines the likelihood of edges existing between nodes based on their group memberships. With a Bayesian inference approach, we can revert the problem, and infer the most probable modularity structure that could have generated an observed network, by computing
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P(\varvec{b}|\textbf{A})$$\end{document}
+P
+(
+b
+|
+A
+)
+through the Bayesian rule [
+27
+]. The number of groups
+B
+and the most likely partition
+b
+can be computed in combination by optimizing the Integrated Classification Likelihood [
+35
+].
+SBMs lead to relatively homogeneous degree distributions within modules, which might not always align with networks estimated from real-world data. To address this limitation, Degree-corrected SBMs (DcSBMs) account for variations in node degrees within the same module [
+27
+].
+Spectral clustering of patient similarity networks
+Spectral clustering is a powerful method for grouping complex data into distinct clusters by partitioning a similarity graph. It is particularly useful for clustering samples based on high-dimensional omics data. In a patient similarity network, the samples to be clustered are regarded as nodes of a graph. The edges between the nodes represent the similarities between the samples, which are typically evaluated using the Euclidean distance across all variables. Taking the nearest neighbor graph to capture the local structure of the data is especially important for detecting non-linear structures in the data.
+Spectral clustering captures the manifold structure of complex data structures through the eigendecomposition of the graph’s Laplacian matrix. The eigenvectors corresponding to the smallest non-zero eigenvalues form a new, lower-dimensional, feature space where the data points are separated into distinct clusters [
+36
+]. John et al. [
+37
+] proposed the
+Spectrum
+method for spectral clustering of complex omics data, implemented as an R package. It constructs the patient similarity matrix from the omics data, computes the nearest neighbor graph, reduces noise to better reveal underlying structures, and finally performs the spectral clustering. For more details of the method, refer to [
+37
+].
+Data and analysis workflow
+The transcriptomics and proteomics data were retrieved from GDAC Broad Firehose (
+https://gdac.broadinstitute.org
+), a portal collecting data generated by The Cancer Genome Atlas (TCGA) [
+38
+]. In particular, we considered normalized RNA-seq and protein abundance data from the TCGA-GBM and TCGA-LGG projects [
+39
+–
+41
+]. These datasets group the glioma patients into glioblastoma and lower-grade glioma (LGG) in line with the 2007 WHO classification [
+42
+]. LGGs aggregate astrocytoma, oligodendroglioma, and oligoastrocytoma samples. The dataset was updated to align with the 2021 WHO classification, thereby reallocating oligoastrocytoma cases to one of the three defined glioma types [
+30
+].
+The transcriptomics data, derived from RNA sequencing, provides the gene expression levels of over 20,000 genes. The proteomics data, obtained through reverse phase protein arrays (RPPA), is a functional proteomics dataset accounting for nearly 200 proteins involved in major biochemical signaling pathways in cancer [
+43
+]. For the computational feasibility of the methods employed in this study, a dimensionality reduction of the transcriptomics dataset was necessary. Therefore, the analysis was specifically focused on the expression levels of those genes from the transcriptomics dataset that encode the proteins contained in the proteomics dataset, according to the map provided by the GDAC Broad Firehose portal. This resulted in a significant variable reduction while still ensuring that important genes involved in regulating cancer pathways were included in the analysis. This subset of the transcriptomics dataset (transcriptomics
+S
+) comprises 145 RNA-seq variables measured over 206 samples for glioblastoma, 255 samples for astrocytoma, and 166 samples for oligodendroglioma. The reduced dataset was normalized by a high-dimensional Gaussian copula with non-parametric marginals (nonparanormal), which transforms the variable distribution to achieve normality [
+44
+]. The nonparanormal normalization was performed by the
+huge.npn
+R function. For the network inference process, we used only the transformed variables that were normally distributed in all glioma types according to the Jarque-Bera test (
+jarque.test
+function from the
+moments
+R package).
+A preliminary spectral clustering using the
+Spectrum
+method was performed to get insights into the biological information contained in the reduced transcriptomics
+S
+dataset compared to the full transcriptomics dataset and the proteomics dataset. The
+Spectrum
+R tool was employed with a fixed cluster number set to
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$c = 3$$\end{document}
+c
+=
+3
+to match the three glioma types, i.e., glioblastoma, astrocytoma, and oligodendroglioma. The data is handled automatically and no additional parameters are necessary.
+In the methodological workflow, we started with network discovery to infer association and causal gene networks for the three glioma types, using the graphical lasso method and the Jacobian matrix estimation, respectively. Figure
+1
+describes the analysis workflow. The undirected networks were inferred from the transcriptomics data for each glioma type separately by the graphical lasso method using the
+huge
+R function. The StARS method was employed using the
+huge.select
+R function to determine the optimal regularization parameter
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+for each of the three networks. The resulting values for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+were closely aligned across all types, with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda \ \simeq$$\end{document}
+λ
+≃
+0.3, leading to a similar level of sparsity in the graphs. Based on the inverse covariance matrices, undirected gene co-expression networks were constructed for each glioma type, providing information about the partial correlation structure of the gene relations at the transcriptomics level. Owing to the induced sparsity, some genes had no connections, being excluded for further analysis.
+Fig. 1
+Schematic representation of the workflow encompassing network discovery, network analysis, feature selection and patient clustering applied to the TCGA glioma transcriptomics
+S
+dataset (transcriptomics
+S
+stands for the proteomics-informed transcriptomics dataset)
+To infer causality among gene relations, the Jacobian matrix was computed for each glioma type, following the algorithm of [
+20
+]. The fluctuation matrix describing the internal noise of the system is assumed diagonal with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$D_i = \frac{\sigma _i^2}{2}$$\end{document}
+D
+i
+=
+σ
+i
+2
+2
+, for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$i = 1,\dots ,N$$\end{document}
+i
+=
+1
+,
+⋯
+,
+N
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\sigma _i^2$$\end{document}
+σ
+i
+2
+are the variances of the individual variables [
+32
+]. The structural information needed as additional constraints was retrieved from the sparsity of the gene co-expression networks previously estimated. The zero entries in the inverse covariance matrix
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Sigma ^{-1}_{ij} = 0$$\end{document}
+Σ
+ij
+-
+1
+=
+0
+defined the zero entries in the Jacobian matrix
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$J_{ij} = 0$$\end{document}
+J
+ij
+=
+0
+. For each glioma type, a directed network was deduced based on the respective Jacobian matrix, describing how one gene influences another. Self-loops and the sign of the edge weights were ignored for further analysis since the identification of important genes requires focusing only on the strength of the relationship between the genes.
+The next step of the workflow was the analysis of the networks inferred, based on centrality measures and modularity detection. Strength, eigenvector and closeness centrality were calculated to determine the importance of the genes in the glioma networks, while the modularity structure was computed to reveal functionally related groups of genes that may be important. For modularity detection via DcSBMs, the
+greed
+R function was used. If the adjacency matrix of the network is supplied, the function computes the most likely modularity structure obtained by DcSBM [
+35
+].
+In the proposed methodology, relevant genes were selected from the undirected and directed networks, by identifying the genes covering the top 10% of importance in the networks and the most important gene from each module, based on strength, eigenvector and closeness centrality. This leads to eight sets of potential biomarkers for each glioma type.
+We used the
+enrichKEGG
+and
+enrichGO
+functions from the
+clusterProfiler
+package in R to perform KEGG and GO enrichment analysis on the selected genes in each glioma type. These functions take a list of gene IDs and return pathways or GO terms that are significantly enriched. KEGG and GO enrichment can be specified for Homo sapiens through the arguments
+organism =“hs”
+and
+OrgDb = org.Hs.eg.db
+, respectively. Both
+enrichKEGG
+and
+enrichGO
+functions allow for False Discovery Rate (FDR) control via the Benjamini-Hochberg procedure (
+pAdjustMethod = “BH”
+), which adjusts p-values for multiple testing. To retrieve Entrez IDs from gene symbols, the
+mget
+function from the
+org.Hs.eg.db
+package is employed. For each glioma type, we combine the eight sets of selected genes to form one gene set for each glioma type, that is passed to the enrichment analysis.
+In a final step of the analysis, spectral clustering using the
+Spectrum
+method was applied to the resulting glioma transcriptomics datasets accounting for the different sets of genes selected by the network analysis step, to test whether these reduced datasets allow the distinction of known glioma types. The Adjusted Rand Index (ARI) [
+45
+] was computed to quantify how much the identified clusters were in agreement with the actual updated labels. The quality of the clustering in terms of tightness and separation was evaluated by the Average Silhouette Width (ASW) [
+46
+]. In the
+Spectrum
+method the first
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$c = 3$$\end{document}
+c
+=
+3
+eigenvectors were used for clustering the data; thus, the feature space based on those was used to calculate the ASW.
+Results
+To assess if the biological information of the considered omics data is capable of capturing glioma intertumoral heterogeneity, a preliminary unsupervised study was performed. In particular, the
+Spectrum
+clustering method was applied to the full transcriptomics dataset (16,217 features), the proteomics dataset (174 features), and the transcriptomics
+S
+dataset (143 features), i.e., covering only genes coding for the proteins collected in the proteomics dataset.
+The confusion matrices of the clustering results together with the two clustering performance measures ASW and ARI are provided in Table
+1
+. The full RNA transcriptomics dataset produced the best clustering outcome, with the highest scores in both measures, suggesting these data reflect glioma heterogeneity. In contrast, the proteomics dataset lead to poor-quality clusters, not matching the known glioma types. This outcome indicates that the proteomics dataset used was not informative for glioma patient stratification. Interestingly, the clustering obtained for the proteomics-informed dataset, i.e., transcriptomics
+S
+, achieved performances comparable to those obtained from the full transcriptomics dataset. The lower input dimension massively reduced the computational complexity, making this subset of features a valuable input dataset for our analysis.
+Table 1
+Results from spectral clustering based on the transcriptomics and proteomics datasets (transcriptomics
+S
+stands for the proteomics-informed transcriptomics dataset)
+Transcriptomics
+Proteomics
+Transcriptomics
+S
+16217 features
+174 features
+143 features
+Astrocytoma
+4
+239
+12
+57
+42
+107
+4
+243
+8
+Glioblastoma
+190
+15
+1
+33
+14
+69
+181
+24
+1
+Oligodendroglioma
+0
+6
+160
+37
+49
+57
+0
+17
+149
+ARI
+0.82
+0.01
+0.75
+ASW
+0.71
+0.45
+0.65
+Figure
+2
+shows the patient similarity network derived from the transcriptomics
+S
+dataset by the
+Spectrum
+algorithm. The graph is visualized using the force-directed layout algorithm by Fruchterman and Reingold, which positions nodes that are directly connected closer to each other and increases the distance of isolated nodes [
+47
+]. The similarity network shows a remarkable distinction between the three glioma types, despite some samples being closer to others from a different class. For instance, few glioblastoma cases are allocated in the area of astrocytoma and oligodendroglioma, suggesting some molecular affinities that might deserve further investigation. Overall, astrocytoma seems to share more similarities with the other two classes, while oligodendroglioma and glioblastoma can be better distinguished. This prior result is in line with biological knowledge since astrocytoma is characterized by the same cell type as glioblastoma [
+48
+], while having mutations in the same gene family as oligodendroglioma [
+2
+].
+Fig. 2
+Patient similarity network computed from the proteomics-informed transcriptomics dataset transcriptomics
+S
+. Each node represents a patient, and colors are assigned based on the associated glioma type. The nodes are placed using a force-directed layout algorithm
+Network discovery and analysis
+The estimation of the undirected glioma networks by the graphical lasso method was performed separately for glioblastoma, astrocytoma, and oligodendroglioma. The resulting gene co-expression networks comprised a set of genes that have at least one connection, i.e., 141 genes for glioblastoma, 143 genes for astrocytoma, and 141 genes for oligodendroglioma. Based on these network structures, the Jacobian matrices were computed for each type. We recall that the Jacobian matrix is not symmetric, as two genes can influence each other in both directions and in different ways (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$J_{mn} \ne J_{nm}$$\end{document}
+J
+mn
+≠
+J
+nm
+). Moreover, the entries can be positive or negative, where a positive entry
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$J_{mn}$$\end{document}
+J
+mn
+means that gene
+m
+has an activating influence on gene
+n
+, while a negative entry indicates an inhibiting influence. However, the sign of the influence was not taken into account in our analysis; instead, our focus was on the direction and strength of the relationships between the genes. While in the undirected networks, the edges reflect conditional dependencies between the genes, the edges in the directed networks reflect the extent to which the expression of one gene affects the expression of another gene.
+Given the difficulty of a visual analysis of these dense networks, modularity detection by SBMs was employed to uncover groups of related genes and centrality measures were used to detect key genes as potential biomarkers. To this aim, for each glioma type, both undirected and directed networks were considered. The modularity detection algorithm applied to the undirected graphs identified 11 modules in both the astrocytoma and glioblastoma network and 9 modules in the oligodendroglioma network. In the directed networks, 15 modules were detected for both astrocytoma and oligodendroglioma, and 14 modules for glioblastoma. The modules group together genes that have a similar role in the network, indicating that genes within the individual modules are likely to be functionally related and participate in related biological processes.
+The detection of such modules and the computation of gene importance improves the interpretability of the overall networks. Strength centrality is a local measure that highlights well-connected genes with significant or numerous direct interactions. Such genes may play central roles in biological processes, acting as direct participants in potentially important interactions [
+21
+,
+28
+]. Eigenvector centrality extends beyond the local neighborhood and recursively considers the influence of a node’s neighbors. This allows for the identification of genes with a broader influence over the network, highlighting those that may play roles in the regulation or coordination of multiple biological pathways [
+21
+]. By capturing both direct and indirect influence, eigenvector centrality points to genes that may serve as central coordinators within complex systems. While eigenvector centrality provides a balanced average over all paths in the network, closeness centrality focuses specifically on the shortest, most direct paths to all other nodes. Genes with high closeness centrality can interact quickly with other genes, suggesting they may be important in signaling and regulatory roles [
+21
+,
+28
+].
+From the computation of the centrality measures emerged that eigenvector centrality assigns a more distinct ranking among the genes, with some genes having significantly higher importance values than others, whereas strength and especially closeness centrality return a more uniform value to each gene. Eigenvector centrality proves to be particularly valuable in identifying hub genes, offering the most interpretable outcome from a visual point of view. Figure
+3
+shows, as an example, the astrocytoma undirected and directed network in which the nodes are labelled with the respective gene names and the node size is proportional to the gene importance based on eigenvector centrality. The modularity structure is depicted by the node colors, with genes in the same module sharing a color. The nodes are placed using the force-directed layout algorithm by Fruchterman and Reingold [
+47
+].
+Fig. 3
+Astrocytoma
+a
+undirected network and
+b
+directed gene network. The nodes are labelled with the corresponding gene names. The modularity structure is depicted by the node colors, with genes in the same module sharing a color. The node area is sized proportional to the node’s eigenvector centrality, making influential genes appear larger. The nodes are placed using a force-directed layout algorithm
+For ease of network visualization and interpretation, an interactive online visualization tool is provided in
+https://netzwerk-ninja.github.io/glioma/gene-networks/
+. The tool enables the exploration of the undirected and directed networks estimated for all three glioma types based on the different centrality measures. The rankings of the network genes according to the centrality measures can be found under
+https://netzwerk-ninja.github.io/glioma/gene-rankings/
+, where the genes are colored according to the modularity structure.
+Coupling module detection with eigenvector centrality allows the detection of entire groups of genes with high importance within the network. From Fig.
+3
+, it is possible to detect the most relevant module based on eigenvector centrality in both undirected and directed astrocytoma networks, i.e., the purple module in Fig.
+3
+a and the blue module in Fig.
+3
+b. Figure
+4
+focuses on those subnetworks, allowing a deeper discussion of the included gene relations. Interestingly, despite a generally different module structure of directed and undirected networks, the most important module in each of these two cases is mostly constituted by the same genes, with the only exception of
+BCL2
+, which is exclusively present in the purple module of the undirected astrocytoma network. This high node overlap among the two graph representations allows the disclosure of how the estimated gene relationships change from the undirected to the directed network. We observe that the edge weights of the undirected module appear relatively uniform, while varying significantly in the directed network. In this case, many pairs of nodes have links in both directions, yet their weights highly differ, suggesting a dominant influence of one gene over the other. For instance, from Fig.
+4
+a,
+PIK3R2
+is predicted to have a considerable impact on
+RAD51
+, influencing it by a direct strong positive link, and by a path mediated by
+FOXM1
+, which might indicate an important gene regulatory process.
+Fig. 4
+Most relevant module in astrocytoma
+a
+undirected network and
+b
+directed network. These modules include the same genes, with the only exception of
+BCL2
+, which is exclusively present in the module of the undirected astrocytoma network. Node colors and placements correspond to Fig.
+3
+A literature review on these genes revealed findings that align with our results, highlighting a potential common ground in DNA repair mechanisms. Specifically,
+PIK3R2
+regulates the activity of the enzyme Phosphoinositide 3-kinase (PI3K), which is linked to many cell functions, such as growth, proliferation, and cell motility. This gene is widely known in cancer, where it is frequently mutated, and associated with tumor proliferation and increased invasion [
+49
+,
+50
+]. Due to these characteristics, recent studies proposed
+PIK3R2
+as a cancer prognostic marker [
+51
+,
+52
+].
+On the other hand,
+FOXM1
+is a transcription factor gene involved in cell proliferation, self-renewal, and tumorigenesis [
+53
+]. Commonly upregulated in cancer [
+54
+], it is considered a prognostic marker and a therapeutic target [
+55
+].
+The existence of a link going from
+PIK3R2
+to
+FOXM1
+is supported by literature, as
+FOXM1
+activation is controlled by PI3K/ATK pathway [
+56
+], which is crucial in glioma progression [
+57
+].
+Instead,
+RAD51
+has its primary function in DNA-damage repairs [
+58
+], a process extremely important in cancer, and broadly investigated in glioma due to its implication in treatment failure. In particular, it has been shown that higher levels of
+RAD51
+are associated with poor glioma survival, due to its role in repairing DNA damages caused by radiation and chemotherapy, contributing to treatment resistance and tumor recurrence [
+59
+,
+60
+].
+Many studies pointed out the
+FOXM1
+role in regulating DNA damage response [
+61
+–
+63
+]. In pediatric glioma, it has been shown that inhibition of PI3K reduces the DNA repair functions by a pathway involving
+FOXM1
+. In particular,
+FOXM1
+is responsible for activating promoters of genes having DNA damage repair functions, such as
+RAD51
+[
+64
+]. In ovarian cancer, the depletion of
+PIK3R2
+results in increased DNA damage and a reduction of the proteins encoded by the
+RAD51
+gene [
+65
+].
+All these findings suggest that the genes identified in our approach deserve further exploration to understand their biological functions in glioma. If such regulations are confirmed by biological validations, we may postulate that the
+PIK3R2
+gene might impact glioma therapy resistance by alternating DNA repair processes, with important clinical implications.
+For further biological interpretation and potential biomarker detection, the modularity structures and node importances in the networks were used to select the following sets of genes from the networks: genes covering the top 10% of importance in undirected networks based on strength centrality (set 1), eigenvector centrality (set 2), and closeness centrality (set 3); the most important gene per module in undirected networks based on strength centrality (set 4), eigenvector centrality (set 5), and closeness centrality (set 6); genes covering the top 10% of importance in the directed networks based on strength centrality (set 7), eigenvector centrality (set 8), and closeness centrality (set 9); the most important gene per module in directed networks based on strength centrality (set 10), eigenvector centrality (set 11), and closeness centrality (set 12). The selected genes for each glioma type from all twelve sets are listed in Table
+2
+.
+Table 2
+Selected genes in the 8 sets: undirected networks vs. directed networks, genes covering the top 10% of importance vs. most important gene per module, strength centrality (C
+S
+) vs. eigenvector centrality (C
+E
+) vs. closeness centrality (C
+C
+) (
+Astrocytoma,
+Glioblastoma,
+Oligodendroglioma)
+The overview provided in Table
+2
+allows the identification of promising genes that may play significant roles in the glioma disease due to their importance in the networks. For instance, there are genes identified as important in the different networks, indicating their potential relevance in processes shared across different types. Among them,
+ACACA
+plays a key role in glioblastoma and oligodendroglioma networks,
+AKT3
+in astrocytoma and oligodendroglioma, and
+CDK1
+in the three glioma types. On the other hand, there are genes that were detected as key variables for a single glioma type, making them potential markers for glioma intertumoral heterogeneity. Indeed, many genes were selected exclusively for glioblastoma, such as
+CCNB1
+,
+NFKB1
+and
+SERPINE1
+, potentially characterizing the most aggressive type of glioma.
+We analyzed the genes selected for each glioma type using the KEGG and GO enrichment analysis, which allowed us to identify key pathways and functional categories that are significantly overrepresented. Figure
+5
+highlights the top 15 KEGG pathways significantly enriched in the gene set for each glioma type, while Fig.
+6
+illustrates the top 10 enriched GO terms. The x-axis shows the ratio of genes associated with each KEGG pathway or GO term relative to the total gene set. The dot size reflects the number of genes linked to each pathway or term, and the dot color represents the adjusted p-values from the enrichment analysis, accounting for multiple testing corrections. Smaller
+p
+-values indicate greater statistical significance.
+Fig. 5
+KEGG enrichment analysis showing the top 15 KEGG pathways significantly enriched in the gene sets. The x-axis displays the ratio of genes associated with each KEGG pathway relative to the total gene set. The dot size reflects the number of genes linked to each pathway and the dot color represents the adjusted
+p
+-values from the enrichment analysis
+Fig. 6
+GO enrichment analysis showing the top 10 GO terms significantly enriched in the gene sets. The x-axis displays the ratio of genes associated with each GO term relative to the total gene set. The dot size reflects the number of genes linked to each term and the dot color represents the adjusted
+p
+-values from the enrichment analysis
+Besides the links to glioma and other cancer types, the
+EGFR
+,
+PI3K
+/
+AKT
+and
+mTOR
+pathways appear among the top significant in the KEGG enrichment analysis. Interestingly, our network analysis had already highlighted the
+PI3K
+/
+AKT
+pathway, and its importance in glioma has been discussed previously. The
+mTOR
+signaling pathway acts both as a downstream effector and upstream regulator of
+PI3K
+[
+66
+], and has become an important therapeutic target for glioblastoma [
+67
+,
+68
+]. The activity of this pathway is also associated with disease progression in astrocytoma and oligodendroglima [
+69
+]. Glioblastoma frequently exhibits overexpression or mutation of
+EGFR
+, triggering the activation of many downstream signaling pathways, such as the
+PI3K
+/
+Akt
+/
+mTOR
+pathway [
+57
+]. The
+AMPK
+pathway, here significantly enriched in the glioblastoma gene set, is known for its role in inflammation and cancer, particularly in regulating immune responses within the tumor microenvironment [
+70
+]. Its involvement in glioma, specifically in glioblastoma, has also been studied, where it appears to promote tumor formation [
+71
+–
+73
+].
+In the GO enrichment analysis, protein serine kinase activity and protein serine/threonine kinase activity are significantly enriched in all three glioma types. Protein kinases regulate various signalling pathways and cellular processes in cell life such as metabolism, transcription and apoptosis [
+74
+]. While protein serine kinase is a borader term, protein serine/threonine kinase activity is directly involved in the
+PI3K
+/
+Akt
+/
+mTOR
+and
+AMPK
+pathways, as
+AKT
+and
+mTOR
+as well as
+AMPK
+are serine/threonine kinases [
+57
+,
+73
+]. Kinase inhibitors have become important in cancer therapy [
+75
+,
+76
+] and present a promising therapeutic strategy in glioma.
+Patient clustering
+Since the dataset exploration performed as a first stage of our analysis assessed that the initial dataset was suitable for patient stratification by spectral clustering, we would like to preserve this ability after variable selection. Therefore, as a final step, clustering was performed by considering only data from the selected features. The confusion matrices of the clustering results together with ASW and ARI values are given in Table
+3
+.
+Table 3
+Results from spectral clustering based on the variables selected from undirected vs. directed networks; genes covering the top 10% of importance vs. most important gene per module; strength centrality (C
+S
+) vs. eigenvector centrality (C
+E
+) vs. closeness centrality (C
+C
+))
+Undirected networks - Top 10%
+Undirected networks - Best per module
+Directed networks - Top 10%
+Directed networks - Best per module
+C
+S
+C
+E
+C
+C
+C
+S
+C
+E
+C
+C
+C
+S
+C
+E
+C
+C
+C
+S
+C
+E
+C
+C
+15 features
+10 features
+29 features
+23 features
+23 features
+26 features
+16 features
+13 features
+30 features
+32 features
+32 features
+29 features
+(set 1)
+(set 2)
+(set 3)
+(set 4)
+(set 5)
+(set 6)
+(set 7)
+(set 8)
+(set 9)
+(set 10)
+(set 11)
+(set 12)
+Astrocytoma
+181
+24
+50
+171
+21
+63
+232
+21
+2
+204
+26
+25
+207
+31
+17
+225
+26
+4
+235
+18
+2
+85
+46
+124
+186
+41
+28
+224
+12
+19
+232
+21
+2
+219
+8
+28
+Glioblastoma
+32
+170
+4
+45
+140
+21
+14
+192
+0
+16
+186
+4
+12
+194
+0
+10
+196
+0
+66
+139
+1
+15
+186
+5
+13
+192
+1
+27
+178
+1
+28
+178
+0
+32
+173
+1
+Oligodendroglioma
+17
+4
+145
+135
+4
+27
+68
+1
+97
+46
+4
+116
+12
+9
+145
+19
+3
+144
+70
+2
+94
+36
+11
+119
+120
+10
+36
+155
+2
+9
+40
+2
+124
+29
+0
+137
+ARI
+0.47
+0.20
+0.57
+0.51
+0.64
+0.72
+0.36
+0.30
+0.35
+0.38
+0.59
+0.58
+ASW
+0.55
+0.42
+0.56
+0.51
+0.63
+0.68
+0.59
+0.43
+0.60
+0.65
+0.49
+0.54
+For most subsets, the clustering performance decreased compared to the one provided by the initial dataset. However, despite the considerable variable reduction, most of the final subsets lead to high-quality clusters, with ASW score above 0.5. The ability of class recovery was better for the subsets selected from the undirected networks, where ARI values are around 0.5 or higher. This suggests that the undirected networks based on conditional dependencies better capture the known glioma classes compared to the directed networks derived from the estimated Jacobian matrix. However, the biomarker selection process may also play a role since the centrality measures applied to the directed networks focus solely on the out-direction of links, overlooking bidirectional interactions and feedback loops. This may limit their ability to capture the complexity of gene interactions.
+The best clustering results were obtained by considering the most important genes from the modules in the undirected graphs according to closeness centrality (set 6). The ARI value of 0.72 value is only slightly below that of the initial dataset and the ASW value of 0.68 is even higher, indicating that these genes show great potential as diagnostic biomarkers capturing glioma heterogeneity. Figure
+7
+visualizes the clustering based on set 6 in the patient similarity graph. Each node represents a patient, colors are assigned based on the associated glioma type, and the node labels represent the assigned cluster. This representation highlights the definition of well-defined and distinctly separated clusters, as indicated by the high average silhouette score obtained for set 6. The few misaligned observations (i.e., patients grouped in a cluster that does not match their assigned glioma type) tend to be located on the border of their respective glioma type. This suggests a similarity across some glioma types, as expected. Particularly, we can observe similarity between oligodendroglioma (green) and astrocytoma (blue), and between astrocytoma and glioblastoma (orange), which aligns with biological knowledge and prior studies [
+77
+–
+79
+]. On the other hand, a small number of these misaligned observations appears to be more closely aligned with patients in their assigned cluster than those of their actual glioma type. This could indicate that these patients have a distinct transcriptomic molecular profile, potentially identifying outliers or hinting at a need for a different stratification of patient groups.
+Fig. 7
+Patient similarity network computed based on the genes included in set 6 (the most important genes from the modules in the undirected graphs according to closeness centrality). Each node represents a patient, colors are assigned based on the associated glioma type and the node labels represent the assigned cluster. The nodes are placed using a force-directed layout algorithm
+Generally, the clustering performance improved when considering the modularity structure of the networks, though this result might also be affected by the number of genes included in the analysis, which is generally larger than the one derived from the top 10% approach. However, when looking at the sets of genes selected by closeness centrality, the modularity approach led to better ARI values with fewer genes. Closeness centrality provided a relatively uniform distribution of importance between the genes, which explains why the top 10% includes a higher number of genes compared to the other centrality measures. The worst performances in terms of ARI and ASW values were provided by considering genes from the top 10% based on eigenvector centrality. Nevertheless, if the number of genes included in the analysis might affect clustering results, it is worth to note that both these cases are characterized by the smallest number of features.
+The confusion matrices reveal that oligodendroglioma and astrocytoma are often assigned to the same cluster. This outcome aligns well with the known similarities in the genetic profiles of these glioma types. Astrocytomas and oligodendrogliomas are both low-grade gliomas exhibiting mutations in the same gene family, i.e., the IDH genes. Glioblastomas, on the other hand, display a wild-type IDH status, and are characterized by genetic or histological alterations, uncommon to astrocytomas and oligodendrogliomas. In diagnosis, this IDH mutation is a crucial marker that distinguishes astrocytomas and oligodendrogliomas, from the more aggressive glioblastomas [
+2
+]. This outcome is also confirmed by previous studies based on the same datasets, investigating glioma heterogeneity by network inference, which also highlights the similarity between astrocytoma and oligodendroglioma [
+29
+,
+80
+]. Furthermore, there is more overlap between glioblastoma and astrocytoma than between glioblastoma and oligodendroglioma, which is reasonable since both glioblastoma and astrocytoma arise from the same cell type, namely astrocytes.
+In this study, clustering was used as an unsupervised approach to assess the effectiveness of the selected genes in differentiating the glioma classes. An additional literature review on the subset of genes leading to the best clustering results (set 6) was conducted to explore their specific functions in gliomas and cancer in general. The findings can be found in Table 4 in
+Appendix
+. In the literature review, all selected features are mentioned in relation to human cancers, many in the context of gliomas. Among studies about gliomas, many studies are focused on glioblastoma, widely studied due to being the most common and aggressive type of glioma. The
+ACACA
+gene plays a significant role in the glioblastoma and oligodendroglioma networks but has not yet been linked to glioma in the literature.
+CHEK2
+deservers further exploration in astrocytoma, and
+EIF4EBP1
+should be considered for investigation in all types of glioma, since they have not yet been studied experimentally in glioma.
+Conclusions
+In this study, we proposed a network-based methodology to discover relevant gene interaction networks associated with different glioma types. We offer a novel perspective on gene expression in glioma, revealing valuable molecular insights and potential biomarkers that may contribute to diagnosis and therapy. The methodology encompasses the estimation gene co-expression networks from transcriptomics data using the graphical lasso method, the estimation of causal relationships by the Jacobian matrix, modularity detection by SBMs and the analysis of gene importance based on centrality measures. Further clustering of patient similarity networks evaluates the suitability of selected network genes to stratify the patients into the diagnosed glioma types.
+While the sparse gene co-expression networks identified by the graphical lasso method stand as valuable information regarding the molecular associations involved in different glioma types, the causal links disclosed through the Jacobian matrix further increase the biological understanding of the directions of the corresponding interactions. Although these cannot be considered as direct gene regulatory networks due to the absence of transcription factors that usually mediate gene-gene interplay [
+81
+], the estimated causal networks provide an important indication of gene interactions, a crucial starting point to foster further research. In particular, by analyzing the directed gene relations in a astrocytoma module, we were able to detect very promising regulatory mechanisms, which aligns with prior studies, yet not comprehensively investigated in glioma. The confirmation of these findings might increase the overall glioma understanding, with potentially important clinical implications. In the astrocytoma directed network as well as in the glioblastoma and oligondendroglioma networks, several more causal interactions between genes can be identified. With increased computational resources, it would be interesting to explore network inference using a larger dataset. For the Jacobian reconstruction, further research might consider other prior information about the network structure available from curated databases regarding known molecular interactions involved in glioma or cancer in general.
+The analysis of the resulting networks through node centrality and modularity detection provided valuable insights into gene importance and the structure of gene interactions in the glioma networks. This led to a selection of genes as potential biomarkers. For each glioma type, we performed KEGG and GO enrichment analysis based on the selected genes, showing biological pathways and processes that are enriched in the set of genes. While the selected genes are already valuable as disease drivers and therapeutic targets, we further applied spectral clustering to assess their ability to group patients into the known glioma types.
+By calculating closeness centrality and selecting the most central gene from each module in the undirected networks, a set of promising genes that captures intertumoral heterogeneity in gliomas was identified from a mathematical and computational standpoint. Spectral clustering based on these genes yielded clusters that closely aligned with the established glioma subtypes. Glioma is a highly heterogeneous disease, exhibiting greater variability than is captured by the three established glioma types. The structure we identified enables the discovery of new patient subgroups, sharing molecular characteristics.
+We conducted a literature review to evaluate previous reports on the role of these selected genes in glioma or cancer in general, which is essential to assess their potential for diagnosis and therapy. While several genes have already been associated with glioma, many have not yet been comprehensively investigated. To promote further studies, we provided a ranked list that helps researchers prioritizing genes for further experimental validation, involving biological testing of the most promising candidates to examine their role in the development, progression, and therapy of glioma.

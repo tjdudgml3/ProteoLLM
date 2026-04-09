@@ -1,0 +1,5455 @@
+Introduction
+Networks are commonly used for modelling association among the building blocks of complex systems in biology and medicine Cannataro et al. (
+2010
+). Models are often built from available data; thus, the availability of static data has lead to the introduction of simple static models (Aittokallio and Schwikowski
+2006
+; Parthasarathy et al.
+2010
+; Dondi et al.
+2021a
+). Due to technological advances, the production of more sophisticated data has shed light into quantitative and time-varying relationships among biological entities in a given organism (Murugan et al.
+2021
+; Mattsson and Takes
+2021
+; Shawn et al.
+2022
+). Therefore, researchers have introduced more complex models able to gather such information and to reuse them to produce relevant knowledge. Examples of these models are: temporal networks modelling cellular components, or spreading processes, like the spread of information and disease (Russell et al.
+2020
+; Petrizzelli et al.
+2022
+; Cinaglia and Cannataro
+2022
+).
+We here focus on temporal (or time-varying) networks. A temporal network is a network whose edges are present only at certain points (called timestamps) in a discrete time domain, so it may be seen as a sequence of static networks, one for each timestamp, as represented in Fig.
+1
+. Each edge may also be weighted or labelled, to carry more information. Temporal networks are a special kind of dynamic networks, which are graphs that from an initial state may change due to different events, not only to edges, but also to nodes (node addition and deletion, node splitting, and node merging) in a continuous evolution Kazemi et al. (
+2020
+).
+Fig. 1
+Figure depicts three temporal snapshots of a temporal network
+After the introduction of these models, it has been clear that novel ad-hoc algorithms developed for the analysis of such networks were necessary. First approaches were based on the reductionist approach involving the aggregation of different dimensions (or timestamps) into a single network discarding all the information related to time. This approach enabled the reuse of the large plethora of existing methods but caused the loss of all the important information related to temporal evolution.
+Consequently, to overcome this limitation, novel methods have been introduced. Many of these methods were based on the analysis of each single timestamp independently via the existing methods for static network analysis Kumar Das et al. (
+2021
+). Then, results were aggregated by means of time-series analysis. Nevertheless, it was clear that the best option was the analysis of the network using an holistic approach integrating the different snapshots.
+Natural and social systems show a behaviour that can be described as temporal networks, where interactions are observed only intermittently Li et al. (
+2017
+). This happens for example in cellular metabolic networks Almaas et al. (
+2004
+), protein structure networks Ortuso et al. (
+2021
+) or in brain networks William and Peter (
+2016
+).
+Holme and Saramaki presented in Holme and Saramäki (
+2012
+) the first review paper related to temporal graph in 2012. Main contribution of this seminal work was to define clearly the temporal graph data structure and main problems (Holme and Saramäki
+2012
+,
+2019
+; Masuda and Lambiotte
+2016
+)
+The survey in Michail (
+2016
+) focuses on algorithm design. It highlights several issues related to path problems, Menger’s Theorem, dissemination, local and global properties, and network design.
+In this paper, we present a systematic literature review of the main temporal network problems and their algorithmic solutions. The main aims of this paper are to introduce basic concepts of temporal networks and to review main algorithms for their analysis, as well as main applications in biology and medicine. We also include the main software developed in this context, with the goal of highlighting also the tools available to analyse temporal networks.
+Some of these problems (for example, dense subgraph and colored motif discovering, graph covering) have not been analysed by other surveys and this represents a novel contributions of our survey. A second contribution is the focus on biological and medicine applications, which is not deepen in the previous surveys. Finally, a third novel contribution is the presentation of software tools for the analysis of temporal networks, while other survey are mainly theoretical.
+The rest of the paper is organised as follows. In Sect.
+2
+, we define the main concepts related to temporal networks. In Sect.
+3
+, we introduce some network measures that have been introduced to evaluate the relevance of nodes/edges in a temporal networks or general properties of a temporal network. In Sect.
+4
+, we consider the main graph problems and the main computational results, including methods for temporal networks traversing, such as path finding and connectivity, and for covering and finding dense subgraphs in temporal networks.
+In Sect.
+5
+, we discuss motif search in temporal networks, that is the core operation in several network analysis methods, such as network alignment and network embedding.
+In Sect.
+6
+, we recall the main software tools for temporal networks analysis, that are key elements for the application of fundamental methods to solve concrete problems.
+In Sect.
+7
+, we review the main problems in biology and medicine that have been modelled with temporal graphs, such as brain connectome, protein–protein interaction networks, and epidemiology.
+In Sect.
+8
+, we report a summary of the main contributions of the paper.
+Finally, in Sect.
+9
+, we discuss open problems and future research directions.
+Methodology
+The reporting of this systematic review was guided by the standards of the Preferred Reporting Items for Systematic Review and Meta-Analysis (PRISMA) Statement Sarkis-Onofre et al. (
+2021
+).
+Basic concepts of temporal networks
+A graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E)$$\end{document}
+G
+=
+(
+V
+,
+E
+)
+is a pair of sets, where
+V
+is a set of nodes or vertices, and
+E
+is a set of edges (directed or undirected). A multigraph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,D)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+D
+)
+consists of three sets, where
+D
+is a class of dimension sets, that allows to define properties to edges of the multigraph. A temporal graph is a special case of multigraph, where
+D
+is a set
+T
+of discrete and ordered timestamps. We present next the formal definition of temporal graph (see Fig.
+1
+).
+Definition 1
+A temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G = (V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+is defined over three sets:
+V
+, a set of nodes
+T
+, an ordered set of timestamps
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1< t_2 \dots < t_M$$\end{document}
+t
+1
+<
+t
+2
+⋯
+<
+t
+M
+E
+, a set of temporal edges, where each temporal edge is a triplet (
+u
+,
+v
+,
+t
+), with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u,v \in V$$\end{document}
+u
+,
+v
+∈
+V
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t \in T$$\end{document}
+t
+∈
+T
+.
+Notice that in a temporal graph, edges may change from one timestamp to the other, while the set of nodes is not changing. In the following, we denote by
+n
+the number of nodes, by
+m
+the number of temporal edges, and by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_M$$\end{document}
+t
+M
+the number of timestamps.
+We denote by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G(t)=(V,E(t))$$\end{document}
+G
+(
+t
+)
+=
+(
+V
+,
+E
+(
+t
+)
+)
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t \in T$$\end{document}
+t
+∈
+T
+, the static graph induced by the active edges
+E
+(
+t
+) defined at timestamp
+t
+.
+G
+(
+t
+) is called the snapshot of
+G
+at timestamp
+t
+. The temporal graph
+G
+can be seen as a sequence of snapshots
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(G(1), G(2), \dots , G(t_M))$$\end{document}
+(
+G
+(
+1
+)
+,
+G
+(
+2
+)
+,
+⋯
+,
+G
+(
+t
+M
+)
+)
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_M$$\end{document}
+t
+M
+is the maximum timestamp in
+T
+. In Fig.
+1
+, we have presented an example of a temporal graph consisting of three snapshots.
+We denote by
+A
+(
+t
+), where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t \in T$$\end{document}
+t
+∈
+T
+, the adjacency matrix (also called connectivity matrix) of a snapshot
+G
+(
+t
+) at timestamp
+t
+.
+A
+(
+t
+) is a
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$V\times V$$\end{document}
+V
+×
+V
+-matrix, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A(t)_{u,v}=1$$\end{document}
+A
+(
+t
+)
+u
+,
+v
+=
+1
+if
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(u,v,t)\in E(t)$$\end{document}
+(
+u
+,
+v
+,
+t
+)
+∈
+E
+(
+t
+)
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u \ne v$$\end{document}
+u
+≠
+v
+(there is an edge between nodes
+u
+and
+v
+at timestamp
+t
+); otherwise,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A(t)_{u,v}=0$$\end{document}
+A
+(
+t
+)
+u
+,
+v
+=
+0
+. Notice that the diagonal entries of
+A
+(
+t
+) are equal to 0, that is,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$A(t)_{v,v}=0$$\end{document}
+A
+(
+t
+)
+v
+,
+v
+=
+0
+for any
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v\in V$$\end{document}
+v
+∈
+V
+.
+A temporal graph can be seen also as an edge-labelled graph (see Fig.
+2
+), where labels associated with an edge represent the timestamps where that edge is available (or active).
+Fig. 2
+(1) A representation of the temporal graph of Fig.
+1
+as a labelled graph and (2) the corresponding underlying graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G_s$$\end{document}
+G
+s
+Next, we present the definition of underlying graph of a temporal graph. Informally, the underlying graph represents the relations and the structure of a temporal graph, no matter in which timestamp, and can be seen as the union of the snapshots (see the right part of Fig.
+2
+) where the edges are not labelled by timestamps.
+Definition 2
+Given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, the underlying static graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G_s= (V,E_s)$$\end{document}
+G
+s
+=
+(
+V
+,
+E
+s
+)
+of
+G
+is defined on the same node set
+V
+, while the set
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$E_s$$\end{document}
+E
+s
+of edges is defined as follows:
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} E_s = \{ (u,v): (u,v,t) \in E, \text { for some }t \in T \}. \end{aligned}$$\end{document}
+E
+s
+=
+{
+(
+u
+,
+v
+)
+:
+(
+u
+,
+v
+,
+t
+)
+∈
+E
+,
+for some
+t
+∈
+T
+}
+.
+Notice that while a snapshot is a static graph that contains only the edges defined in a specific timestamp, the underlying graph contains all the edges defined in some timestamp of the time domain.
+An extension of the definition of temporal graph has been given in Huanhuan et al. (
+2014
+), called extended temporal graph, where each temporal edge is denoted by a quadruple
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(u,v,t, \lambda )$$\end{document}
+(
+u
+,
+v
+,
+t
+,
+λ
+)
+, with
+u
+,
+v
+are two nodes,
+t
+is a timestamp, and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+is the traversal time to go from
+u
+to
+v
+(see Fig.
+3
+). Essentially, it represents a weighted version of the definition of temporal graphs, where if
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(u,v,t, \lambda )$$\end{document}
+(
+u
+,
+v
+,
+t
+,
+λ
+)
+is a temporal edge, then starting from node
+u
+at time
+t
+, it is possible to traverse the edge from
+u
+to
+v
+and arrive at time
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t + \lambda$$\end{document}
+t
++
+λ
+in
+v
+. Notice that in some applications, the weight/traversal time of an edge may change over time, and possibly, there could be different traversal time to go from
+u
+to
+v
+at the same time
+t
+.
+Fig. 3
+An extended temporal graph, where edges are labelled by pair
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(t,\lambda )$$\end{document}
+(
+t
+,
+λ
+)
+, where
+t
+is a timestamp and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\lambda$$\end{document}
+λ
+the time required to traverse the labelled edge at time
+t
+. In bold, a temporal path from Node 1 to Node 4 that starts a t time 1 and arrives at time 5
+One of main concept that has been extended from static graphs to temporal graphs is that of traversing a graph with a walk or a path. We start to give the definition of temporal walk (see the example of Fig.
+4
+).
+Definition 3
+Given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, a temporal walk in
+G
+is a sequence
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$w = \langle v_{1}\ e_{1}\ v_{2}\ e_{2} \dots \ e_{q-1}\ v_{q} \rangle$$\end{document}
+w
+=
+⟨
+v
+1
+e
+1
+v
+2
+e
+2
+⋯
+e
+q
+-
+1
+v
+q
+⟩
+of nodes
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v_i$$\end{document}
+v
+i
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le q$$\end{document}
+1
+≤
+i
+≤
+q
+, and temporal edges
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_i$$\end{document}
+e
+i
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le q-1$$\end{document}
+1
+≤
+i
+≤
+q
+-
+1
+, such that the following properties hold:
+For each
+i
+, with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le q-1$$\end{document}
+1
+≤
+i
+≤
+q
+-
+1
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_i =(v_i, v_{i+1}, t_i)$$\end{document}
+e
+i
+=
+(
+v
+i
+,
+v
+i
++
+1
+,
+t
+i
+)
+, for some timestamps
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i$$\end{document}
+t
+i
+of
+T
+For each
+i
+, with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le q-1$$\end{document}
+1
+≤
+i
+≤
+q
+-
+1
+, consider the temporal edges
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_i =(v_i, v_{i+1}, t_i)$$\end{document}
+e
+i
+=
+(
+v
+i
+,
+v
+i
++
+1
+,
+t
+i
+)
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_{i+1} =(v_{i+1}, v_{i+2}, t_{i+1})$$\end{document}
+e
+i
++
+1
+=
+(
+v
+i
++
+1
+,
+v
+i
++
+2
+,
+t
+i
++
+1
+)
+, then
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i < t_{i+1}$$\end{document}
+t
+i
+<
+t
+i
++
+1
+(or in some case
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i \le t_{i+1}$$\end{document}
+t
+i
+≤
+t
+i
++
+1
+).
+The starting time of
+w
+is
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1$$\end{document}
+t
+1
+, then ending time is
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_{q-1}$$\end{document}
+t
+q
+-
+1
+.
+Fig. 4
+An example of temporal walk in a temporal graph from Node 1 to Node 3. The thick edges belong to the walk; notice that the timestamps in bold satisfy the time constraint
+Now, we can define the related concept of temporal path, trail, and circuit (see Fig.
+5
+for an example of a temporal path in a temporal path and Fig.
+3
+for an example of a temporal path in an extended temporal graph).
+Definition 4
+Given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+.
+A temporal path is a temporal walk where all the vertices are distinct.
+A temporal trail
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$r = \langle v_{1}\ e_{1}\ v_{2}\ e_{2} \dots \ e_{q-1}\ v_{q} \rangle$$\end{document}
+r
+=
+⟨
+v
+1
+e
+1
+v
+2
+e
+2
+⋯
+e
+q
+-
+1
+v
+q
+⟩
+is a walk, such that each edge is traversed at most once, that is, for each
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_i = (v_i,v_{i+1}, t_i)$$\end{document}
+e
+i
+=
+(
+v
+i
+,
+v
+i
++
+1
+,
+t
+i
+)
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_j = (v_j,v_{j+1}, t_{j+1})$$\end{document}
+e
+j
+=
+(
+v
+j
+,
+v
+j
++
+1
+,
+t
+j
++
+1
+)
+, then
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(v_i, v_{i+1})$$\end{document}
+(
+v
+i
+,
+v
+i
++
+1
+)
+is different from
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(v_j, v_{j+1})$$\end{document}
+(
+v
+j
+,
+v
+j
++
+1
+)
+.
+A temporal circuit is a temporal walk that starts and ends from a same node.
+Fig. 5
+An example of temporal path in a temporal graph. The thick edges belong to the path and each node on the path is traversed once; notice also in this case that the timestamps in bold satisfies the time constraint
+Another fundamental concept of static graphs that has been considered in temporal graphs is the node degree. Next, we introduce the definition of temporal node degree.
+Definition 5
+Given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, a temporal degree of node
+v
+over time interval
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[t_i,t_j]$$\end{document}
+[
+t
+i
+,
+t
+j
+]
+in
+G
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i<t_j$$\end{document}
+t
+i
+<
+t
+j
+is given by
+1
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} deg_{v}(t_i,t_j) = \sum _{u \in V \setminus \{v\}}\sum _{t=t_i}^{t_j} \phi (v,u,t), \end{aligned}$$\end{document}
+d
+e
+g
+v
+(
+t
+i
+,
+t
+j
+)
+=
+∑
+u
+∈
+V
+\
+{
+v
+}
+∑
+t
+=
+t
+i
+t
+j
+ϕ
+(
+v
+,
+u
+,
+t
+)
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u \in V\setminus v$$\end{document}
+u
+∈
+V
+\
+v
+, and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi (v,u,t)$$\end{document}
+ϕ
+(
+v
+,
+u
+,
+t
+)
+is equal to 1 if there is a temporal edge between nodes
+v
+and
+u
+at timestamp t; otherwise,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi (v,u,t)$$\end{document}
+ϕ
+(
+v
+,
+u
+,
+t
+)
+is equal to 0.
+Notice that
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$deg_{v}(t)$$\end{document}
+d
+e
+g
+v
+(
+t
+)
+is the temporal degree of
+v
+in timestamp
+t
+, which is defined as in Eq.
+1
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i = t_j = t$$\end{document}
+t
+i
+=
+t
+j
+=
+t
+.
+Notice that we can define the function
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi (v,u)$$\end{document}
+ϕ
+(
+v
+,
+u
+)
+for the underlying static graph as follows. If there is at least one edge between nodes
+v
+and
+u
+(where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u \in V\setminus v$$\end{document}
+u
+∈
+V
+\
+v
+) in a timestamp
+t
+, with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t=1,2,\dots ,t_M$$\end{document}
+t
+=
+1
+,
+2
+,
+⋯
+,
+t
+M
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi (v,u)$$\end{document}
+ϕ
+(
+v
+,
+u
+)
+is equal to 1, otherwise
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi (v,u)$$\end{document}
+ϕ
+(
+v
+,
+u
+)
+is equal to 0. Formally,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi (v,u)$$\end{document}
+ϕ
+(
+v
+,
+u
+)
+is defined as follows:
+2
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} \phi (v,u) = \left\{ \begin{matrix} 1 &{} \text {if} &{}\sum _{t}^{t_M} \phi (v,u,t) > 0 \\ 0 &{} \text {if} &{}\sum _{t}^{t_M} \phi (v,u,t) = 0.\\ \end{matrix}\right. \end{aligned}$$\end{document}
+ϕ
+(
+v
+,
+u
+)
+=
+1
+if
+∑
+t
+t
+M
+ϕ
+(
+v
+,
+u
+,
+t
+)
+>
+0
+0
+if
+∑
+t
+t
+M
+ϕ
+(
+v
+,
+u
+,
+t
+)
+=
+0
+.
+Now, we define inter-contact time between two nodes. It measures the difference between two consecutive timestamps where a certain temporal edge appears. Given two nodes connected by at least two temporal edges, the definition of inter-contact time is defined as follows.
+Definition 6
+Given two nodes
+v
+and
+u
+connected by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$z \ge 2$$\end{document}
+z
+≥
+2
+temporal edges, the inter-contact time
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tau _{v,u}$$\end{document}
+τ
+v
+,
+u
+between
+v
+and
+u
+is a list of size
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$z-1$$\end{document}
+z
+-
+1
+, where each value of the list is defined as follows. Assume that the
+i
+-th temporal edge connecting
+v
+and
+u
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le z-1$$\end{document}
+1
+≤
+i
+≤
+z
+-
+1
+, is in timestamp
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_a$$\end{document}
+t
+a
+, the
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$i+1$$\end{document}
+i
++
+1
+-th temporal edge connecting
+v
+and
+u
+is in timestamp
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_ b > t_a$$\end{document}
+t
+b
+>
+t
+a
+, then the
+i
+-th value of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tau _{v,u}$$\end{document}
+τ
+v
+,
+u
+is defined as
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_b - t_a$$\end{document}
+t
+b
+-
+t
+a
+.
+Consider the example of Fig.
+6
+, the inter-contact time between nodes
+v
+and
+u
+is the list [2, 1].
+Fig. 6
+A simple example of a temporal network with two nodes
+v
+and
+u
+and five timestamps that illustrates the concept of the inter-contact time. The inter-contact time
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tau _{v,u}$$\end{document}
+τ
+v
+,
+u
+between nodes
+v
+and
+u
+is a list of size 2, since there exist three temporal edges connecting
+v
+and
+u
+.
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tau _{v,u}$$\end{document}
+τ
+v
+,
+u
+is equal to [2,1], where the first value is the difference between timestamps of second and first temporal edge connecting
+v
+and
+u
+, that is timestamps 3 and 1; the second value of the vector is the difference between timestamps 4 and 3 (the timestamps of the third and second temporal edge connecting
+v
+,
+u
+)
+Next, we define the concept of optimal path and optimal distance in a temporal graph. Unlike in static graphs, in temporal graphs, an optimal temporal path can be defined in several ways, based on different criteria such as arrival time, overall traversal time, and number of traversed edges. Therefore, here, we define optimal temporal path between two nodes
+u
+and
+v
+as a temporal path that starts in
+u
+, arrives in
+v
+, where
+u
+and
+v
+are distinct, and that minimizes one of the measures defined in Sect.
+4.1
+. The measure can be the arrival time (leading to foremost temporal path), the overall traversal time (leading to fastest temporal path), or the number of traversed edges (leading to shortest temporal path). The optimal distance between
+u
+and
+v
+, denoted by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\alpha _{u,v}$$\end{document}
+α
+u
+,
+v
+, is the measure of an optimal temporal path in a temporal graph
+G
+. We denote by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\alpha _{u,v}^{I}$$\end{document}
+α
+u
+,
+v
+I
+, the
+optimal temporal distance
+in the temporal graph defined over time interval
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$I=[t_i,t_j]$$\end{document}
+I
+=
+[
+t
+i
+,
+t
+j
+]
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i \le t_j$$\end{document}
+t
+i
+≤
+t
+j
+. Notice that, if
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t = t_i = t_j$$\end{document}
+t
+=
+t
+i
+=
+t
+j
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\alpha _{u,v}^{I}$$\end{document}
+α
+u
+,
+v
+I
+is the
+optimal temporal distance
+in
+G
+(
+t
+).
+Temporal network measures
+Temporal network measures have been widely applied to represent local properties of nodes or global properties of the entire network.
+Centrality measures
+Centrality measures defined in static graphs have been extended to temporal graphs. In graph analysis, centrality measures are important concepts and have been widely used to identify important nodes in a graph. Centrality has been defined with different metrics and each of them shows the importance of a node from a different perspective. Here, we define three important centrality measures: degree centrality, closeness centrality, and betweenness centrality in a temporal graphs.
+Degree centrality of a node shows the importance of the node based on the number of its interactions. A node with higher number of interactions can be a good candidate to pass information to large part of the nodes in a network. Degree centrality in a temporal graph is calculated, similarly to static case, with an additional sum across timestamps. More precisely, temporal degree centrality of node
+v
+in a temporal graph is calculated as the sum of the degrees of
+v
+in each snapshot. Following Thompson et al. (
+2017
+), Temporal Degree centrality
+TD
+(
+v
+) of node
+v
+is given by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} TD(v)= \sum _{t=1}^{t_M} deg_{v}(t), \end{aligned}$$\end{document}
+T
+D
+(
+v
+)
+=
+∑
+t
+=
+1
+t
+M
+d
+e
+g
+v
+(
+t
+)
+,
+where recall that
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$deg_{v}(t)$$\end{document}
+d
+e
+g
+v
+(
+t
+)
+is the degree of node
+v
+in snapshot
+G
+(
+t
+).
+The second centrality measure of a node that we consider is the temporal closeness centrality which shows the importance of a node by measuring how fast other nodes are reachable from it in a temporal graph Pan and Saramäki (
+2011
+). Temporal closeness centrality of a node
+v
+is obtained by averaging the sum of the inverses of the optimal distances between
+v
+and other nodes of the temporal graph. Indeed, temporal closeness centrality
+TC
+(
+v
+) of node
+v
+is defined by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} TC(v)=\frac{1}{n-1}\sum _{u \in V\setminus v}\frac{1}{\alpha _{v,u}}, \end{aligned}$$\end{document}
+T
+C
+(
+v
+)
+=
+1
+n
+-
+1
+∑
+u
+∈
+V
+\
+v
+1
+α
+v
+,
+u
+,
+where recall that
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\alpha _{v,u}$$\end{document}
+α
+v
+,
+u
+is the optimal distance for any
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v,u \in V$$\end{document}
+v
+,
+u
+∈
+V
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v \ne u$$\end{document}
+v
+≠
+u
+. Therefore, the node with higher closeness centrality is an ideal node to transmit quickly an information to all other nodes in a network.
+Betweenness centrality measures the importance of a node based on the number of times that the node appears in an optimal temporal path between any pair of nodes. Nodes with high betweenness centrality are crucial for the commutation in a network, since they connect with optimal paths many nodes with each other. Betweenness centrality has been used in many applications such as social network analysis Tang et al. (
+2009
+), machine learning Şimşek and Barto (
+2008
+), and neuroscience van den Heuvel et al. (
+2010
+). Temporal betweenness centrality
+TB
+(
+v
+) of node
+v
+in a temporal graph is defined as
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} TB(v) = \sum _{s\ne v \ne u \in V} \frac{\gamma _{s,u}(v)}{\gamma _{s,u}}, \end{aligned}$$\end{document}
+T
+B
+(
+v
+)
+=
+∑
+s
+≠
+v
+≠
+u
+∈
+V
+γ
+s
+,
+u
+(
+v
+)
+γ
+s
+,
+u
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\gamma _{s,u}$$\end{document}
+γ
+s
+,
+u
+is the number of optimal paths between nodes
+s
+and
+u
+in the temporal graph and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\gamma _{s,u}(v)$$\end{document}
+γ
+s
+,
+u
+(
+v
+)
+is the number of optimal paths between nodes
+s
+and
+u
+which pass through node
+v
+in the temporal graph.
+Other temporal network measures
+In network mining, burstiness shows the distribution of the temporal structure of connectivity Thompson et al. (
+2017
+). Therefore, in temporal network analysis, burstiness measure is an important property of many processes (Barabási
+2010
+; Vazquez et al.
+2007
+; Vázquez et al.
+2006
+; Barabasi
+2005
+; Min et al.
+2011
+). Burstiness measure in temporal networks has been used in several applications, including communications (Barabasi
+2005
+; Eckmann et al.
+2004
+; Jo et al.
+2012
+), spreading of diseases Vazquez (
+2013
+), epidemics Takaguchi et al. (
+2013
+), and neuroscience William and Peter (
+2016
+). Burstiness measure is introduced by Goh and Barabási (
+2008
+) and defined in Holme and Saramäki (
+2012
+) as follows:
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} B_{v,u}=\frac{\sigma (\tau _{v,u})-\mu (\tau _{v,u})}{\sigma (\tau _{v,u})+\mu (\tau _{v,u})}, \end{aligned}$$\end{document}
+B
+v
+,
+u
+=
+σ
+(
+τ
+v
+,
+u
+)
+-
+μ
+(
+τ
+v
+,
+u
+)
+σ
+(
+τ
+v
+,
+u
+)
++
+μ
+(
+τ
+v
+,
+u
+)
+,
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tau _{v,u}$$\end{document}
+τ
+v
+,
+u
+is a vector of inter-contact times between nodes
+v
+and
+u
+such that
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u \in V\setminus v$$\end{document}
+u
+∈
+V
+\
+v
+(see Definition
+6
+), and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\sigma$$\end{document}
+σ
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\mu$$\end{document}
+μ
+are, respectively, standard deviation and mean of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\tau _{v,u}$$\end{document}
+τ
+v
+,
+u
+.
+Burstiness
+belongs to the range
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[-1,1]$$\end{document}
+[
+-
+1
+,
+1
+]
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$B_{v,u} = 1$$\end{document}
+B
+v
+,
+u
+=
+1
+indicates completely bursty sequence,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$B_{v,u} = 0$$\end{document}
+B
+v
+,
+u
+=
+0
+corresponds to a natural sequence, and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$B_{v,u} = -1$$\end{document}
+B
+v
+,
+u
+=
+-
+1
+shows a completely periodic sequence. Bursts can be defined either for nodes or for edges. Here, the number of bursts are calculated per edge and can be extended to a nodal measure by summing over the bursty coefficients across all edges for a given node.
+Fluctuability is an important measure which provides information about the global properties of a temporal network. Fluctuability measure quantifies the temporal variability of connectivity Thompson et al. (
+2017
+) and it is defined as follows (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\phi$$\end{document}
+ϕ
+is defined in Sect.
+2
+):
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} F = \frac{\sum _{v}\sum _{u} \phi (v,u)}{\sum _{v}\sum _{u}\sum _{t} \phi (v,u,t)}, \end{aligned}$$\end{document}
+F
+=
+∑
+v
+∑
+u
+ϕ
+(
+v
+,
+u
+)
+∑
+v
+∑
+u
+∑
+t
+ϕ
+(
+v
+,
+u
+,
+t
+)
+,
+where
+v
+and
+u
+are two distinct nodes in
+V
+.
+Fluctuability Measure
+can be at most 1, when every edge is defined in a single timestamp of the time domain.
+Volatility Measure is a
+global
+measure of a temporal network which indicates how many changes, on average, are observed between two consecutive timestamps. Following Thompson et al. (
+2017
+), volatility is defined as:
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} Vol = \frac{1}{t_M-1}\sum _{t=1}^{t_M-1}D(A(t),A(t+1)), \end{aligned}$$\end{document}
+V
+o
+l
+=
+1
+t
+M
+-
+1
+∑
+t
+=
+1
+t
+M
+-
+1
+D
+(
+A
+(
+t
+)
+,
+A
+(
+t
++
+1
+)
+)
+,
+where recall that
+A
+(
+t
+) is the connectivity matrix of the snapshot
+G
+at time
+t
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_M$$\end{document}
+t
+M
+is the overall number of timestamps in the time domain, and
+D
+is the Hamming distance function which quantifies the difference between connectivity matrix at times
+t
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t + 1$$\end{document}
+t
++
+1
+(notice that in undirected graphs, each edge is considered only once).
+Reachability Latency Measure is another global measure of a temporal network. Reachability measures the time needs to reach nodes in a temporal network. Reachability Latency Measure quantifies the optimal distance to reach a fraction
+r
+of the nodes in a network.
+Temporal Efficiency Measure is a global measure of a temporal network. Similar to reachability, Efficiency estimates temporal properties based on optimal paths. Following Thompson et al. (
+2017
+), to obtain the Temporal Efficiency Measure first, we need to calculate at each timestamp the inverse of the optimal distance for all nodes. Then, the inverse optimal distance are averaged across timestamps. Formally, Temporal Efficiency Measure is defined as
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} H = \frac{1}{t_{M}(n^{2}-n)} \sum _{v,u,t}\frac{1}{\alpha ^{I}_{v,u}}, v \ne u. \end{aligned}$$\end{document}
+H
+=
+1
+t
+M
+(
+n
+2
+-
+n
+)
+∑
+v
+,
+u
+,
+t
+1
+α
+v
+,
+u
+I
+,
+v
+≠
+u
+.
+Notice that the global temporal efficiency measure could be computed at a nodal level as well.
+Fundamental problems in temporal networks
+In this section, we present fundamental problems related to temporal graphs that have been considered in the literature. We start with problems related to paths, walks, and connectivity, which have been the focus on many research works, and then, we consider other problems, the identification of dense subgraphs, and graph covering.
+Path, walk, and circuit problems
+Finding walks or paths is a topic that have been extensively studied in computer science, with several applications in biology (for example finding chain of activation of proteins) or epidemiology (finding a chain of contagions). The topic has been extensively studied from the introduction of temporal networks, since the temporal constraint adds in some cases a level of difficulty in algorithm design.
+Given two vertices
+u
+and
+v
+, a
+foremost temporal path
+(or earliest-arrival time path)
+p
+starting from timestamp
+t
+is a temporal path that (1) starts from
+u
+and arrives in
+v
+; (2) the starting time of
+p
+is in a timestamp
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t'$$\end{document}
+t
+′
+greater or equal than
+t
+; (3) the arrival time is minimized.
+A foremost temporal Path from a starting vertex
+u
+to any other node of a temporal graph can be computed in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(n t_M + m)$$\end{document}
+O
+(
+n
+t
+M
++
+m
+)
+time Mertzios et al. (
+2019
+). The algorithm for this problem (FTPA) given in Mertzios et al. (
+2019
+), similarly to the classic breadth-first search algorithm (Cormen et al.
+2009
+; Dondi et al.
+2019
+) for static graphs, explores the temporal edges in increasing order of timestamps.
+Other basic temporal path problems from a node
+u
+to a node
+v
+have been considered in Huanhuan et al. (
+2014
+), given two timestamps
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1$$\end{document}
+t
+1
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_2$$\end{document}
+t
+2
+in
+T
+, with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1 \le t_2$$\end{document}
+t
+1
+≤
+t
+2
+:
+Latest-departure path
+: a temporal path from
+u
+to
+v
+that has the largest departure time after
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1$$\end{document}
+t
+1
+and that has ending time before
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_2$$\end{document}
+t
+2
+Fastest path
+: a temporal path from
+u
+to
+v
+that starts after
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1$$\end{document}
+t
+1
+and ends before
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_2$$\end{document}
+t
+2
+and that requires the minimum time, defined as the difference between the arrival time and the starting time
+Shortest path
+: a temporal path from
+u
+to
+v
+that starts after
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1$$\end{document}
+t
+1
+and ends before
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_2$$\end{document}
+t
+2
+and that consists of the minimum number of traversed edge (or has minimum weight for temporal weighted graphs).
+Latest Departure path can be solved in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(n+m t_M)$$\end{document}
+O
+(
+n
++
+m
+t
+M
+)
+time Huanhuan et al. (
+2014
+), using an algorithm that applies the same strategy of the FTPA algorithm, but considering temporal edges in reverse order of timestamps.
+Fastest path can be solved in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(|S| (n + m t_M )$$\end{document}
+O
+(
+|
+S
+|
+(
+n
++
+m
+t
+M
+)
+, where
+S
+is the set of outgoing edges from the starting node having a timestamp between
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_1$$\end{document}
+t
+1
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_2$$\end{document}
+t
+2
+Huanhuan et al. (
+2014
+). The Fastest Path can be solved using the FTPA algorithm, iterating the algorithm for each starting time
+t
+in
+S
+and observing that, among the fastest paths from
+u
+to
+v
+that start at time
+t
+, a fastest path reaching node
+v
+is a foremost path. This algorithm can be improved to
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(\min {n |S|, n + m t_M })$$\end{document}
+O
+(
+min
+n
+|
+S
+|
+,
+n
++
+m
+t
+M
+)
+time by pruning unnecessary paths.
+A similar approach can be considered for the Shortest path problem, observing that a prefix of a shortest path must be a shortest path to an intermediate node within a given timestamp; notice that the property does not hold if the given timestamp is not considered. Then, by applying a strategy inspired by Djikstra’s Algorithm Cormen et al. (
+2009
+) and by pruning some unnecessary paths, shortest path problem can be solved in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(n + M \log d_{max})$$\end{document}
+O
+(
+n
++
+M
+log
+d
+max
+)
+time, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$d_{max}$$\end{document}
+d
+max
+is the largest degree of a node in
+G
+Huanhuan et al. (
+2014
+).
+Another path problem has been introduced in Casteigts et al. (
+2021
+), which adds constraints that the path has to respect. In particular, the problem looks for a
+restless
+temporal path from
+u
+to
+v
+, which is defined as a temporal path from
+u
+to
+v
+if each pair of consecutive edges in the path are traversed within a time
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta$$\end{document}
+Δ
+.
+The restless path problem is a decision problem that asks whether there exists a restless path from a node
+u
+to a node
+v
+of a temporal graph. The complexity of the problem has been analysed for many temporal graph classes (Casteigts et al.
+2021
+; Zschoche
+2022
+). The Restless Path problem is NP-complete Casteigts et al. (
+2021
+), even if it is restricted cases: (1) for all finite
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta \ge 1$$\end{document}
+Δ
+≥
+1
+when the time domain consists of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta +1$$\end{document}
+Δ
++
+1
+timestamps, even when each edge is active in one timestamp; (2) for temporal graphs whose underlying graphs have all but one edge; (3) for temporal graphs whose underlying graphs have degree bounded by six.
+The problem has been considered also in the parameterized complexity framework and it is known to be W[1]-hard when parameterized by distance to disjoint paths, for all
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta \ge 1$$\end{document}
+Δ
+≥
+1
+, even if each temporal edge is active in at most one time stamp. The Restless Path problem admits a fixed-parameter algorithm when parameterized by a parameter introduced in Casteigts et al. (
+2021
+), called timed feedback vertex number. Other complexity results have been given for the problem considering properties of the underlying graph Casteigts et al. (
+2021
+).
+A variant of the restless path problem introduced in Casteigts et al. (
+2021
+) is the Short Restless Path problem, that looks for a restless path of length at most
+k
+between two nodes. The Short Restless Path problem is NP-hard Casteigts et al. (
+2021
+), but it admits a fixed-parameter tractable probabilistic algorithm of time complexity
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(2^k t_M|(V|+|E|))$$\end{document}
+O
+(
+2
+k
+t
+M
+|
+(
+V
+|
++
+|
+E
+|
+)
+)
+based on the multilinear monomial detection technique. The algorithm can be derandomized obtaining a deterministic algorithm of time complexity
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$2^{O(k)} O(t_M|(V|+|E|))$$\end{document}
+2
+O
+(
+k
+)
+O
+(
+t
+M
+|
+(
+V
+|
++
+|
+E
+|
+)
+)
+. The problem admits also a fixed-parameter randomized algorithm of time complexity
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O^*(4^{k-p_{min}})$$\end{document}
+O
+∗
+(
+4
+k
+-
+p
+min
+)
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$p_{min}$$\end{document}
+p
+min
+is the minimum length of a temporal path between nodes
+u
+and
+v
+Zschoche (
+2022
+).
+A classical (static graph) problem is computing whether a graph is Eulerian, that is, it contains a circuit or a walk where each edge is traversed exactly once. A temporal Eulerian circuit in a temporal graph is a temporal circuit (that is, it respects the constraint that timestamps of consecutive edges are increasing or non-decreasing) and it is an Euler circuit in the associated underlying static graph.
+While finding whether a static graph contains an Eulerian circuit is solvable in polynomial time, finding whether a temporal graph contains a temporal Eulerian circuit is NP-complete even when each temporal edge is active in at most three timestamps Bumpus and Meeks (
+2021
+). The result is proved by showing an interesting relation of finding an Eulerian circuit to the Travelling Salesman problem on temporal stars.
+The problem of finding an Eulerian trail is NP-complete even when the time domain consists of two timestamps Marino and Silva (
+2021
+). The result is proven with a complex reduction from the Not All Equal 3-SAT problem.
+A number of variants of path and walk problems have been considered in the literature. A notable example is the robustness of the network to delays Füchsle et al. (
+2022
+), where the delays may be known in advance or online.
+Connectivity and Menger’s theorem
+Menger’s Theorem is a well-known result in graph theory. Given two nodes
+u
+and
+v
+of a static graph, the theorem states that the maximum number of node disjoint paths from
+u
+to
+v
+is equal to the minimum number of nodes that have to be removed to separate
+u
+from
+v
+. Menger’s Theorem does not hold for temporal graphs, in particular even for single-labelled temporal graphs, where each edge is associated with a single timestamp (Berman
+1996
+; Kempe et al.
+2002
+) (see the example in Fig.
+7
+).
+Fig. 7
+The example give in Kempe et al. (
+2002
+) that shows that Menger’s theorem does not hold for temporal graphs. There exists only one temporal vertex disjoint path from
+s
+to
+t
+, while the removal of one of the vertices in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\{a, b, c\}$$\end{document}
+{
+a
+,
+b
+,
+c
+}
+does not disconnect
+s
+from
+t
+The results is not only of theoretical relevance, but it has consequences on path computation problem. In particular, computing the maximum number of node disjoint paths from
+u
+to
+v
+, which can be solved in polynomial time on static graphs, is an NP-hard problem for temporal graphs (Kempe et al.
+2002
+; Ibiapina et al.
+2022
+).
+Although the Menger’s theorem cannot be directly extended to temporal graphs, two modifications of the theorem have been proved:
+For single-labelled temporal graphs, replacing in Menger’s Theorem node disjointness with edge disjointness. This leads to the property that the maximum number of edge disjoint temporal paths from
+u
+to
+v
+is equal to the minimum number of temporal edges that has to be removed to separate
+u
+from
+v
+Kempe et al. (
+2002
+).
+Replacing in Menger’s Theorem node disjointness with departure time disjointness and node removal with time removal. Two temporal paths are
+time disjoint
+when they leave each node at different timestamps. A node-time-removal consists of removing all the temporal edges incident in a node
+x
+which are active in a given timestamp
+t
+(notice that for an undirected graphs, an edge (
+u
+,
+v
+) has to be replaced by two antiparallel arcs and the node-time-removal causes the deletion only of one the two parallel arcs). Mertzios et al. (
+2019
+) proved that the maximum number of departure disjoint temporal paths from
+u
+to
+v
+is equal to the minimum number of node-time-removal needed to separate
+u
+from
+v
+.
+If, instead of departure time disjointness, we consider temporal node disjointness (two paths/walks cannot traverse a node at the same time), then the maximum number of temporal node disjoint temporal walks from
+u
+to
+v
+is equal to the minimum number of node-time-removal needed to separate
+u
+from
+v
+Mertzios et al. (
+2019
+). The same property does not hold if we consider temporal paths instead of temporal walks Ibiapina et al. (
+2022
+). Notice that in this case, Menger’s Theorem holds only for one temporal path and a node separator of size 1 Ibiapina et al. (
+2022
+). In particular, the result in Ibiapina et al. (
+2022
+) shows that computing of the maximum number
+k
+of temporal node disjoint paths can be computed in polynomial time when
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=2$$\end{document}
+k
+=
+2
+and NP-hard for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k \ge 3$$\end{document}
+k
+≥
+3
+.
+A connectivity problem that has recently been applied to PPI network Jimmy et al. (
+2019
+) is a temporal extension of the Steiner Tree problem. Given a weighted temporal graph and a set of
+k
+demands, where each demand is a protein pair or a set of proteins, the problem looks for a subgraph of minimum weight, such that the nodes of each demand are connected in some timestamp. Different versions of the problem have been considered, varying the definition of demands, that can be connections between pairs of nodes or between all pairs of a given set. The variants of the problems are not only NP-hard, but also NP-hard to approximate within a nontrivial approximation factor (that is solving in each timestamp independently) Jimmy et al. (
+2019
+). On the other hand, when the input graph grows monotonically on the time domain (
+E
+(
+i
+),
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le t_M-1$$\end{document}
+1
+≤
+i
+≤
+t
+M
+-
+1
+, is contained in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$E(i+1)$$\end{document}
+E
+(
+i
++
+1
+)
+), a better approximation factor can be achieved. Moreover, several variants of the problem can be solved with Integer Linear Programming, an approach that is validated also on real PPI networks Jimmy et al. (
+2019
+).
+Other connectivity properties of temporal graphs have been considered in the literature, including connected components of a temporal graphs and Edmond’s Theorem (the maximum number of arborescences in a graph is equal to the minimum cut).
+Dense subgraphs in temporal networks
+Detection of cohesive subgraphs, such as communities, is one of the fundamental problems in network mining. The community detection problem has been used in different biological analysis, such as gene expression and drug interaction analysis (Fratkin et al.
+2006
+; Saha et al.
+2010
+). Moreover, many different definitions of cohesive subgraphs have been considered in the literature, such as cliques and
+s
+-plexes. One of the most applied definition of cohesivity is based on density (ratio between number of edges and number of nodes). Given an input graph, the dense subgraphs problem looks for a subgraph of maximum density. The densest subgraph problem is solvable in polynomial time using Goldberg’s algorithm Goldberg (
+1984
+) and can be approximated in linear time with Charikar greedy algorithm, which has a
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\frac{1}{2}$$\end{document}
+1
+2
+-approximate factor (Asahiro et al.
+2000
+; Charikar
+2000
+). The densest subgraph problem has been recently extended to find a set of densest subgraphs, for example the K-Densest Subgraphs approach (Galbrun et al.
+2016
+; Dondi et al.
+2021b
+), which asks for a collection of
+k
+densest, distinct subgraphs.
+Densest subgraph have been studied also for temporal networks (Coscia et al.
+2011
+; Fortunato
+2010
+; Rozenshtein et al.
+2020
+; Riccardo and Mehdi
+2021a
+; Zhang et al.
+2022
+). In particular, a dense subgraph problem in a temporal network, called k-Densest-Episodes problem, has been introduced in Rozenshtein and Gionis (
+2019
+); Rozenshtein et al. (
+2020
+). The k-Densest-Episodes problem considers a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G = (V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, with a positive integer
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k \ge 1$$\end{document}
+k
+≥
+1
+, and asks for a set
+S
+of
+k
+temporal subgraphs
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$S = \{ G[T_1,V_1], \dots , G[T_k,V_k] \}$$\end{document}
+S
+=
+{
+G
+[
+T
+1
+,
+V
+1
+]
+,
+⋯
+,
+G
+[
+T
+k
+,
+V
+k
+]
+}
+, which belong to disjoint time intervals (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$T_1, \dots ,T_k$$\end{document}
+T
+1
+,
+⋯
+,
+T
+k
+) (see the example in Fig.
+8
+, for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$k=1$$\end{document}
+k
+=
+1
+). Notice that two sets
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$V_i$$\end{document}
+V
+i
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$V_j$$\end{document}
+V
+j
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i,j \le k$$\end{document}
+1
+≤
+i
+,
+j
+≤
+k
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$i \ne j$$\end{document}
+i
+≠
+j
+, may be overlapping. The objective function of the problem aims to maximize the sum of the densities of the
+k
+subgraphs in
+S
+.
+Fig. 8
+An example of a temporal graph with a densest subgraph induced by nodes
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\{1, 2 , 3, 4, 6 \}$$\end{document}
+{
+1
+,
+2
+,
+3
+,
+4
+,
+6
+}
+of density
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\frac{7}{5}$$\end{document}
+7
+5
+in interval [1, 2]
+The problem is solvable with polynomial-time algorithm (Rozenshtein and Gionis
+2019
+; Rozenshtein et al.
+2020
+). Rozenshtein and Gionis (
+2019
+) combines (1) a dynamic programming to find a segmentation into not overlapping time intervals, and (2) Goldberg’s algorithm to compute a densest subgraph in the graph defined in each interval. Due to time complexity of the dynamic programming and Goldberg’s algorithm, the algorithm is not suitable for large networks. Hence, the work in Rozenshtein et al. (
+2020
+) introduced a heuristic, called KGAPPROX, based on approximate dynamic programming (ApproxD) and an approximate algorithm for the densest subgraph problem (ApprDens). The KGAPPROX has a running time of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(\frac{k^2}{\epsilon _1 \epsilon _2^{2}} |t_M|m log^2 n)$$\end{document}
+O
+(
+k
+2
+ϵ
+1
+ϵ
+2
+2
+|
+t
+M
+|
+m
+l
+o
+g
+2
+n
+)
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\epsilon _1$$\end{document}
+ϵ
+1
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\epsilon _2$$\end{document}
+ϵ
+2
+are, respectively, approximation parameters of ApproxD and ApprDens. Moreover, the work in Rozenshtein et al. (
+2020
+) proposed a post-processing step which possibly shrinks intervals of the solution when the density is not decreased. The authors of Rozenshtein et al. (
+2020
+) introduced another problem called k-Densest-Episodes-EC with the goal of obtaining larger covering of nodes. The objective function of k-Densest-Episodes problem includes the sum of densities and a function of the fraction of covered nodes. Unlike the k-Densest-Episodes problem, the k-Densest-Episodes-EC is NP-hard Rozenshtein et al. (
+2020
+).
+Another attempt to solve k-Densest-Episodes problem is given by Riccardo and Mehdi (
+2021a
+), where a fast heuristic called Local-search Temporal Densest Subgraphs (LSTDS) is presented. LSTDS start with an initial segmentation computed considering the distribution of active edges in time domain. Then, a local search approach is applied to improve the density of the solution by modifying the intervals of the segmentation. The work in Castelli et al. (
+2020
+) introduced a different approach, called Temporal Densest Genetic Algorithm (TDGA), for the k-Densest-Episodes problem. TDGA considers candidate solutions obtained by changing the endpoints of intervals and by applying the Charikar’s greedy algorithm to compute a dense subgraph in each interval. In Dondi et al. (
+2022
+), it is proposed a different approach that, given a solution of k-Densest-Episodes, aims at identifying, for each subgraph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G_i$$\end{document}
+G
+i
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$1 \le i \le k$$\end{document}
+1
+≤
+i
+≤
+k
+, a new subgraph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G'_i$$\end{document}
+G
+i
+′
+with density close to that of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G_i$$\end{document}
+G
+i
+and defined over a subinterval of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$I_i$$\end{document}
+I
+i
+.
+Graph covering
+Covering a static graph with a minimum cardinality set of nodes is a well-known and fundamental problem, called Node Cover or Vertex Cover, in computer science. Vertex Cover has been considered by a number of papers, due to its relevance in practice and due to its importance in graph theory, theoretical computer science, and algorithm design. Recently, this problem has been considered for temporal graphs, where different formulations have been proposed.
+We recall that, in a static graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$H=(U,A)$$\end{document}
+H
+=
+(
+U
+,
+A
+)
+, a set
+C
+of nodes covers
+H
+if, for each edge
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(u,v) \in A$$\end{document}
+(
+u
+,
+v
+)
+∈
+A
+,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$u \in C$$\end{document}
+u
+∈
+C
+or
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v \in C$$\end{document}
+v
+∈
+C
+.
+The first temporal variant of Vertex Cover has been introduced in Akrida et al. (
+2020
+). Given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, a (non-temporal edge)
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e=(u,v)$$\end{document}
+e
+=
+(
+u
+,
+v
+)
+is temporally covered by a pair (
+a
+,
+t
+), with
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$a \in V$$\end{document}
+a
+∈
+V
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t \in T$$\end{document}
+t
+∈
+T
+, if
+a
+is one of the endpoints of
+e
+(that is
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$a = u$$\end{document}
+a
+=
+u
+or
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$a = v$$\end{document}
+a
+=
+v
+) and
+e
+is active in timestamp
+t
+. In a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, a temporal vertex cover is a subset
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$C \subseteq V \times T$$\end{document}
+C
+⊆
+V
+×
+T
+, such that edge (
+u
+,
+v
+) is temporally covered by some pairs
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$(a,t) \in C$$\end{document}
+(
+a
+,
+t
+)
+∈
+C
+. The Temporal Vertex Cover problem asks for a temporal vertex cover of minimum cardinality.
+The sliding window temporal vertex cover problem proposed in Akrida et al. (
+2020
+) is a variant that imposes the covering of each edge in intervals (called sliding windows) where the edge is active. The Sliding Window Temporal Vertex Cover problem asks for a subset
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$C \subseteq V \times T$$\end{document}
+C
+⊆
+V
+×
+T
+, such that each edge (
+u
+,
+v
+) active in a sliding window is covered by a pair (
+a
+,
+t
+), where
+t
+is a timestamp of the sliding window and
+a
+is equal to
+u
+or
+v
+.
+Temporal vertex cover is known to be NP-hard and also hard to approximate with factor (1 -
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varepsilon$$\end{document}
+ε
+) unless NP has a
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$n^{O \log \log n}$$\end{document}
+n
+O
+log
+log
+n
+-time deterministic algorithm Akrida et al. (
+2020
+). On the positive side, the problem can be approximated via a reduction to the Hitting Set problem, achieving an approximation factor of
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$H_{n-1} - \frac{1}{2}$$\end{document}
+H
+n
+-
+1
+-
+1
+2
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$H_{n-1}$$\end{document}
+H
+n
+-
+1
+, where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$H_n = \sum _{i=1}^n \frac{i}{i} \approx \ln n$$\end{document}
+H
+n
+=
+∑
+i
+=
+1
+n
+i
+i
+≈
+ln
+n
+Akrida et al. (
+2020
+).
+Sliding Window Temporal Vertex Cover is also NP-hard Akrida et al. (
+2020
+) and it can be solved via dynamic programming in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(t_{M} \Delta (n +m) \cdot 2^{n \Delta })$$\end{document}
+O
+(
+t
+M
+Δ
+(
+n
++
+m
+)
+·
+2
+n
+Δ
+)
+time Akrida et al. (
+2020
+), where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta$$\end{document}
+Δ
+is the size of the sliding window. Furthermore, even for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta =2$$\end{document}
+Δ
+=
+2
+, with maximum degree of the underlying graph
+G
+at most 3, every connected component of every snapshot containing at most seven vertices, the problem is APX-hard Akrida et al. (
+2020
+).
+Sliding window temporal vertex cover admits approximation algorithms, with respect to various parameters. More precisely, it admits approximation factors: (1)
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\ln n + \ln \Delta +\frac{1}{2}$$\end{document}
+ln
+n
++
+ln
+Δ
++
+1
+2
+Akrida et al. (
+2020
+; p. 2) 2
+k
+, where
+k
+is the maximum number of times that each edge can appear in a sliding window Akrida et al. (
+2020
+;p. 3)
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$d-1$$\end{document}
+d
+-
+1
+, with
+d
+the maximum vertex degree at every snapshot Hamm et al. (
+2022
+). Furthermore, complexity lower bounds for the two problems have been proved in Akrida et al. (
+2020
+).
+The problems have been considered also in sparse graphs Hamm et al. (
+2022
+). More precisely, Sliding Window Temporal Vertex Cover is NP-hard even when the underlying graph is a cycle or a path, for every
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta \ge 2$$\end{document}
+Δ
+≥
+2
+, while Temporal Vertex Cover can be solved in polynomial time in these cases Hamm et al. (
+2022
+). Sliding Window Temporal Vertex Cover admits a PTAS on temporal paths and cycles Hamm et al. (
+2022
+). Different exponential algorithms have been considered for Sliding Window Temporal Vertex Cover, in particular a fixed-parameter algorithm where the parameter is the size of a temporal vertex cover Akrida et al. (
+2020
+).
+A different formulation of temporal graph cover has been proposed in Rozenshtein et al. (
+2021
+) for summarizing event timelines in temporal networks. The problem aims at defining the activity interval of each node of the graph, so that, for each temporal edge (
+u
+,
+v
+,
+t
+), at least one of
+u
+or
+v
+is active in an interval that includes
+t
+. In this case, we say that the defined activity intervals cover
+E
+.
+Four variants of this problem have been proposed in Rozenshtein et al. (
+2021
+) and they differ for the interval activity definition (it can be a single interval or a sequence of more non overlapping intervals) and the objective function (the minimization of the sum of node activities or the minimization of the maximum activity of a node). The length of an activity interval
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$[t_1,t_2]$$\end{document}
+[
+t
+1
+,
+t
+2
+]
+is
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_2 - t_1$$\end{document}
+t
+2
+-
+t
+1
+.
+In the first variant, called MinTimeLineCover, given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, the goal is to find activity intervals for the nodes in
+V
+, so that they cover
+E
+and the sum of node activity lengths is minimized. A second variant, called MinMaxTimeLine, given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, aims at finding activity intervals for the nodes in
+V
+, so that they cover
+E
+and the objective function is the minimization of the maximum length of an activity interval. In Fig.
+9
+, we give an example of covering a temporal graph. Notice that the solution represented in Fig.
+9
+is a solution both of MinTimeLineCover and MinMaxTimeLine. The objective function of MinTimeLineCover has value 2 (two nodes have an activity interval of length 1), while the objective function of MinMaxTimeLine has value 1 (the maximum length of an activity interval is 1).
+Fig. 9
+An example of a cover of a temporal graph, as defined by MinTimeLineCover and MinMaxTimeLine, where the grey areas represent the interval activities of nodes. Nodes 1 and 3 have an activity interval of length of 1, since they are active in timestamp 1 and 2, and the remaining vertices have an activity interval of length 0, since they are active in a single timestamp
+MinTimeLineCoverK, given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+and an integer
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$K \ge 2$$\end{document}
+K
+≥
+2
+, asks for the definition of activity intervals, at most
+K
+for each node in
+V
+, so that they cover
+E
+and the sum of node activity interval lengths is minimized. MinMaxTimeLineK, given a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+and an integer
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$K \ge 2$$\end{document}
+K
+≥
+2
+, asks for the definition of activity intervals, at most
+K
+for each node in
+V
+, so that they cover
+E
+and the maximum span of a node (defined as the sum, for a node, of the lengths of its activity intervals) is minimized. Notice that some of the intervals may be empty, when they are not needed to solve the problems.
+MinTimeLineCover, MinTimeLineCoverK, and MinMaxTimeLineK are all NP-hard Rozenshtein et al. (
+2021
+), even if the time domain consists of exactly two timestamps Froese et al. (
+2022
+) (for one timestamp, all the problem variants are trivial, since all the solutions have a cost equal to 0). Surprisingly, MinMaxTimeLine can be solved by a polynomial time algorithm, more precisely in
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(n \log n)$$\end{document}
+O
+(
+n
+log
+n
+)
+via binary search and via a polynomial reduction to the 2-SAT problem Rozenshtein et al. (
+2021
+). Moreover, MinTimeLineCoverK and MinMaxTimeLineK cannot be approximated within any factor, unless P = NP, since deciding if these two problems admits a solution of cost 0 is an NP-complete problem Rozenshtein et al. (
+2021
+).
+The computational and parameterized complexity of MinTimeLineCover, MinTimeLineCoverK and MinMaxTimeLineK has been deeply analysed (Froese et al.
+2022
+; Dondi
+2022
+). MinTimeLineCover is NP-hard even in very restricted cases Dondi (
+2022
+): (1) when at most one temporal edge is defined in each timestamp; (2) when each vertex is incident in at most two temporal edges, for each timestamp, and the time domain is defined over three timestamps.
+Fixed-parameter algorithms have been defined for the problem MinTimeLineCover. When the time domain consists of two timestamps, MinTimeLineCover is fixed-parameter tractable for parameter cost of the solution, via a parameterized reduction to the Min 2-SAT problem Froese et al. (
+2022
+). We recall that the Min 2-SAT problem, given a Boolean formula in conjunctive normal form, asks for the removal of the minimum number of clauses that lead to a satisfiable formula. A fixed-parameter tractable algorithm for the problem is given for parameters (1) the maximum number of nodes with temporal edges in a timestamp and (2) the maximum length of an interval where a node has incident temporal edges. The algorithm is based on a dynamic programming approach that considers, for each timestamp
+t
+, the possible activity intervals of nodes having active edges in timestamp
+t
+.
+MinTimeLineCoverK and MinMaxTimeLineK, for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$K \ge 2$$\end{document}
+K
+≥
+2
+, are NP-hard if we are seeking for a solution of cost 0, even for temporal graphs containing three identical layers Froese et al. (
+2022
+). For cost equal to 0, MinTimeLineCoverK and MinMaxTimeLineK are both fixed-parameter tractable when parameterized by
+n
+using Integer Linear Programming Froese et al. (
+2022
+). MinMaxTimeLineK is W[1]-hard when parameterized by
+n
+for cost equal to 1, while MinTimeLineCoverK parameterized by
+n
+plus the cost of a solution admits a fixed-parameter algorithm based on dynamic programming Froese et al. (
+2022
+). This latter result is obtained by splitting the activity of nodes into two sets, having cost 0 (solvable for the case cost equal to 0) and having cost at least 1. Interestingly, it is shown that this latter set induces an interval graph, and the number of possible interval graphs is upper bounded by a function of
+n
+and the cost of a solution. Finally, MinTimeLineCoverK and MinMaxTimeLineK are fixed-parameter tractable when parameterized by
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$n + K$$\end{document}
+n
++
+K
+. For MinTimeLineCoverK, the result is achieved by dynamic programming, while for MinMaxTimeLineK using a bounded search tree algorithm Froese et al. (
+2022
+).
+Efficient heuristics based on solving restricted variants of MinTimeLineCoverK and MinMaxTimeLineK have been designed and evaluated experimentally on synthetic and real datasets (extracted from Twitter) Rozenshtein et al. (
+2021
+).
+Searching motifs in temporal networks
+Detecting interesting subgraphs with a given property or with a statistically significance is a fundamental problem in graph mining. Here, we consider some approaches that have been considered in temporal graphs.
+Graph motifs
+A graph (or a network) motif is defined as a subgraph of limited size that appears with a statistically significance in the input graph. Finding motifs is fundamental to understand network structural properties. Identifying triangle (cliques of size three) is used for example to compute clustering coefficients.
+Different definitions of temporal motifs have been introduced in the literature, based on different temporal properties:
+A first definition defines a motif as an ordered set of temporal edges, so that the static graph induced by the edges is connected and (a) two consecutive (defined by the order) temporal edges occur at a time bounded by parameter
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta _C$$\end{document}
+Δ
+C
+; (b) the temporal edges incident on a node of the motif must be consecutive temporal edges in the motif Kovanen et al. (
+2011
+)
+A second approach Song et al. (
+2014
+) defines a motif as an ordered set of temporal edges, so that the first and the last temporal edge of the motif are at a temporal distance at most
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta _W$$\end{document}
+Δ
+W
+A third definition Hulovatyy et al. (
+2015
+) relaxes property (b) of the first definition and asks only for induced subgraphs (that is, all the temporal edges of nodes connecting nodes of the subgraph have to be considered in the motif)
+A fourth definition Paranjape et al. (
+2017
+) relaxes property (b) of the first definition and asks only for induced subgraphs (as the third definition) and adds the condition that the fist and the last temporal edge of the motif are at a temporal distance at most
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta _W$$\end{document}
+Δ
+W
+.
+One of the most applied definition, proposed in Liu et al. (
+2021
+) and Grasso et al. (
+2021
+), states that a temporal motif is a connected subgraph whose edges’ temporal edges
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$e_1=(v_1, v_2, t_1), \dots , e_z = (v_z, v_{z+1}, t_z)$$\end{document}
+e
+1
+=
+(
+v
+1
+,
+v
+2
+,
+t
+1
+)
+,
+⋯
+,
+e
+z
+=
+(
+v
+z
+,
+v
+z
++
+1
+,
+t
+z
+)
+can be ordered, so that
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i < t_{i+1} \le t_i +1$$\end{document}
+t
+i
+<
+t
+i
++
+1
+≤
+t
+i
++
+1
+(or for
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_i \le t_{i+1}$$\end{document}
+t
+i
+≤
+t
+i
++
+1
+simultaneous events).
+An occurrence of a temporal motif
+M
+in a temporal graph
+T
+is a subgraph
+H
+of
+T
+, such that there exists a mapping
+f
+between the nodes of
+M
+and the nodes of
+H
+which is bijective and such that (1) if there exists a temporal edge between two nodes
+u
+,
+v
+in
+M
+, in some timestamp
+t
+of
+T
+, then there exists a temporal edge between two nodes
+u
+,
+v
+in
+H
+, in some timestamp
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t'$$\end{document}
+t
+′
+of
+T
+; (2) the chronological order between edges of the motif is respected in the occurrence of the motif; (3) the temporal edges in
+H
+are active in a time interval of length
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\Delta$$\end{document}
+Δ
+.
+Colored motif
+A well-known problem in computational biology and, more generally, in computer science, is the quest for colored motifs inside a network (Lacroix et al.
+2006
+; Bruckner et al.
+2010
+; Betzler et al.
+2011
+). The problem has application in metabolic networks and PPI networks (Lacroix et al.
+2006
+; Bruckner et al.
+2010
+), where the goal is to identify functional motifs. Given a multi-set of colors, called motif, representing functionalities, the goal is to identify a connected component in a graph whose vertices match the motif. The problem has been recently considered also for temporal networks, mainly adding the constraint that the connected component should be a temporal path Thejaswi et al. (
+2020
+). Several variants of the problem have been considered, showing that they are NP-hard (except for the case when a specific ordering on the colors is defined in the motif), but admit fixed-parameter algorithms based on multilinear monomial detection technique Thejaswi et al. (
+2020
+). The approximation complexity of an optimization variant of the problem that asks for the maximum number of colors included in a solution (so the subgraph may contain only some colors of the motif) has also been considered, showing that it cannot be approximated within factor
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$O(n^{\frac{1}{2}- \varepsilon })$$\end{document}
+O
+(
+n
+1
+2
+-
+ε
+)
+, for any
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\varepsilon > 0$$\end{document}
+ε
+>
+0
+, unless
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$P = NP$$\end{document}
+P
+=
+N
+P
+Riccardo and Mehdi (
+2021b
+). For the same variant of the problem, a heuristic based on local search has been designed Riccardo and Mehdi (
+2021b
+).
+Temporal network comparison
+Network comparison aims at the identification of correspondence among two or more networks. For static networks, the alignment can be defined as follows Guzzi and Milenković (
+2018
+). Given two input networks G1 and G2, the problem of finding an alignment between the two networks may be translated into the search for a mapping between nodes of G1 and nodes of G2, with the aim of the maximization of a quality score. The computational hardness of this problem arises from the NP-completeness of the underlying subgraph isomorphism problem Cannataro et al. (
+2010
+). When considering temporal networks with
+k
+timestamps, the problem becomes more complicated, since we have to deal with
+k
+temporal subgraphs.
+The subgraph isomorphism problem in this context becomes the Temporal Subgraph Isomorphism problem Liu et al. (
+2021
+) (TSI). From a practical point of view, TSI is the search from meaningful time-ordered patterns in a sequence of timestamps. These patterns can be expressed as the search of correspondences of a query graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G_q$$\end{document}
+G
+q
+in a temporal graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G_t$$\end{document}
+G
+t
+.
+As evidenced in Redmond and Cunningham (
+2016
+,
+2013
+), there exist three approaches for solving the problem. A first approach (
+extract and test
+) is based on the extensive extraction of all the subgraphs with some specific temporal properties (as specified in the query), and then performing isomorphism test on each subgraph. A second approach (
+test and extract
+) first performs subgraph isomorphims and then filters results discarding those that do not have the temporal properties. A third hybrid approach leverages temporal information during the isomorphism test.
+More recently, Liang et al. (
+2021
+) proposed a framework that transforms a dynamic network into a set of snapshots. This approach is a trade-off between the approaches that do not consider the dynamic evolution of the networks and the previous algorithms that focus on the separate evolution of two networks. In this approach, the dynamic of the two considered network is considered as two separate sequence of snapshot. Then, the authors propose a framework for aligning each pair of corresponding snapshots. An extension of the previous approach is applied to multirelational temporal network in Chen and Liang (
+2022
+).
+An approach to the alignment of temporal networks has been proposed in Elhesha et al. (
+2019
+). Given two temporal graphs, the goal is the definition of an alignment function that maps all the nodes of the first graph in a subset of the nodes of the second graph, such that it maximizes an objective function that includes (1) A similarity between the corresponding pair of nodes minus (2) the sum number of connected components in each snapshot.
+Representation learning for temporal networks
+Network representation learning (or network embedding) Guzzi and Zitnik (
+2022
+) is a common way for applying machine learning on graph data, to get benefit from both. Classical embedding algorithms focused on static networks and they transformed a network into a low-dimensional vector space to analyse the network itself (Nelson et al.
+2019
+; Shawn et al.
+2022
+; Guzzi et al.
+2022
+; Veltri et al.
+2007
+). Currently, there exist many algorithms and many classification attempts that are categorised and described in some previous surveys (Cui et al.
+2018
+; Chang et al.
+2020
+; Nelson et al.
+2019
+; Goyal and Ferrara
+2018
+; Hamilton et al.
+2017
+; Cannataro et al.
+2013
+).
+These algorithms receive as input an unweighted graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E)$$\end{document}
+G
+=
+(
+V
+,
+E
+)
+represented by its associated adjacency matrix
+A
+and a real-valued matrix
+X
+containing node attributes
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$X \in R^{m x |V|}$$\end{document}
+X
+∈
+R
+m
+x
+|
+V
+|
+. The goal of each algorithm is to map each node into a vector z
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\in \mathbb {R}^{d}$$\end{document}
+∈
+R
+d
+where
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$d < |V|$$\end{document}
+d
+<
+|
+V
+|
+.
+Some recent surveys (Cui et al.
+2018
+; Chang et al.
+2020
+; Nelson et al.
+2019
+; Goyal and Ferrara
+2018
+; Hamilton et al.
+2017
+; Cannataro et al.
+2013
+) present an overview of existing methods that may be categorised in shallow embedding methods and graph neural methods. Algorithms belonging to the first class encode each node (
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v_i \in G$$\end{document}
+v
+i
+∈
+G
+) into a single vector through the use of a simple encoding function defined as
+3
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\begin{aligned} ENC(v_i)=Mv_i, \end{aligned}$$\end{document}
+E
+N
+C
+(
+v
+i
+)
+=
+M
+v
+i
+,
+where M is a matrix containing the embedding vectors and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$v_i$$\end{document}
+v
+i
+is a vector used for selecting the column. Algorithms belonging to the second class learn a graph neural network for representing nodes and presents the main advantage of being inductive, i.e., they can easily learn the representation of a novel node without processing the whole graph Guzzi et al. (
+2022
+).
+More recently, the rising of temporal network has generated the need for the introduction of novel embedding methods for temporal networks.
+Definition 7
+Given a temporal network graph
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$G=(V,E,T)$$\end{document}
+G
+=
+(
+V
+,
+E
+,
+T
+)
+, the task of time-varying network embedding is to learn a mapping function
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$f: V \rightarrow K \subseteq R^d, d<< \Vert V\Vert$$\end{document}
+f
+:
+V
+→
+K
+⊆
+R
+d
+,
+d
+<
+<
+‖
+V
+‖
+which maps each node of the graph into a low-dimensional space by preserving both node proximity and temporal constraints. Two nodes are close in the vector space if they are topologically close and there exists a temporal proximity between them.
+In Mohan and Pramod (
+2022
+), authors designed a random surfing model based on an adaption of Markov chains to represent node similarity. Then, a deep auto-encoder is used to perform non-linear dimensionality reduction. Generated embeddings are then evaluated using a temporal link prediction benchmark.
+The work by Goyal et al. (
+2020
+) has a similar goal. Given a temporal graph represented by the temporal snapshot, a method for learning a representation of nodes at each time step is presented. Then, the obtained representation is used for predicting future links among nodes. The algorithm called
+dyngraph2vec
+is based on multiple multilayered non-linear networks to analyse each network. Then, recurrent networks are used to learn the structure of the temporal transitions.
+Software tools for temporal networks
+As we introduced, temporal network analysis is currently an hot topic in research. Consequently, as we presented in this survey, many different problems and algorithms to solve them have been introduced. Here, we first present software tools used for specific problems for temporal networks, which are implementations of different algorithms proposed to solve the problems that have been discussed in the previous sections. Moreover, more recently, even comprehensive libraries are available. In Table
+2
+, we presented some softwares and their functions. The last row of the table contains the link of a page of the GitHub portal showing the whole set of softwares of GitHub tagged as temporal networks.
+Software tools for specific problems
+Table
+1
+shows software tools that have been used for specific temporal network problems.
+Table 1
+Software tools used for specific problems for temporal networks
+Problem
+Language
+URL
+Alignment problem
+C++
+https://www.cise.ufl.edu/relhesha/temporal.zip
+– url not available
+Global pairwise network alignment
+C++/Python
+https://www.dcc.fc.up.pt/got-wave/
+Vertex Cover problems
+Python
+https://github.com/polinapolina/the-network-untangling-problem
+Motif discovery problem
+Java
+https://github.com/RobertoGrasso96/MODIT
+Node colored motif discovery problem
+C
+https://github.com/suhastheju/temporal-patterns-mk2
+k-Densest-Episode problem
+Python
+https://github.com/polinapolina/segmentation-meets-densest-subgraph
+Maximum Colorful Path in a Temporal Graph problem
+Python
+https://github.com/mehdihosseinzadeh/ColorPath_TG
+Data Structures
+Python
+https://github.com/hilsabeckt/hybridtempstruct
+In particular, Elhesha et al. (
+2019
+) implemented tempo algorithm for temporal network alignment, Aparício et al. (
+2019
+); Nassa et al. (
+2011
+) provided user-friendly interface and implementation source for GoT-WAVE algorithm for temporal global pairwise network alignment problem, Rozenshtein et al. (
+2021
+) implemented algorithms for vertex cover problems (k-Inner, k-Budget, and k-Baseline), Grasso et al. (
+2021
+) implemented MODIT as a method for counting motifs (of any size) in a temporal network for motif discovery problem, Thejaswi et al. (
+2020
+); Chow et al. (
+2021
+); Ren et al. (
+2021
+) implemented variants of
+node colored motif discovery
+, constrained to be paths, in temporal graphs (Temporal-patterns-mk2), Rozenshtein et al. (
+2020
+) applied KGAPPROX algorithm for k-Densest-Episode problem, and Riccardo and Mehdi (
+2021b
+) implemented CTPLS algorithm for maximum colorful path in a temporal graph (Max CPTG) problem.
+General purpose software tools
+Here, we present some general purpose software tools that address general problems in network analysis. In Table
+2
+, we presented some softwares and their functions. The last row of the table contains the link to a page of the GitHub portal showing the whole set of softwares of GitHub tagged as temporal networks.
+Table 2
+A synopsis of some selected softwares.
+Software
+Language
+Analysis
+Visualization
+Temporal network analysis
+a
+Python/C++
+IO-S-P
+Y
+Teneto - Temporal centrality network Measure
+b
+Python
+IO-S
+Y
+TGLib
+c
+R
+IO-S-P
+N
+NetworkX Hagberg et al. (
+2008
+)
+d
+Python
+IO-NS-CA-C-ME-EM
+Y
+TimeNexus
+e
+Cytoscape App
+IO-PA
+Y
+Py3Plex Skrlj et al. (
+2019
+)
+f
+Python
+IO-NS-CA-C-PA
+Y
+General collection of packages on GitHub
+g
+Python
+N
+N
+In Visualization column: Y and N, respectively, indicate if the software supports visualization
+In analysis column:
+IO
+Network Input Output,
+S
+Network Statistics,
+P
+PathAnalysis,
+C
+Clustering,
+ME
+Module Extraction,
+EM
+Network Embedding.
+a
+https://gitlab.com/tgpublic/tglib
+b
+https://github.com/wiheto/teneto
+c
+https://programminghistorian.org/en/lessons/temporal-network-analysis-with-r
+d
+https://networkx.org
+e
+https://apps.cytoscape.org/apps/timenexus
+f
+https://github.com/SkBlaz/py3plex
+g
+https://github.com/topics/temporal-networks
+Applications of temporal networks in biology and medicine
+Temporal networks have been applied to different biological and medical problems. We will focus on four main applications: analysis of brain connectome, protein–protein interaction networks, and epidemics modelling applications to single cell technologies.
+Brain connectome
+Several studies have analysed the human brain using temporal graph theory, where neural units are nodes extracted, for example, from MRI (Magnetic Resonance Imaging) data, and interactions between nodes change over time Thompson et al. (
+2017
+). An edge between two nodes is defined when there is an anatomical connectivity or a synchronized functional activity is observed. The identification of neural units that are structurally connected in clusters or modules led to better understand neurophysiological processes.
+Structural and functional connectome properties have been studied in several work that applies the temporal network framework. Node centrality measures provide information on how the relevance of nodes inside the brain network. In Thompson et al. (
+2017
+), centrality measure has been applied to analyse which nodes and correspondent brain regions are central in the brain network dynamics, using temporal degree centrality and closeness centrality, for example illustrating the relevance of visual region, frontoparietal attention, dorsal attention, and default mode.
+The contribution given in Thompson et al. (
+2017
+) includes also insights into the burstiness of inter-contact time and its relation with specific tasks, the application of fluctuability and volatility, and reachability latency (related to a given task).
+Another application of temporal centrality measures in connectome is due to van den Heuvel et al. (
+2010
+), where it is explored the communication between different regions of the brain. In particular, van den Heuvel et al. (
+2010
+) showed that schizophrenia impacts global network connectivity of frontal and temporal brain regions. They found significant reduction of betweenness centrality of frontal regions hubs of patients showing a less central hub role of these regions in the brain network. A similar approach has been proposed in Fransson and Thompson (
+2020
+), where betweenness is applied to identify hubs in brain networks.
+Connectivity is a fundamental property of networks and in particular of brain network. The functional connectivity of brain network and the learning of brain network structure have been considered in Kim et al. (
+2021
+); Kong et al. (
+2021
+).
+Protein–protein interaction networks
+Protein–Protein Interaction Networks (PPIN) are undirected graphs, whose nodes represent proteins, more precisely a gene coding protein; edges represent interaction between two proteins, mainly co-expressed proteins. Since proteins can become active or inactive, their interactions usually change over time, and thus, a natural extension to PPIN is to consider a temporal representation Przytycka et al. (
+2010
+), that is a temporal graph.
+A well-known problem that has been considered for PPI networks is the identification of paths representing processes that, starting with the activation of a protein, leads to the activation of another protein (Cannataro et al.
+2010
+; Jimmy et al.
+2019
+). These paths are associated with the maximization of an objective function which is the probability of the chain of interactions represented by the path. An extension of this problem looks for a collection of paths associated with chains of activation interactions, instead of a single path Jimmy et al. (
+2019
+).
+A similar problem for PPI networks is the inference of the way receptor signaling propagates and how it affects transcription factors Khodaverdian and Yosef (
+2022
+). This problem is modeled as finding a walk in a temporal graph (where vertices can be present only in some timestamp, while edges are present only when both endpoints are present) from a source node to a target node that starts in the first timestamp and ends in the last. Furthermore, the walk must satisfy a constraint that one of its edges connects two nodes in the same snapshot or in consecutive snapshots (timestamps
+i
+and
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$i+1$$\end{document}
+i
++
+1
+). The problem of finding a shortest walk can be solved in polynomial time when the time domain consists of two timestamps Khodaverdian and Yosef (
+2022
+), while in general is NP-hard and cannot be approximated within factor
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\frac{|t_M|}{2}$$\end{document}
+|
+t
+M
+|
+2
+, when there at least
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$t_M \ge 3$$\end{document}
+t
+M
+≥
+3
+timestamps Khodaverdian and Yosef (
+2022
+).
+Another relevant problem of PPIN is the identification of groups of co-expressed protein as they represent sets of protein related to a same functionality (Han et al.
+2004
+; Cannataro et al.
+2010
+; Ou-Yang et al.
+2014
+). This may lead to clustering problems (partition of networks into groups of cohesive subgraphs) or to the identification of the top
+k
+cohesive subgraphs (possibly overlapping and with some uncovered nodes). The identification of relevant groups of protein may lead also to subgraph query, that is, the identification of whether a subgraph belongs to a larger graph. In some cases, graphs can be colored, where colors represent functionalities and the goal is to look if there is a group of elements that represent a given multi-set of functionalities.
+The identification of protein complexes (sets of proteins related to some biological functions) with temporal networks is a problem addressed in Li et al. (
+2020
+). First, a temporal network is built by taking into account spatial information and gene expression data. Then, a clustering algorithm (Markov Clustering) is applied on the temporal network constructed to identify protein complexes.
+Temporal centrality measures have been applied also for the analysis of protein–protein interaction networks. In Meng et al. (
+2022
+), hubs, which are fundamental to analyse protein–protein interaction networks, are identified by degree centrality.
+Analysing of the yeast protein–protein interaction network regulated both in time and in space is reported in Han et al. (
+2004
+). In particular, Han et al. (
+2004
+) considers a significant proportion of proteins as ‘hubs’, in which hubs are classified into two types based on expression with their partners on same/different time or space.
+The work in Lebre et al. (
+2010
+) addresses the time-varying networks of gene regulation in systems biology. Given time course gene expression data, authors analyse gene by gene and find the topology of regulatory network and the changing over time.
+Temporal graphs for epidemics modelling
+Spreading of diseases may be trivially modelled using a temporal network. Nodes of the network are the individuals, while edges their contacts. A set of node labels is used to model the status (i.e., Healthy, Suscepted, Infected, Recovered) (Masuda et al.
+2021
+; Guzzi et al.
+2022
+), while the temporal evolution of the contacts is represented by the temporal snapshot of the network itself. The rationale behind this representation is that the structure (and in particular its dynamic counterpart) of these networks may model and predict the epidemic propagation Guzzi et al. (
+2022
+). Temporal networks have been introduced some years ago in the literature, and their use is increased during the COVID-19 pandemic. Common applications of temporal networks cover a broad range, from epidemic modelling, to evaluation of measures for epidemic controlling.
+The use of networks in epidemiology help researchers to describe the dynamics of spreading focusing on interactions between individuals or groups, where the spreading process is driven by contacts in the network Balcan et al. (
+2009
+). Main limitation of the use of network is the requiring of mobility and contact data to feed network models.
+Humphries et al. (
+2021
+) introduced a framework for modelling and analysing spreading. The framework enables the analysis of spreading considering both an individual and a pair-based perspective of modelling. For the contagion process, they consider the susceptible-infected-recovered (SIR) model, built on top of a network with time-varying edges. Petrizzelli et al. presented the benefits of a topology-aware versus an age-based vaccination strategy to mitigate the spreading of the virus Petrizzelli et al. (
+2022
+).
+A fundamental problem of the SIR model is the identification of chain of interactions via the identification of restless paths in temporal graphs (Casteigts et al.
+2021
+; Zschoche
+2022
+) (see Sect.
+4
+). In this approach, nodes represent individuals and a contact between two individuals at time
+t
+is represented with a temporal edge at timestamp
+t
+between the corresponding nodes. In this case, a chain of infections involving different individuals is a temporal path. To represent the time when an individual can spread the infection (hence, it is not recovered), a time constrained is added to the path, that is, a contact must be observed in a time window.
+The importance of temporal networks for epidemics has been considered in Enright and Kao (
+2018
+). When considering the spreading process, the concept of temporal path is useful to define nodes that can be reached by the infection. Consider a time interval. A network/graph is temporally strongly connected when each pair of nodes is connected by a temporal path in the considered interval. A network is temporally connected if, for every pair of nodes, at least one is reachable by a temporal path starting from the other in the considered interval. A network is temporal contagion connected when there exists at least one node, such that there exist temporal paths starting from that node and reaching all the other nodes of the graph in the considered interval. These concepts are introduced to define a spreading that starts from some node of the networks and reaches/infects the other nodes in some time. When considering the spreading of a disease, setting, some variants of the previous concepts can be defined, considering for example when a node can possibly spread a contagion.
+Temporal Subgraph Isomorphism between temporal networks has also been considered for comparing the spreading process of two diseases Enright and Kao (
+2018
+).
+Temporal graphs and single cell technologies
+Due to the fast growing variety of single cell technologies and datasets accessible, numerous single cell approaches utilizing temporal networks have been proposed. We report here two examples of applications of temporal graphs to Single Cell data. The first example is the Temporal Network Flow Entropy (TNFE) method introduced in Gao et al. (
+2022
+) to detect the critical states during a disease. The work constructs a temporal network on two timestamps for each sample (individual) considered based on gene expression matrix. Then, via a comparison of the differences between the snapshots of the two timestamps, they construct a static network (called differential network). They calculate the Network Flow Entropy (NFE) on the differential network at each timestamp. This measure is used to characterize the network fluctuation of molecules from each individual sample against a given reference sample to identify the crucial stages of disease progression on an individual basis. The experimental work of Gao et al. (
+2022
+) is applied on a simulated dataset and six datasets associated with real diseases taken from the NCBI GEO and The Cancer Genome Atlas (TCGA) databases.
+Another contribution is presented in Wang et al. (
+2022
+), where the network of mitochondria in a cell is analysed. This network undergoes quick alterations through fission, fusion, and motility. Fusion and fission are structural processes that disperse mitochondria over the cell and create densely linked networks. The work of Wang et al. (
+2022
+) proposes a software for Mitochondrial Temporal Network Tracking (MitoTNT), where the temporal network is built considering live-cell fluorescence microscopy data in four dimensions (space dimensions and time). Wang et al. (
+2022
+) applies MitoTNT for three tasks: high-resolution investigation of the dynamics of mitochondrial network, node-level study of mitochondrial fission/fusion, and analysis of the mitochondrial temporal network.
+Discussion
+As discussed so far, temporal network analysis is currently a hot topic in research. In particular, in the biological and biomedical scenario, the possibility to model the intrinsic variability of the biological systems has increased the interest of researchers. This has led to the definitions of several problems, which show, from a computational point of view, similarities and differences with respect to the static cases.
+The interest of research of the algorithmic community has initially focused on finding paths or walks. In fact, as discussed in Sect.
+4
+, the temporal evolution leads to several combinatorial problems; for example, it has to be pointed out the difference between fastest and shortest path. The interest on paths and walks problem is motivated also by the several applications of these problems, from transportation to epidemics (see Sect.
+7
+), and for the definitions of centrality measures (see Sect.
+3
+).
+Main fundamental problems in temporal networks show complexity ranging from polynomial (P) to non-polynomial (NP-hard) complexity; thus, in Fig.
+10
+, we present the classification of the complexity of the fundamental problems related to paths, walks, circuits, and trails. Notice that all the problems which are NP-hard for temporal graphs are in P for static graphs (when they can be defined in this latter model).
+Fig. 10
+Classification of the main problems related to paths, walks, circuits, and trails in temporal graphs, according to their complexity. Notice that Restless path is a decision problem (and it is NP-complete), while the others are all optimization problems
+In this survey, we consider also other other fundamental problems for temporal graphs (connectivity, identification of dense subgraphs, covering temporal edges, motif, and colored motif identification), due to their practical relevance and to their interesting properties, different from static cases. Some of these problems have already found application in biology and medicine, others, for example covering temporal edges, are promising approaches that may find future applications, due also to their relevance of the corresponding problem on static graphs.
+Notice that although we have considered fundamental problems for temporal graphs, several other problems have been considered in the literature. For example, Feedback Edge Set Haag et al. (
+2022
+), Maximum Matching (Baste et al.
+2020
+; Mertzios et al.
+2020
+), and Coloring Marino and Silva (
+2022
+), have been considered also for temporal graphs.
+Another example is the identification of cohesive subgraphs in a temporal graph. We have considered in Sect.
+4
+a model of cohesive subgraph based on density (called dense subgraph), since it is a fundamental primitive in graph mining with several applications Bahmani et al. (
+2012
+). Other models of cohesive subgraphs have been considered for temporal graphs, like cliques Himmel et al. (
+2017
+),
+k
+-plexes Bentert et al. (
+2019
+), and
+k
+-cores (Wu et al.
+2015
+; Liu et al.
+2022
+).
+Another direction that has been considered in the literature is the network design. Given a static graph which represents an underlying graph, network design aims at defining timestamps where edges are active, so that we obtain a temporal graph that respects some connectivity property and that minimizes some objective function, like the maximum number of timestamps defined for an edge, or the overall number of timestamps assigned Mertzios et al. (
+2019
+).
+Another aspects of temporal graphs that have been recently considered is the definition of models, similarly to what has been done for static graphs. In particular, the work in Casteigts et al. (
+2021
+) has introduced a random temporal graph model similar to the Erdos–Renyi random graph model, studying the connectivity properties of the resulting temporal graphs.
+Conclusions and future research
+In this section, we summarize the main contribution of our work and we point out some future directions as well as some open problems in temporal networks.
+After introducing basic concepts, definitions, and measures of temporal networks, we recalled fundamental problems of temporal networks, such as those regarding paths, walks, circuits, and connectivity, with special focus on finding dense subgraphs and on graph covering. Then, we reviewed main algorithms regarding the search of motifs in temporal networks and temporal network comparison (network alignment). An introduction of the role on representation learning (network embedding) has been also provided.
+Moving from an abstract layer (problem formulation and basic algorithms), to a concrete layer (software and applications), the paper discusses main software tools and applications for temporal networks. In particular, some of the discussed algorithms that have been implemented in open source software tools are briefly described in a dedicated section. Emerging applications of temporal networks in medicine (brain connectome), biology (protein–protein interaction networks), and public health (epidemics modelling) are also described.
+Several contributions have been given on the algorithmic/complexity analysis of problems in temporal networks. Comparing with the case of static graphs, there is a need for the implementations/development of novel algorithms/software tools that are able to solve many problems on temporal networks (for example for the many variant of temporal paths considered in literature). A first contribution in this direction is Teneto Thompson et al. (
+2017
+), an open-source library for temporal network analysis, supporting centrality and connectivity measures and temporal network generation, and the TGlib library Oettershagen and Mutzel (
+2022
+), an open-source library which includes the computation of temporal centrality measures and statistics, and the implementation of temporal path algorithms.
+Considering the problems on temporal networks, although many variants of the path problems have been considered due to their application in epidemiology and transportation, the problem could be further investigated for practical applications, for example by considering a minimum contact time for the transmission of virus.
+From an algorithmic point of view, one of the most interesting problem is the parameterized complexity of MinTimeLineCover, when parameterized by the cost of the solution (that is the number of vertices that are active in more than a single timestamp). MinTimeLineCover admits a fixed-parameter algorithm for the parameter cost of the solution, when the time domain consists of exactly two timestamps Froese et al. (
+2022
+), but it is not known whether it is a fixed-parameter for larger time domains. Finally, it should be noted that the introduction of parallel and high performance algorithms may significantly impact the field Guzzi et al. (
+2013
+).

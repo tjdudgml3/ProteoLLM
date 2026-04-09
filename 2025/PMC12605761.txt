@@ -1,0 +1,515 @@
+Abbreviations
+CCS
+collisional cross section
+CNN
+convolutional neural network
+DDA
+data‐dependent acquisition
+DIA
+data‐independent acquisition
+FDR
+false discovery rate
+GRU
+gated recurrent unit
+HER2+
+human epidermal growth factor receptor 2‐positive
+LSTM
+long short‐term memory
+PEP
+posterior error probability
+PSM
+peptide‐spectrum match
+TCR
+T‐cell receptor
+TNBC
+triple‐negative breast cancer
+WT/MT
+wild‐type/mutant
+1
+Introduction
+Genetic and epigenetic aberrations, accumulated either spontaneously or induced by environmental factors, can transform normal tissue into cancer. In cancer immunotherapy, the natural mechanisms of the immune system to eliminate tumor cells are harnessed. The accumulation of genetic and molecular changes associated with tumorigenesis in normal cells can prompt the immune system to recognize them as non‐self and target them for elimination [
+1
+]. These changes in cancer genotype trigger the production of proteins that are qualitatively or quantitatively different from those produced by normal cells. Among these proteins, those that can be recognized by the adaptive immune system to provoke an immune response against cancer are called tumor antigens [
+2
+,
+3
+].
+The immune system naturally presents short peptides derived from intracellular protein degradation on the cell surface, bound to major histocompatibility complex (MHC) molecules, also known in humans as human leukocyte antigen (HLA) molecules, to facilitate T‐cell immunosurveillance [
+1
+]. Collectively, these naturally presented peptides constitute the immunopeptidome and dynamically reflect the intracellular proteome and cellular health status. As part of cancer immune‐based mechanisms, the presentation of tumor antigens on the surface of HLA molecules is essential.
+There are two main types of HLA molecules involved in antigen presentation and cancer immunosurveillance: HLA class I (HLA‐I) and HLA class II (HLA‐II). HLA‐I molecules primarily present peptides derived from proteasomal degradation of endogenous cytosolic proteins and interact with CD8⁺ T cells, while HLA‐II molecules present peptides from extracellular or endosomally processed proteins and are recognized by CD4⁺ T cells [
+4
+,
+5
+,
+6
+]. Predominantly, these immunopeptidomes consist of peptides originating from normal self‐proteins, with only a minor proportion arising from tumor‐specific (present only in tumor cells) or tumor‐associated (present in both tumor and normal cells) proteins [
+1
+]. Given the immense proliferative capacity of cancer cells, the immune system often fails to effectively control tumor growth. For this reason, considerable efforts have been made to identify and harness tumor antigens to enhance the efficacy of cancer immunotherapy.
+Advanced mass spectrometry (MS), coupled with computational biology, has facilitated the systematic isolation, characterization, and analysis of the immunopeptidome, a process collectively referred to as immunopeptidomics. This interdisciplinary field aims to comprehensively identify peptides bound to MHC molecules, elucidating the molecular basis of immune recognition and surveillance. Immunopeptidomics offers a robust approach for detailed mapping of MHC‐presented peptides (collectively termed the MHC ligandome), offering valuable insights into immune recognition processes involved in infections, malignancies, and other pathological states. Although the concept of immunopeptidomics has been recognized long back [
+7
+], recent technological advancements in MS sensitivity, bioinformatics methods, and next‐generation sequencing (NGS) have significantly accelerated its development, greatly enhancing both the accuracy and depth of MHC peptide identification and characterization.
+MS‐based immunopeptidomics is an important technique in antigen discovery since it enables the direct identification of MHC‐bound peptides, even low‐abundance ligands. This method was first introduced in 1992 by Hunt et al. using liquid chromatography (LC) coupled to tandem mass spectrometry (LC‐MS/MS) for the direct detection of HLA‐presented peptides [
+8
+]. The past decades have seen significant enhancement in the capacity to identify tumor‐specific antigens, thanks to the improvement in MS sensitivity, throughput, and computational proteogenomic approaches. The use of the LC‐MS/MS platform in neoantigen discovery has been highly supportive since it offers high adaptability, unbiased peptide detection, and compatibility with the complex landscape of HLA polymorphisms [
+9
+,
+10
+].
+In parallel to de novo peptide sequencing [
+11
+,
+12
+], custom database searching has also improved the detection of tumor‐specific ligands. These workflows often combine whole‐exome sequencing (WES) of matched tumor‐normal samples and RNA sequencing (RNA‐seq) to capture expressed variants [
+12
+,
+13
+]. Among various mutation types, such as single nucleotide variants (SNVs), insertions/deletions, fusions, or splice variants, SNVs remain the most frequent source of neoantigens. These genomic and transcriptomic data serve as a reference to match MS‐derived peptides, enabling precise identification of mutation‐derived neoantigens [
+14
+,
+15
+,
+16
+].
+As immunotherapies such as mRNA vaccines and adoptive T‐cell therapies increasingly rely on accurate tumor antigen discovery, safety concerns surrounding off‐target toxicity also become more prominent. A primary mechanism underlying off‐target toxicity is the inherent degeneracy of T‐cell receptors (TCRs), enabling them to recognize antigens based on key combinatorial amino acid motifs within MHC‐presented peptides and allowing a limited TCR repertoire to survey vast peptide diversity [
+17
+,
+18
+]. This flexibility, however, also permits cross‐reactivity between tumor associated antigens (TAAs) and self‐antigens. This cross‐reactivity can arise via sequence homology, where significant similarity exists between TAAs and self‐peptides at critical TCR contact residues, or structural mimicry, where distinct peptide sequences form similar 3D surfaces within the MHC groove recognized by the TCR [
+19
+,
+20
+]. This risk underscores the importance of selecting truly tumor‐specific targets, irrespective of antigen origin. Current computational tools in this field compare the sequence and structural similarity of identified TAAs against comprehensive databases of human self‐peptides and known autoantigens like the Immune Epitope Database (IEDB). These tools are trained on massive datasets of TCR‐peptide‐MHC interactions to predict T‐cell specificity [
+21
+]. Furthermore, dedicated AI‐based pipelines for cross‐reactivity risk assessment have been developed. For example, the multi‐omics R suite CrossDome can provide users with integrated workflows that facilitate both peptide‐centered prediction and TCR‐centered prediction to prioritize safer targets [
+22
+]. Integrating these AI‐enhanced cross‐reactivity prediction pipelines is significant.
+Traditionally, canonical antigens that originated from proteins encoded by annotated coding regions have been the main focus in this field. However, recent advances show the important role of noncanonical antigens, peptides derived from unannotated or non‐coding regions, including pseudogenes, endogenous retroelements, and long non‐coding RNAs [
+23
+]. These may offer higher tumor specificity and new opportunities for off‐the‐shelf therapies but also require stringent safety evaluation using precision computational frameworks.
+The typical immunopeptidomics workflow usually begins with the extraction of MHC‐bound peptides through immunopurification or acid elution, followed by peptide identification using LC‐MS/MS. Different acquisition strategies like data‐dependent acquisition (DDA) or data‐independent acquisition (DIA) require different analyzing methods, through database searching, de novo sequencing, or spectral library matching. Candidate peptides are typically evaluated for their potential to bind to specific HLA allotypes using in silico MHC binding prediction algorithms. A more detailed summary of the immunopeptidomics pipeline has been comprehensively reviewed by Pongcharoen et al. [
+24
+].
+While current MS‐based immunopeptidomics workflows have proven effective in identifying MHC‐bound peptides, limitations remain, including challenges in detecting low‐abundance or noncanonical peptides, reliance on curated or experimental spectral libraries, and the intensive time and computational resources required for data processing and interpretation. As the field advances toward broader and more precise antigen discovery, there is a growing demand for tools that enhance accuracy, sensitivity, and scalability.
+Recent developments in artificial intelligence (AI) and machine learning (ML) are beginning to address the limitations at multiple stages of the immunopeptidomics pipeline. AI‐driven tools have been applied to generate high‐quality in silico spectral libraries [
+25
+,
+26
+], improve peptide‐spectrum match (PSM) scoring [
+27
+,
+28
+,
+29
+], and predict retention time (RT) and ion mobility with high precision [
+30
+,
+31
+]. Additionally, AI enables more accurate de novo peptide sequencing and supports the integration of proteomic data with genomic and transcriptomic information, facilitating the identification of both canonical and noncanonical antigens [
+32
+,
+33
+]. In this review, we explore these AI applications in detail, highlighting how they are advancing the immunopeptidomics landscape. We also include a case study in breast cancer to demonstrate their translational potential and offer our perspective on future directions in this rapidly evolving field. Table
+1
+details the main research questions and approaches in AI‐Driven immunopeptidomics for neoantigen discovery.
+TABLE 1
+Key research questions in AI‐driven immunopeptidomics for neoantigen discovery.
+Research question
+Immunopeptidomics challenge
+AI contribution
+Representative tools/models reviewed
+What peptides are presented by HLA molecules?
+Low abundance peptides, complex MS/MS spectra
+In silico spectral and RT prediction for DIA spectral libraries
+Prosit, DeepLC, AlphaPeptDeep
+How can we identify novel or noncanonical peptides?
+Limited by reference databases
+De novo peptide sequencing directly from spectra
+DeepNovo, SMSNet, Casanovo, PepNet
+How do we improve peptide‐spectrum match (PSM) confidence?
+High FDR in large, diverse peptide search spaces
+AI‐based rescoring using predicted features
+MSBooster, MS
+2
+Rescore, AlphaPeptDeep
+Which peptides are immunogenic and likely to elicit T‐cell responses?
+Presence ≠ immunogenicity
+Immunogenicity prediction and neoantigen prioritization using ML/DL
+NetMHCpan, DeepHLApan, MHCflurry, EPIC
+Can we reduce reliance on experimental spectral libraries?
+DDA library generation is time‐consuming and biased
+In silico libraries constructed from predicted spectra and RTs
+Prosit, pDeep, AlphaPeptDeep
+Note:
+This table outlines major research questions guiding basic and translational immunopeptidomics, with a focus on how artificial intelligence (AI) can enhance our understanding of peptide presentation and improve neoantigen discovery. While inspired by foundational immunology queries, the questions are contextualized here within the scope of AI‐assisted data interpretation, peptide prediction, and antigen prioritization.
+John Wiley & Sons, Ltd.
+2
+Application of AI in Immunopeptidomics
+Advancements in AI and ML have made significant contributions to reshaping the immunopeptidomics landscape. From spectral library generation and RT prediction to de novo sequencing, PSM rescoring, and immunogenicity estimation, AI tools are now addressing many of the technical challenges. These tools deal with traditionally limited sensitivity, reproducibility, and scalability in MS‐based workflows. In the following sections, we review how AI has been applied across key stages of the immunopeptidomics pipeline. Figure
+1
+describes AI‐Based Immunopeptidomics Workflow for Neoantigen Discovery.
+FIGURE 1
+AI‐based immunopeptidomics workflow for neoantigen discovery. “Created in BioRender. Mcneela, E. (2025)
+https://BioRender.com/ev3wvut
+”. (A) Sample preparation & HLA peptide enrichment. Tumor samples are lysed, and HLA‐peptide complexes are enriched using immunoprecipitation with HLA‐specific antibodies on IP beads. Eluted peptides are collected for downstream analysis. (B) Spectral and retention time prediction. AI models (e.g., Prosit, AlphaPeptDeep, DeepLC) predict MS/MS spectra and RTs from peptide sequences, enabling the construction of virtual spectral libraries that enhance DIA‐based identification. (C) De novo peptide sequencing. Tools like DeepNovo, Casanovo, and SMSNet infer peptide sequences directly from experimental spectra without relying on protein databases, facilitating the discovery of noncanonical or novel HLA‐bound peptides. (D) Peptide‐spectrum match (PSM) rescoring. Hybrid spectral libraries (experimental + predicted) are searched, and resulting PSMs are rescored using AI tools (e.g., MSBooster, MS
+2
+Rescore, AlphaPeptDeep) to improve match confidence and reduce false discovery rates. (E) Immunogenicity prediction & neoantigen prioritization. AI tools (e.g., NetMHCpan, MHCflurry, DeepHLApan) predict MHC binding, antigen presentation, and T‐cell recognition potential, enabling prioritization of immunogenic peptides as candidate neoantigens.
+2.1
+AI Applications for Spectral and Retention Time Prediction
+Traditional MS approaches have been performed using DDA, a method that selects the most abundant ions during the MS1 scan for fragmentation in sequential MS2 scans [
+34
+,
+35
+]. Given the straightforward implementation and a wide range of peptides identified in standard proteomics workflows, DDA suffers from reproducibility issues due to the stochastic nature of ion selection [
+36
+]. More importantly, it struggles to identify low‐abundance and co‐eluting peptides, which are especially prevalent in immunopeptidomics. Figure
+1A
+illustrates Sample Preparation & HLA Peptide Enrichment in immunopeptidomics.
+To overcome these challenges, DIA was developed. In DIA, all peptide ions within predefined mass‐to‐charge (m/z) ranges are systematically fragmented, resulting in a much more complex MS2 spectra, often containing fragments from multiple co‐fragmented peptides that raise a challenge for data interpretation [
+37
+,
+38
+]. Therefore, successful peptide identification in DIA depends heavily on reference spectral libraries, which are used to match observed fragment patterns to known peptides [
+39
+]. Table
+2
+illustrates the comparison of Traditional versus AI‐Enhanced Mass Spectrometry Approaches in Immunopeptidomics.
+TABLE 2
+Comparison of traditional vs. AI‐enhanced mass spectrometry approaches in immunopeptidomics.
+Category
+Traditional approach (DDA/DIA)
+AI‐enhanced approach
+Acquisition Strategy
+DDA selects top N precursor ions; DIA fragments all ions in windows
+Same MS setup, but enhanced with AI‐predicted spectral libraries
+Spectral Matching Source
+Experimental spectral libraries (often DDA‐derived)
+In silico prediction using AI tools (e.g., Prosit, DeepMass, AlphaPeptDeep)
+Limitations
+Low reproducibility (DDA), bias towards abundant tryptic peptides, limited noncanonical coverage
+May require retraining for new PTMs or noncanonical sources
+AI‐Enhanced Features
+None or minimal; relies on experimental spectra and predefined search rules
+Predicted MS/MS spectra, RTs, CCS values
+Advantages of AI Integration
+Standardized pipelines, but limited scalability and flexibility
+Higher coverage, faster scalability, adaptable to diverse peptide classes
+Application to Immunopeptidomics
+Reduced sensitivity to low‐abundance or modified peptides
+Improved identification of noncanonical and rare peptides; better FDR control, expand identification coverage
+Note:
+This table summarizes key differences between conventional mass spectrometry workflows, primarily data‐dependent acquisition (DDA) and data‐independent acquisition (DIA), and AI‐enhanced strategies used in immunopeptidomics. AI tools support spectral and retention time prediction, improve peptide identification across diverse sources, and overcome challenges in reproducibility, noncanonical peptide detection, and data scalability.
+John Wiley & Sons, Ltd.
+The curated MS/MS spectra in spectral libraries, which are often produced from DDA experiments, carry important characteristics including fragment ion mass‐to‐charge (m/z) values and their intensities, which show the fragmentation pattern of digested peptides [
+40
+,
+41
+,
+42
+]. Furthermore, since chromatographic peak identification is mostly dependent on RT, which is established by a peptide's interaction with the stationary and mobile phases of the LC system, it offers further information to improve peptide‐spectrum matching [
+43
+,
+44
+]. RT is often reproducible under constant LC conditions and is impacted by the physicochemical characteristics of the peptide [
+42
+].  Together, spectral features and RT play an important role in peptide identification in DIA workflows.
+Conventional spectral matching approaches in DIA rely on experimental spectral libraries generated through DDA, which introduces several limitations. These libraries are time‐consuming and costly to produce, biased toward high‐abundance tryptic peptides, and often lack coverage of noncanonical or personalized peptide sequences [
+45
+,
+46
+]. To address the limitations, AI‐based tools have been developed to predict both MS/MS spectra and RTs directly from peptide sequences. As a result, in silico spectrum libraries that are commonly used in DIA matching are constructed [
+47
+,
+48
+,
+49
+]. The two main prediction tasks of this strategy are RT prediction and fragmentation spectrum generation. AI‐based spectrum prediction effectively models the m/z and intensity profiles of fragment ions with a level of similarity to experimental spectra comparable to replicating MS/MS runs [
+25
+,
+50
+,
+51
+]. Simultaneously, DL models trained for RT prediction, such as those using recurrent neural networks (RNNs), convolutional neural networks (CNNs) [
+52
+], or hybrid CNN‐RNN architectures [
+53
+,
+54
+], have also demonstrated reliable performance in a wide range of chromatographic setups.
+Early models like pDeep [
+50
+] and DeepMass:Prism [
+51
+], which learnt intricate fragmentation patterns straight from peptide sequences, were a major advancement above traditional ML techniques. These models leveraged RNNs, particularly long short‐term memory (LSTM) and gated recurrent units (GRU), to capture sequential dependencies in peptide chains. Their introduction has significantly improved the PSM scoring process during database searches in DDA workflows.
+To support DIA workflows, where complex spectra require accurate library‐based matching, Prosit introduced a deep learning (DL) framework based on bidirectional GRUs with attention mechanisms [
+25
+]. This generic artificial neural network model is capable of predicting both fragmentation spectra and RT directly from peptide sequences. For fragmentation prediction, Prosit uses a BiGRU network with attention to model peptide sequences in conjunction with precursor charge and normalized collision energy. For RT prediction, it applies a fully connected neural network to the encoded peptide representation, using only sequence information as input. The model has been retrained on synthetic HLA ligands to support non‐tryptic peptides, making it particularly valuable for immunopeptidomics.
+To further improve prediction performance and model adaptability, later in 2022, Zeng et al. introduced AlphaPeptDeep as a modular DL framework built using PyTorch [
+31
+]. AlphaPeptDeep is a flexible DL framework designed to predict multiple peptide properties, including MS/MS fragment ion intensities, RT, and collisional cross‐section (CCS). The model can be customized or extended for additional tasks. It features transformer‐based architectures alongside CNNs, LSTMs, and GRUs, and includes functionality for meta‐embedding features such as precursor charge, collision energy, and instrument type. Furthermore, AlphaPeptDeep also supports transfer learning, enabling adaptation to specific datasets such as HLA peptides or post‐translationally modified (PTM) peptides with minimal retraining. This flexibility makes AlphaPeptDeep particularly suitable for immunopeptidomics workflows, where noncanonical and modified peptides can be expected. In addition, Prosit Transformer has been introduced recently to highlight the potential of transformer architectures in MS‐based proteomics [
+55
+]. Using the original Prosit training and test datasets, the model applies the Bidirectional Encoder Representations from Transformers (BERT) submodel from the Tasks Assessing Protein Embeddings (TAPE) framework to predict MS2 spectrum intensities directly from peptide sequences. Although not an official successor to Prosit, Prosit Transformer demonstrated improved performance over the original BiGRU‐based Prosit implementation [
+55
+].
+In addition to spectral prediction, accurate RT prediction has become a valuable component in immunopeptidomics workflows. Tools like DeepLC, which employs CNNs, have demonstrated robust RT prediction across diverse chromatography setups, and also accommodate unseen peptide modifications through transfer learning [
+52
+]. Furthermore, models such as AutoRT [
+54
+] and DeepDIA [
+26
+], which combine CNN and RNN architectures, have shown improved accuracy in predicting RTs, particularly in immunopeptidomic datasets. These tools contribute significantly to building in silico libraries that are both scalable and adaptable to complex sample types.
+Given the substantial breakthrough in this field with a huge number of models focusing on standard linear peptides, limited support has been seen for PTM and cross‐linked peptides, which present unique fragmentation behaviors and altered RTs. Although tools like pDeepXL [
+56
+] have started to address this issue by developing separate models for cleavable and non‐cleavable cross‐linked peptides using transfer learning, broader integration into mainstream workflows remains limited.
+2.2
+AI‐Powered De Novo Peptide Sequencing
+De novo peptide sequencing is a critical approach for identifying peptides directly from tandem mass spectrometry (MS/MS) data without relying on existing protein databases or spectral libraries [
+57
+,
+58
+]. Unlike conventional database‐driven methods that match acquired spectra to theoretical peptide sequences, de novo approaches infer the full amino acid sequence solely based on the observed spectrum and precursor mass. This is particularly advantageous in immunopeptidomics, where many peptides presented by MHC molecules can be absent from reference databases.
+The main challenges in de novo peptide sequencing stem from the nature of MS/MS. In this method, peptide ions are first selected in the MS1 scan and then fragmented either by using collision‐induced dissociation (CID) or HCD to produce a spectrum of fragment ions recorded in the MS2 scan [
+59
+]. During fragmentation, peptide bonds break and ion series are generated. The two most commonly observed types are b‐ions, retaining the N‐terminal part of the peptide, and y‐ions, retaining the C‐terminal end [
+60
+]. However, in addition to primary b‐ and y‐ion series typically used for peptide sequencing, MS/MS spectra often include a range of secondary fragment types. These include a‐ions (b‐ions minus CO), internal fragment ions (from double cleavage events), immonium ions (diagnostic for specific amino acids), and neutral loss ions, particularly relevant for modified peptides like phosphopeptides [
+11
+,
+61
+,
+62
+]. These fragmentation events are influenced by the collision energy, peptide charge state, length, and the location of specific amino acids. Even in HCD, fragmentation favors the production of b‐ and y‐ions, still, it does not eliminate the occurrence of other fragment types. As a result, the MS/MS spectra frequently include a complicated combination of overlapping fragment ion signals, additional ion types, or co‐isolated peptides (as in the case of DIA methods). The presence of these diverse ions introduces significant variability and spectral complexity, making de novo sequencing a particularly challenging task.
+Recent advances in AI enable data‐driven models to learn fragmentation patterns and spectral features directly from raw MS/MS data [
+63
+]. A key enabler of recent advances in AI‐powered de novo peptide sequencing is the availability of large‐scale, high‐quality peptide spectral libraries [
+58
+,
+64
+]. These AI models depend on well‐annotated training data to learn the relationships between MS/MS spectral patterns and peptide sequences. To facilitate this, recent studies have compiled spectra from diverse public repositories, including the NIST HCD library, synthetic peptide collections such as ProteomeTools [
+65
+], and datasets from platforms like MassIVE [
+66
+]. Together, these resources provide millions of labeled spectra covering a broad range of peptide lengths, charge states, and fragmentation patterns. Such diversity in training data is particularly important for immunopeptidomics, where peptides may be non‐tryptic, modified, or derived from noncanonical regions, and comprehensive learning from diverse peptide types improves generalization across complex biological contexts.
+DeepNovo [
+64
+] is one of the earliest DL‐based models to integrate CNNs and LSTM architectures. It learns local ion features via CNNs and sequential dependencies in amino acid sequences through LSTMs, predicting peptides one residue at a time. Its retrainable architecture allows adaptation to specific datasets, and it has been proposed to extend toward DIA workflows as well.
+In 2019, Karunratanakul et al. introduced SMSNet, a DL‐based framework specifically designed for de novo peptide sequencing [
+67
+]. SMSNet adopts a hybrid architecture combining sequence modeling with beam search and rescoring strategies to improve sequence accuracy. Its design allows it to not only predict amino acid sequences but also incorporate uncertainty quantification for each predicted residue, enabling more reliable identifications. A major highlight of SMSNet is its demonstrated utility in immunopeptidomics and phosphoproteomics. When applied to landmark studies, SMSNet uncovered over 10,000 previously uncharacterized HLA‐presented peptides and phosphopeptides, many of which were not identifiable through database searches. This emphasizes its ability to uncover noncanonical and low‐abundance antigens, making it particularly relevant for immunopeptidomic studies aiming to expand the known repertoire of MHC‐bound ligands.
+PepNet represents a more recent DL‐based model designed to improve the accuracy and generalizability of de novo peptide sequencing across both human and non‐human organisms [
+68
+]. It utilizes a fully end‐to‐end architecture optimized for high‐resolution higher‐energy collisional dissociation HCD‐MS/MS spectra, and it addresses one of the persistent challenges in de novo sequencing, accurate reconstruction of long or multiply charged peptides. PepNet's model integrates a spectrum encoder, and a peptide decoder trained jointly to better capture relationships between fragmentation patterns and peptide sequences. Notably, PepNet has demonstrated the ability to identify several‐fold more peptides from spectra previously unassigned by conventional tools like MaxQuant [
+69
+]. This capability is particularly valuable in immunopeptidomics, where unknown or patient‐specific peptides may not be represented in existing databases. Its strong performance on previously unidentifiable spectra makes it a powerful complementary tool for antigen discovery in cases where comprehensive reference databases are lacking or insufficient.
+Casanovo utilizes transformer neural network architecture to translate MS/MS data directly into peptide sequences [
+70
+]. By treating the sequence of peaks in an MS/MS spectrum analogously to words in a sentence, Casanovo applies principles from natural language processing to decode complex spectral data. This approach allows for the identification of peptides without prior information, making it particularly valuable in contexts such as immunopeptidomics, where novel or unexpected peptides are of interest. Trained on approximately 30 million high‐confidence peptide‐spectrum matches, Casanovo has demonstrated superior performance compared to previous methods. Its efficacy extends to identifying non‐enzymatic peptides and improving the analysis of immunopeptidomics experiments, thereby facilitating a deeper exploration of the immunopeptidome. The development of Casanovo underscores the transformative potential of applying advanced ML techniques, such as transformer models, to proteomics. By enhancing the accuracy and scope of de novo peptide sequencing, tools like Casanovo contribute significantly to the identification of novel antigens and the advancement of immunopeptidomics research.
+In summary, the integration of AI‐driven models into de novo peptide sequencing workflows has markedly improved the identification of peptides, particularly those not represented in existing databases. This progress is crucial for immunopeptidomics, where uncovering novel peptides can lead to a better understanding of immune responses and the development of targeted immunotherapies. Figure
+1C
+describes AI‐based process in De Novo Peptide Sequencing.
+2.3
+AI in Peptide‐Spectrum Match (PSM) Scoring and Rescoring
+Matching experimental MS/MS spectra to candidate peptide sequences is the most important step in MS‐based immunopeptidomics and is known as PSM. This process is typically performed using database search engines like SEQUEST [
+71
+], Mascot [
+72
+], and Andromeda [
+73
+]. These search engines generate theoretical fragment ion spectra from peptide sequences and compare them to the observed spectra. A similarity score is calculated to represent how well the observed MS/MS spectrum matches the theoretical spectrum of a candidate peptide.
+SEQUEST computes the cross‐correlation (XCorr) between experimental and theoretical spectra by offsetting them over a defined window to evaluate how closely the ion intensities align at each shift. A high XCorr indicates a strong match. Meanwhile, Mascot's MOWSE score is a probability‐based metric and is calculated based on the chance of a random match. It transforms the probability of a match into a logarithmic score. A higher score indicates a more confident match. This approach considers fragment ion matches and accounts for database size and peptide frequency. In the case of Andromeda, the engine used in MaxQuant [
+69
+], it employs a scoring function that integrates fragment ion matches, mass error distributions, intensity‐based weighting, and peptide length normalization to calculate a unified match score. The final Andromeda score reflects a weighted sum of ion match intensities adjusted by expected distributions.
+Once similarity scores are calculated for each PSM, determination of statistical significance for these matches is usually conducted via target‐decoy strategies to estimate the false discovery rate (FDR) [
+74
+]. In this approach, a controlled set of false matches is introduced into the search by adding a decoy database to the target protein database. The decoy database is usually generated by reversing or shuffling protein sequences to ensure that any match to a decoy peptide is a false positive [
+75
+]. Therefore, the frequency of the decoy hits can serve as an estimate of false matches compared to the target set. In this method, the data search against a combined target and decoy database is first conducted, and all PSMs are then ranked based on the similarity score. For a given score threshold, target PSMs and decoy PSMs are counted. The FDR rate is estimated based on the ratio between these PSM counts. Often, this is adjusted by a correction factor, usually 2, under the assumption that target and decoy hits occur at equal rates [
+74
+,
+76
+].
+This decoy approach has been commonly applied in traditional proteomics workflows with well‐defined, tryptic peptides, however, when it comes to immunopeptidomics, where peptides could be non‐tryptic, originate from noncanonical or mutated sequences, and are matched against expanded spectral libraries such as AI‐predicted DIA libraries, the search space expand significantly. This results in a more difficult FDR estimation and score calibration due to the increase in the number of high‐scoring false positives, therefore, less confident identifications.
+To overcome this, AI‐rescoring tools have been employed to re‐evaluate PSMs using a richer set of features beyond similarity metrics. Among which, Percolator is the earliest and the most adopted tools [
+77
+]. Percolator uses a semi‐supervised support vector machine (SVM) to distinguish between correct and incorrect PSMs. This model input was taken as a feature vector for each PSM, including similarity score from the search engine, charge state, mass error, and other spectral features. Target or decoy PSMs are labeled separately and Percolator trains a classification model to separate likely true positive from false ones. The model output posterior error probabilities (PEP), which represent the probability that a given PSM is incorrect and q‐values, which estimate the minimum FDR at which the PSM would be considered significant across all identifications with equal or better scores. Not only does Percolator help improve identification confidence, but its compatibility with outputs from many research engines makes it a widely used tool in both DDA and DIA settings. Figure
+1D
+illustrates AI‐based method for PSM rescoring.
+While Percolator relies on classical ML, recent efforts have incorporated DL models to provide richer feature sets for PSM rescoring. One typical candidate is MSBooster [
+28
+]. Specifically, it augments Percolator with spectral similarity scores computed using predicted spectra from Prosit [
+25
+]. These include fragment ion intensity correlation, predicted RT error, and ion mobility predictions. The inclusion of DL‐predicted features helps to better distinguish true PSMs. Another DL‐driven development is Prosit‐based rescoring, which re‐score candidate PSMs based on how closely experimental spectra match predicted ones [
+78
+]. In this setting, Prosit generates predicted fragment ion intensities and RTs for each peptide, and these are compared against the observed MS/MS data to compute new similarity metrics. These scores are then integrated back into search pipelines to re‐rank PSMs. This approach has shown marked improvements in DIA workflows, especially in immunopeptidomics. By learning complex fragmentation patterns using a BiGRU network and applying an attention mechanism, Prosit has been shown to enhance scoring alignment with experimental data, potentially improving sensitivity and specificity in immunopeptidomics.
+Similar to this idea, MS
+2
+Rescore is a modular rescoring framework that combines multiple prediction models to boost PSM accuracy [
+79
+]. It utilizes MS
+2
+PIP to predict MS/MS spectra and DeepLC [
+52
+] to predict RT, then combines these predicted values with observed spectra and chromatographic behavior to compute features such as spectral angle, ion matching accuracy, and RT deviation. These features are then passed into Percolator [
+77
+] for classification. MS
+2
+Rescore has been shown to improve identifications, particularly for noncanonical peptides and in workflows using synthetic spectral libraries. Its strength lies in leveraging multiple prediction models and harmonizing their outputs into a unified rescoring process.
+Lastly, AlphaPeptDeep [
+31
+], an extensible DL framework, also includes rescoring capabilities through its integration with Percolator [
+77
+]. It supports the prediction of MS2 spectra, RT, and CCS, and these predictions can be used to calculate additional features for PSM rescoring. One notable strength of AlphaPeptDeep is its support for transfer learning, allowing it to adapt to modified peptides or noncanonical peptide classes, making it especially suitable for immunopeptidomic applications. Its modularity and PyTorch‐based architecture make it highly customizable, enabling users to retrain models for specific datasets or peptide types.
+2.4
+AI in Immunogenicity Prediction and Neoantigen Prioritization
+While immunopeptidomics enables large‐scale identification of peptides presented by MHC molecules, only a small fraction of these peptides is capable of eliciting functional T‐cell responses. Putative neoantigens originating from tumor‐specific alterations that are identified from the direct epitope detection through LC‐MS/MS still cannot guarantee that they will elicit a T‐cell response. In other words, the presence of a peptide on the cell surface does not guarantee immunogenicity. Other factors such as peptide‐MHC binding strength, TCR accessibility, peptide biochemical properties, and the immunosuppressive tumor microenvironment (TME) can influence T‐cell responses [
+63
+,
+64
+,
+65
+]. Therefore, further validation of epitope immunogenicity to accurately prioritize peptides that are most likely to be immunogenic is the next crucial step to be conducted. This significant step helps reduce the burden of downstream experimental testing towards post potential neoantigen candidates. Many AI tools have been introduced to facilitate this process [
+80
+,
+81
+,
+82
+,
+83
+]. These models use peptide‐intrinsic features like amino acid hydrophobicity, sequence entropy, and mutation position to predict MHC binding affinity or TCR contact likelihood to predict if a peptide will trigger a T‐cell response. In some cases, incorporated biochemical rules were used, while in other cases, large‐scale immunogenicity datasets were leveraged to train ML or DL models. In the following section, we will review these tools under two main broad categories, including MHC binding and presentation prediction, and T‐cell recognition and immunogenicity prediction. Figure
+1E
+describes AI‐based methods for immunogenicity prediction and neoantigen prioritization.
+The likelihood of a peptide to be processed and presented on the surface of cells via MHC molecules is based on its ability to bind to a given MHC allele. MHC Class I molecules typically present peptides derived from intracellular proteins to CD8+ cytotoxic T cells, while MHC Class II molecules present extracellularly derived peptides to CD4+ helper T cells. Several DL tools have been developed to predict peptide‐MHC binding affinity, including the most used tools NetMHCpan (Class I) and NetMHCIIpan (Class II) [
+80
+]. They use artificial neural networks trained on large‐scale peptide binding and eluted ligand datasets to predict binding affinity across a wide range of MHC Class I and II alleles. Both sequence‐based features and position‐specific scoring matrices are incorporated in these tools. However, MHC Class II prediction poses unique challenges due to its open‐ended binding groove, higher peptide length variability, and weaker binding motifs compared to Class I [
+84
+,
+85
+]. Some AI tools have emerged to address these complexities such as Maria, a DL model that predicts peptide MHC‐II presentation probabilities based on peptide sequences, cleavage signatures, patient MHC alleles, and gene expression levels [
+86
+]. MHCnuggets uses LSTM networks to handle variable peptide lengths and predict binding for both common and rare alleles [
+87
+]. More specific to MHC Class I presentation, the ML ensembel models, MHCflurry [
+81
+], predict the binding affinity along with antigen processing and peptide abundance (the likelihood that a given peptide is produced and presented is based on protein expression and processing efficiency). This corporation helps MHCflurry improve the prioritization of peptides likely to be naturally presented on the cell surface. In 2019, Wu et al. introduced DeepHLApan, a DL‐based tool that integrates both binding affinity and gene expression features to predict HLA‐presented epitopes [
+82
+]. It uses a combination of CNN and LSTM layers to capture peptide sequence dependencies and context. While these tools help narrow down the pool of candidate peptides based on MHC binding, they do not assess whether a presented peptide will be recognized by a T‐cell. This ignites the need for the prediction of immunogenicity.
+DeepImmuno uses a deep neural network trained on experimentally validated immunogenic and non‐immunogenic peptides [
+88
+]. It considers peptide sequence patterns and physicochemical properties to predict immunogenicity. NetTepi [
+83
+] (T‐cell epitope predictor) extends NetMHC predictions by incorporating peptide‐MHC stability and T‐cell propensity scoring. It computes a composite score representing the likelihood that a given peptide will be recognized by a T‐cell based on its binding strength to MHC molecules and its biochemical profile relevant for T‐cell engagement.
+In addition, the IEDB immunogenicity prediction tools were trained on curated epitope datasets. It uses multiple ML algorithms such as logistic regression, SVMs, or random forest classifiers to model different aspects or capture different patterns in the training data [
+89
+]. Final immunogenicity prediction scores are computed from these ML‐models under the ensemble strategy.
+Together, these tools filter the large number of MS‐derived peptides to identify those with the highest potential for immunogenicity. This helps reduce the experimental burden on downstream neoantigen validation.
+3
+Case Study: Challenges and AI‐Driven Opportunities in Breast Cancer Immunopeptidomics
+Heterogeneity within a tumor increases its ability to adapt to constantly changing constraints, but adversely affects a patient's prognosis, therapy response, and clinical outcome [
+90
+]. Intratumoral heterogeneity results from a combination of extrinsic factors from the TME and intrinsic parameters from the cancer cells themselves, including their genetic, epigenetic, and transcriptomic traits, their ability to proliferate, migrate, and invade, and their stemness and plasticity attributes [
+90
+,
+91
+].
+Breast cancer is a highly heterogeneous disease, exhibiting variation across molecular subtypes such as hormone receptor‐positive (HR+), human epidermal growth factor receptor 2 (HER2)‐positive, and triple‐negative breast cancer (TNBC). This heterogeneity extends to immune infiltration and TME profiles, which influence responses to immunotherapy [
+91
+]. While breast cancer has historically been considered less immunogenic than tumors like melanoma or lung cancer, recent advances in immunopeptidomics have enabled the identification of TAAs and potential neoantigens in breast cancer tissues [
+92
+]. These findings underscore the growing interest in applying immunopeptidomics to study immune evasion, tumor‐specific peptide presentation, and antigen discovery in breast cancer.
+Among all the subtypes, TNBC tumors tend to exhibit higher levels of immune cell infiltration, greater genomic instability, and elevated tumor mutational burden (TMB) compared to other breast cancer types. Therefore, a neoantigen‐based immunotherapy method is promising. Several studies have explored the use of personalized neoantigen vaccines in TNBC, and epitope prediction tools such as NetMHCpan and EPIC have been integrated into these pipelines.
+In a preclinical study, researchers employed NetMHC 4.0 tool to predict neoantigens in TNBC, and cell‐based assays have been used to validate the binding capacity of the predicted neoantigens to patients' HLA alleles [
+80
+,
+92
+]. This study developed a neoantigen vaccine regimen using long peptides and an oncolytic vaccinia virus (VV) vector to elicit CD8+ T‐cell responses against TNBC tumors. The vaccine slowed tumor growth and improved survival in TNBC preclinical mouse models.
+Another recent neoantigen discovery and vaccine development study is in a Phase 1 clinical trial evaluating personalized polyepitope DNA vaccines in patients with TNBC who had residual disease following neoadjuvant chemotherapy [
+93
+] (Trial number:
+NCT02348320
+). In this study, pVACtools [
+94
+], a computational pipeline that integrates multiple ML‐based neoantigen prediction algorithms, was used to identify and prioritize tumor‐specific mutant epitopes based on tumor/normal exome and RNA sequencing. The resulting vaccine, composed of an average of 11 personalized neoantigens per patient, was administered via electroporation. ELISpot, flow cytometry, and TCR sequencing results confirmed the vaccines were well tolerated and induced neoantigen‐specific CD8+ T‐cell responses in the majority of patients (14 out of 18). With a median follow‐up of 36 months, the recurrence‐free survival reached 87.5%. This highlights the potential of neoantigen DNA vaccines in TNBC.
+Although promising results have been observed in TNBC, other subtypes such as HER2‐positive (HER2+) and HR+ cancers remain more challenging. With lower immune infiltration, reduced MHC expression, and lower overall TMB, these subtypes are considered relatively “colder” and are therefore believed potentially less responsive to neoantigen vaccines. As a result, peptide‐based vaccine strategies in these tumors have historically shown limited efficacy. For example, in the case of the vaccines like nelipepimut‐S (NP‐S), a nine‐amino acid peptide derived from the extracellular domain of the HER2 protein. Given its promise in early‐phase trials, the Phase III PRESENT trial [
+95
+] (Trial number:
+NCT01479244
+) did not demonstrate a significant improvement in disease‐free survival (DFS), leading to its early termination. Another Phase IIb Combination Trial with trastuzumab has been conducted for this peptide to evaluate the safety and efficacy of NP‐S combined with trastuzumab in patients with HER2 low‐expressing breast cancer [
+96
+] (Trial number:
+NCT01570036
+). Overall, no significant difference in DFS was observed. However, a subgroup analysis indicated a potential benefit in TNBC patients, with DFS of 92.6% in the NP‐S plus trastuzumab group versus 71.9% in the control group. However, given that NP‐S alone demonstrates immune activity in patients expressing HLA‐A2 or HLA‐A3 in earlier clinical phases, alternative formulations of it, including liposomal delivery and dendritic cell‐based vaccines, are being explored [
+97
+] (Trial numbers:
+NCT00266110
+,
+NCT00892567
+,
+NCT00304096
+,
+NCT01532960
+,
+NCT00091273
+).
+Another trial investigated other HER2‐derived peptide vaccines including AE37 and GP2. AE37 primarily elicits a CD4+ response, and GP2, a CD8+ response against the HER2 antigen [
+98
+]. The study was designed as a prospective, randomized, single‐blinded, multicenter trial involving disease‐free node‐positive and high‐risk node‐negative patients. There was no overall difference in 5‐year DFS between the vaccine and control groups. However, subgroup analysis showed improved clinical outcomes of DFS in certain subgroups of breast cancer patients. Most recently, an ongoing Phase III clinical study FLAMINGO‐01 [
+99
+] (Trial number:
+NCT05232916
+), is also looking into the effect of GLSI‐100 comprised of GP2 peptide and granulocyte‐macrophage colony‐stimulating factor, in preventing recurrence in patients with HER2/neu‐positive breast cancer.
+Overall, while neoantigen‐based vaccine studies in HER2+ breast cancer are mainly based on HER2‐derived epitopes, AI‐based tools might offer the opportunity to broaden the neoantigen landscape in HER2+ tumors. By integrating features such as binding affinity, antigen processing likelihood, and TCR recognition potential, these models can help identify novel peptides beyond HER2, including those derived from noncanonical sources like long non‐coding RNAs, alternative splicing, and post‐translational modifications.
+4
+Discussion and Future Perspectives
+AI‐based tools have largely transformed the field of immunopeptidomics, enabling deeper peptide identification, neoantigen discovery, and immunogenicity prediction. MS‐based workflows in immunopeptidomics, particularly those relying on DIA have deepened the potential application for unbiased, high‐throughput peptide identification. This method was once limited by the heavily reliance on spectral libraries and has now been transformed along with the events of AI models for high MS/MS spectra prediction. The application of this DIA approach facilitated by AI‐tools introduced a more accessible door for immunopeptidomics.
+Despite advances in spectral prediction, the complexity of the cancer immunopeptidome introduces new hurdles. One example could be the reliance on unspecific digestion modes and large‐scale proteogenomic libraries in DDA and DIA expands the search space dramatically. This results in the inflation of the FDR, especially when databases include non‐tryptic peptides, retained introns, and alternative isoforms. Target‐decoy strategies, while useful in helping control FDR, in this case, AI‐based rescoring approaches are necessary to improve PSM confidence. Additionally, recent studies showed that predicted spectra can closely resemble experimental ones, yet without extensive validation steps such as improved rescoring, use of decoy databases, and external benchmarking, the risk of false positives remains high. On top of that, in the case of noncanonical peptide, it is crucial to take into consideration the likelihood of identifying different classes of peptides. Chong et al. proposed using a separate FDR estimation process for each class of peptides to compute the FDR [
+100
+].
+Furthermore, even when peptides are confidently identified and shown to bind MHC molecules, immunogenicity remains difficult to predict. Tools like NetMHCpan [
+80
+], DeepImmuno [
+88
+], and iProphet [
+101
+] represent significant advances in modeling MHC binding and T‐cell recognition. However, only a subset of predicted binders elicits T‐cell responses (such as in studies on TNBC neoantigen vaccines). This emphasizes the limitations of current models and suggests more attention into this field. While factors like peptide processing, MHC stability, TCR interaction, and TME all influence immunogenicity, a more comprehensive approach with all these features or the exploration into different features could be considered to further this field.
+In parallel, experimental validation of predicted epitopes remains a major bottleneck. Common functional immunogenicity assays such as in vitro T‐cell activation assays like ELISpot, intracellular cytokine staining (ICS) with flow cytometry, TCR engagement assays like tetramer staining, and killing assays like T‐cell co‐culture assays are labor‐intensive, low‐throughput, and constrained by the limited availability of patient‐derived immune cells. In this context, AI plays a critical role in prioritizing potential candidates when experimental capacity is limited. Future developments may involve iterative refinement of AI models through the incorporation of accumulating immunogenicity assay data, thereby improving prediction accuracy and translational relevance in clinical settings.
+Another major concern in this domain would be the on‐target, off‐tumor toxicity. While some peptides may be tumor‐associated, they may also be expressed at low levels in healthy tissues. Hence, targeting such peptides can introduce unintended toxicity [
+102
+,
+103
+,
+104
+]. This issue underscores the need for tumor‐specific validation. Future work could prioritize tumor specificity assessment, such as expression analysis across normal tissues, epitope uniqueness checks, and incorporation of multiomics data.
+There have been proteogenomic pipelines proposed to address challenges in this field by integrating genomic, transcriptomic, and proteomic data into cohesive workflows. One example is NeoDisc that enables direct integration of MS data and supports multi‐source antigen discovery [
+16
+]. This pipeline can be applied from classical neoantigens to viral and noncanonical antigens. NeoDisc also identifies antigen presentation defects and allows both rule‐based and ML‐driven prioritization. This demonstrates the growing maturity of personalized immunopeptidomic platforms [
+9
+,
+16
+].
+Despite these advances, most tools and pipelines are currently optimized for personalized immunotherapy. Yet, there is growing interest in “off‐the‐shelf” targets where shared neoantigens or noncanonical peptides could be applicable across patients. One underexplored area is the role of PTMs, long non‐coding RNAs, and noncanonical splicing events as sources of immunogenic peptides. Some studies have already demonstrated their presence in immunopeptidome datasets and highlighted their immunogenic potential [
+23
+,
+100
+,
+105
+,
+106
+], but further development of more AI models trained specifically in these antigen classes is needed. Also, PTMs, such as phosphorylation or glycosylation, can alter fragmentation patterns and affect spectral prediction and identification. AI‐based models trained specifically on modified peptides or leveraging transfer learning may help address this challenge.
+Finally, as the number of AI models in this domain continues to grow, there is a need for community‐wide efforts to establish standardized benchmarking practices. Public databases like the IEDB have been playing a crucial role in model, it is, however, essential to have more curated benchmark datasets that consist of well‐characterized, experimentally validated immunogenic and non‐immunogenic peptides. In addition, the use of shared performance metrics would greatly facilitate transparent evaluation and reproducibility across studies. Establishing these cross‐community standards will improve model comparability and enhance reproducibility across studies.
+5
+Conclusion
+Application of AI in imunopeptidomics has rapidly transformed this field by addressing key challenges in peptide identification, immunogenicity prediction, and neoantigen prioritization. While progress has been most notable in highly immunogenic tumors like melanoma and lung cancer, there is growing potential for AI‐driven approaches to turn likely “colder” tumor “hot” by enhancing their immune visibility and hence improve the benefit of immunotherapy in these types of cancers. Future models may help reclassify such tumors as immunologically targetable by revealing hidden immunogenic features and improving peptide selection.
+In future research, attention should also be given to transfer learning approaches that allow models trained on canonical peptides to adapt to rare or modified peptides, improved modeling of PTM‐related fragmentation patterns, and immunogenicity predictors that incorporate TME signals, antigen processing defects, and immune evasion pathways.
+Author Contributions
+Thanh Hoa Vo
+: conceptualization, methodology, formal analysis, data curation, writing – original draft, writing – review & editing, visualization.
+Orla O'Donovan
+: Validation.
+Edel McNeela
+: Writing – review & editing, validation.
+Jai Prakash Mehta
+: Validation, supervision.
+Sweta Rani
+: Investigation, writing – review & editing, supervision, funding acquisition.
+Conflicts of Interest
+The authors declare no conflicts of interest.

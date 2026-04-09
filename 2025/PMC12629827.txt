@@ -1,0 +1,1188 @@
+Introduction
+Solid tumors are not just a collection of malignant cells—they are dysfunctional organs consisting of cancer cells and nonmalignant host cells together in a complex extracellular matrix (ECM).
+1
+,
+2
+,
+3
+The interplay between tumor cells and host cells in the tumor microenvironment (TME) shapes therapeutic responses and resistance.
+1
+However, conventional approaches in oncology drug development that use cultured cancer cell lines or subcutaneously implanted tumor cells fail to recapitulate the complexity of tumor cell-stromal cell and cell-ECM interactions.
+4
+Physiological models of tumor tissue that are compatible with drug screening are needed to discover drugs that target these complex interactions in TME.
+Recently, we and others have established organotypic tumor slice model systems from mouse and primary human tumor samples that recapitulate the complexity of intratumor heterogeneity, preserve tissue architecture, and enable longitudinal biochemical and pharmacological studies.
+5
+,
+6
+,
+7
+,
+8
+However, the number of tissue slices that can be generated from a single tumor sample limits their use in high-throughput screenings. To address this challenge, we integrated these models with machine learning algorithms to computationally predict tumor responses to hundreds of drugs. As a proof of concept, we applied our integrated approach to identify drugs that specifically target the cancer TME in highly desmoplastic tumors.
+We performed functional kinase inhibitor screens in mouse triple-negative breast cancer (TNBC) cell lines and pancreatic cancer cell lines, both in monolayer (2D cultures) and in organotypic tumor slices (3D culture) from immune-competent tumors of the same origin. Using a polypharmacology-based machine-learning approach, we identified several drug candidates that significantly reduced the viability of tumor tissue slices but not the cancer cells in 2D cultures. While some of the drugs predicted to be effective on 3D tumors were previously known, we also discovered several drugs that specifically inhibited the viability of 3D tumors but not the cancer cells in 2D cultures. Notably, we validated the effectiveness of doramapimod in tissue slices from multiple desmoplastic tumors and
+in vivo
+mouse models. Mechanistic investigations showed that doramapimod, a known p38 mitogen-activated protein kinase (MAPK) inhibitor, also directly inhibits the discoidin domain-containing receptor (DDR1/2) in cancer-associated fibroblasts (CAFs), leading to reduced production of ECM proteins, immune-suppressing chemokines, and growth-promoting factors. Both doramapimod treatment and genetic depletion of DDR1/2 and MAPK12 in CAFs hindered ECM production and stunted cancer cell growth in co-culture assays. Additionally, DDR1/2 and MAPK12 regulated ECM production by modulating GLI activity in CAFs, independent of the hedgehog signaling pathway. Targeting the DDR1/2-MAPK12-GLI pathway with doramapimod enhanced the effectiveness of chemotherapy and immunotherapy in tumor slices from patients and preclinical models. These results highlight the role of the non-canonical hedgehog pathway in CAF regulation and demonstrate the value of using 3D tissue models to identify critical targets within the TME.
+Results
+Comparison of 2D cultures and 3D tissue screens identifies drugs targeting the tumor microenvironment
+We sought to identify drugs that specifically target the TME by conducting contrastive drug screenings on cells in monolayer (2D cultures) and tumor tissues (3D microtumors). These microtumors are prepared directly from fresh tumor specimens and retain multiple native cell types, including stromal and immune components, as well as the ECM and overall tissue architecture. Utilizing a machine learning-driven drug screening approach,
+9
+,
+10
+,
+11
+,
+12
+we carried out kinase inhibitor screenings on orthotopic, immune-competent mammary and pancreatic tumor tissues, along with cell lines of the same origin cultured in 2D (
+Figure 1
+A). We employed three well-established murine models, known for the substantial influence of the TME on cancer cell behavior and therapy response. These models include stroma-rich TNBC (E0771 and Py8119) and pancreatic cancer (KPC). Experimentally, we tested a panel of 32 computationally selected kinase inhibitors and assessed their impact on the viability of cancer cells in both 2D and microtumors. The collected phenotypic data were integrated with previously established kinase inhibitor profiles and elastic net regression modeling, an approach known as kinome regularization (KiR),
+11
+,
+13
+,
+14
+to predict responses to 428 kinase inhibitors (
+Figure S1
+;
+Table S1
+). KiR offers a major advantage by requiring only a small, well-characterized set of inhibitors that collectively target ∼90% of the kinome. It leverages the fact that while kinase inhibitors often have broad specificity, each has a distinct activity profile. Using elastic net regression, KiR links phenotypic outcomes (e.g., cell or tissue viability) to the activity of individual kinases, penalizing those with minimal contributions and highlighting key dependencies. This approach is particularly valuable when screening is performed in complex systems such as microtumor models, where throughput is limited, and large-scale testing is impractical. Once kinase dependencies are inferred, they can be used to computationally predict responses to ∼400 additional kinase inhibitors. We built a total of six KiR models: three using data from responses in 2D cell cultures and three using data from responses in micortumors. Model performance was evaluated using leave-one-out cross-validation (LOOCV), where the mean squared error (MSE) between predicted and observed drug responses was calculated. In LOOCV, the activity profiles of 31 drugs were used to train the model to predict the effect of the remaining drug on viability in 2D cultures or microtumors. The MSE between predicted and observed changes in viability provided an error score for each model. Overall, the models for both 2D cultures and 3D microtumors performed with at least 80% accuracy (
+Figure S1
+). The optimized models were then used to predict responses to 428 kinase inhibitors.
+Figure 1
+Comparative drug screening in 2D culture and 3D tissues reveals tumor-specific vulnerabilities
+(A)
+Schematic overview of the experimental workflow
+. Fresh tumor tissues were processed into microtumors. Drug screening was conducted in both 2D cultured cells and microtumors systems, followed by machine learning-based analysis to identify effective compounds.
+(B)
+An unexpectedly high number of drugs are effective in 3D tissues compared to 2D cultures
+. A bar plot showing the number of effective compounds identified in microtumors versus 2D monolayer cultures across three tumor models: E0771 (breast), Py8119 (breast), and KPC (pancreas). A significantly higher number of effective drugs were identified in the microtumors.
+(C)
+Overlap of effective drugs for breast and pancreatic cancers in 3D tissue slices
+. The Venn diagram displays the overlap of drugs predicted to be effective against breast and pancreatic cancers in microtumors. A core set of 12 compounds was found to be commonly effective.
+(D)
+The top 3D tumor-specific effective drugs
+. Heatmaps comparing the responses in microtumors versus 2D cultured cells for the top tumor-specific effective drugs in E0771 (left) and KPC (right) models.
+(E)
+Top kinases targeted by kinase inhibitors specifically in microtumors
+. A plot showing the fraction of tumor-specific effective drugs that inhibit the indicated kinases, based on measured kinase inhibition profiles at 500 nM concentration.
+(F)
+Drug response variability across cancer types in 2D and 3D
+microtumors. A boxplot showing the response of various cancer types to a set of 12 drugs in 2D culture and microtumor models.
+An inhibitor was considered effective if it was predicted to reduce the viability of tissues or cells by at least 35% at 500 nM compared to the DMSO control. In all three cases, we found that the number of inhibitors predicted to be more effective on microtumors was, on average, 2–3 times higher than those effective on 2D cultured cells. (
+Figure 1
+B). When comparing the overlap of kinase inhibitor responses predicted to be effective in microtumors, we observed a higher overlap between the two TNBC models (29 drugs) compared to the pancreatic tumor model (18–21 drugs) (
+Figure 1
+C). We then investigated drugs that were specifically effective in microtumors but had no effect on the viability of cancer cells in 2D cultures (
+Table S2
+). For the E0771 microtumors, the top predicted tumor-specific drugs included dorsomorphin (a BMP and AMPK inhibitor) as well as JAK and FLT3 kinase inhibitors. For the KPC microtumors, the top tumor-specific inhibitors included the broadly acting ruboxistaurin and enzastaurin and inhibitors of the PKC kinase (
+Figure 1
+D). To understand the breadth of kinases inhibited by these tumor-specific effective inhibitors, we compiled a list of their primary targets. The most common targets included TRK, LRRK2, JAK, and VEGFR kinases (
+Figure 1
+E). Other kinases targeted by these tumor-specific drugs included MAPK family members, PIM, DDR, PKC, CAMK, and IRAK kinases. We then performed enrichment analysis of these top kinases using the Tabula Sapiens database,
+15
+which includes human cell data from 24 organs and over 400 distinct cell types. While we recognize that many of these kinases, such as FLT3 or NUAK, are also expressed in cancer cells, our goal was to highlight their broader expression across diverse non-malignant cell types. The analysis showed that several kinases are associated with endothelial cells (VEGFR and NUAK), immune cells (LRRK2, JAK, FLT3, MAP4K4, and CAMK), neuronal/neuroendocrine cells (NTRK and RET), and stromal cells (DDR and MUSK) (
+Table S3
+). These findings, along with the identification of microtumor-specific effective inhibitors, suggest that some drug responses may be mediated by effects on non-cancer cell populations in the TME, underscoring the importance of conducting drug screenings in models that capture this complexity.
+Next, we focused on 12 drugs that were predicted to be effective in all three stromal-rich tumor models (
+Figure 1
+C). Of these, doramapimod, GSK-269962A, and JAK kinase inhibitors were consistently predicted to be more effective on 3D tumors than in 2D culture (
+Figure 1
+D). Doramapimod is a pan-p38 family of MAPKs inhibitor that inhibits all four isoforms,
+16
+and has been previously tested in humans for treating rheumatoid arthritis.
+17
+GSK-26992A inhibits ROCK kinase, which plays an important role in regulating cancer cell invasion, migration, and immune cell function.
+18
+A previous study showed that while treatment with GSK-269962A did not affect the growth of 48 different breast cancer cell lines
+in vitro
+, it significantly impacted the growth of TNBC (4T1) tumors
+in vivo
+.
+19
+This provides support to our KiR predictions based on microtumors closely mirror the response observed
+in vivo
+. Similarly, GSK-650394 (an SGK1 inhibitor) has also been shown to exhibit activity in breast cancer models
+in vivo
+.
+20
+The JAK-STAT signaling pathway is also known for its involvement in various oncogenic hallmarks such as cancer cell proliferation, immune response, and inflammation,
+21
+Specifically, JAK inhibitor I (a pan JAK inhibitor) has been demonstrated to inhibit tumor growth across multiple models,
+22
+corroborating the anti-tumor responses predicted by our models. Together, this highlights that the inhibitors identified through screening in microtumors models could be overlooked in traditional drug screening using 2D cancer cell cultures.
+Doramapimod suppresses tumor growth across multiple cancer models
+Since doramapimod’s role in cancer is not well established, we evaluated its effects in the TME using microtumors derived from multiple models, including murine tumors (KPC, 4T1, Py8119, and E0771 primary and lung metastases), a breast cancer patient-derived xenograft (PDX) (HCI-001), and human tumors (hepatocellular carcinoma and meningiomas) (
+Figure 2
+A). We found that treatment with doramapimod significantly reduced (
+p
+< 0.05) the viability of microtumors derived from desmoplastic tumors such as TNBC and pancreatic cancer. In contrast, its effect was limited in other tumor types such as HCC and meningiomas, which generally have less dense stroma (
+Figure 2
+A), suggesting that the mechanism of action of doramapimod may involve a desmoplastic stromal cell type. Analysis of doramapimod at 2.5 μM across 492 cancer cell lines from the DepMap data
+23
+showed minimal sensitivity, with only 11 lines exhibiting <50% residual growth and the most sensitive line retaining 37% viability (
+Figure 2
+B). This concentration is five times higher than in our microtumor and 2D assays, suggesting doramapimod primarily impacts microtumors viability via the TME rather than direct cancer cell toxicity.
+Figure 2
+Doramapimod treatment suppresses tumor growth in multiple cancer models
+(A)
+Efficacy of doramapimod in desmoplastic tumors
+. Bar graph showing the viability (% of control) of microtumors from various tumor types following treatment with doramapimod (500 nM) or DMSO control. Data represent the mean ± SEM from two-three biological replicates.
+(B)
+Minimal effect of doramapimod in 2D cultures
+. The relative viability of 492 cancer cell lines from diverse lineages treated with doramapimod at 2.5 μM.
+(C)
+In vivo efficacy of doramapimod in the E0771 TNBC model
+. Left: tumor growth curves in mice bearing E0771 tumors treated with systemic doramapimod (30 mg/kg daily) or vehicle. Right: final tumor weights at endpoint.
+n
+= 9/group. Unpaired Student’s t test. ∗
+p
+< 0.05).
+(D)
+Doramapimod treatment in an orthotopic pancreatic cancer mouse model
+. Left: a schematic of experimental design showing KPC cells implanted into the pancreas of 6-week-old C57BL/6 mice to establish an orthotopic pancreatic cancer model. Mice were treated daily with doramapimod (40 mg/kg) for two weeks. Right: tumor weight and representative images of doramapimod or vehicle-treated KPC tumors.
+n
+= 4 (control);
+n
+= 5 (treatment). Student’s t test. ∗∗
+p
+< 0.01.
+(E)
+Tumor growth of 4T1 tumors treated with doramapimod
+. Left: growth curves of 4T1 tumors in BALB/cJ female mice with subcutaneous 4T1 tumor, treated twice a week with either doramapimod (1 mg/kg) or vehicle control via intratumoral injections. Black arrows indicate the timing of drug administrations. Tumor weight at the endpoint.
+n
+= 7 (control);
+n
+= 6 (treatment).
+Right
+: tumor growth of breast PDX model (HCI001) in mice treated with doramapimod. Doramapimod (1 mg/kg) or vehicle control was intratumorally injected twice a week into HCI-001 PDX tumor-bearing mice.
+n
+= 5 (control);
+n
+= 5 (treatment). For time course tumor volume measurement, statistical significance was calculated by two-tailed, unpaired multiple Student’s t tests with Holm-Sidak correction. For tumor weight, Student’s t test. ∗
+p
+< 0.05, ∗∗
+p
+< 0.01, and ∗∗∗
+p
+< 0.001. Error bars indicate SEM.
+Next, we evaluated doramapimod’s therapeutic potential
+in vivo
+using physiologically relevant mouse models. We tested its ability to suppress tumor growth in models of TNBC (E0771 and 4T1), pancreatic cancer (KPC), and a PDX model of TNBC (HCI-001) (
+Figures 2
+C–2E). First, we assessed the ability of systemically delivered doramapimod to reduce E0771 mammary tumors and KPC pancreatic tumors in mice. For establishing mammary TNBC tumors, we orthotopically injected E0771 cells into the mammary fat pads of female mice. Once the tumors reached a volume of 100 mm
+3
+, the mice were randomly divided into vehicle or doramapimod treatment groups. After a two-week treatment period, we found that doramapimod significantly reduced tumor growth by 57% and tumor weight by 26.0% compared to the vehicle control (
+Figure 2
+C). To establish pancreatic tumors, we orthotopically injected firefly luciferase-expressing KPC cells into the pancreata of male mice. One week after tumor implantation, we used an IVIS to evenly distribute mice with similar tumor burdens into control and doramapimod treatment groups. After two weeks of treatment, mice treated with doramapimod showed a significant reduction in tumor weight, with a 44% decrease compared to the control group (
+Figure 2
+D).
+Previous studies have shown that doramapimod functions as an anti-inflammatory agent by inhibiting cytokines, such as interleukin (IL)-6 and IL-13, via p38 MAPK signaling.
+24
+,
+25
+,
+26
+To determine if its anti-tumor effects were due to systemic anti-inflammatory activity, we administered a low dose of (1 mg/kg) directly into the tumor site, minimizing systemic exposure. This approach was tested in both immunocompetent (4T1) and immunocompromised (HCI-001 PDX) mouse models. Intratumoral delivery of doramapimod significantly suppressed tumor growth in both models (
+Figure 2
+E). In 4T1 tumors, we observed a significant reduction in growth and a ∼2-fold decrease in final tumor weight. Similarly, localized treatment of HCI-001 PDX tumors led to a reduction in tumor volume to ∼63.6% of vehicle-treated controls. These findings suggest that doramapimod’s antitumor effects extend beyond systemic immune modulation and involve local mechanisms within the TME.
+Doramapimod treatment alters extracellular matrix composition and impacts cancer-associated fibroblast function
+To investigate doramapimod’s mechanism of action, we analyzed transcriptomic changes in KPC and E0771 tumors treated with doramapimod versus vehicle control (
+Figure 3
+A;
+Table S4
+). Doramapimod treatment significantly reduced the expression of 80–84 genes (≥2-fold,
+p
+< 0.05), including col1a1 (2.1-fold), loxl2 (3.0-fold), and agt (5.3-fold). Pathway and GO analysis showed enrichment for genes involved in ECM organization, metalloproteases, and collagen processes (
+Figure 3
+B). To validate these changes at the protein level, we performed ECM-focused proteomics on treated tumors. Doramapimod reduced the abundance of several ECM components, including collagens (e.g., col10a1, col4a3, col6a5, and col11a2) and ECM regulators (
+Figure 3
+C). While the specific genes and proteins varied between breast and pancreatic tumor models, ECM-related pathways were consistently downregulated in both, indicating a shared response to doramapimod.
+Figure 3
+Doramapimod inhibits the expression of ECM-associated genes in pancreatic and breast tumors
+(A)
+Transcriptional changes in tumor tissues following doramapimod treatment
+. Volcano plots show differentially expressed genes (DEGs) in KPC (left) and E0771 (right) tumor tissues. Genes significantly upregulated or downregulated (>2-fold,
+p
+< 0.05) in doramapimod-treated tumors versus control are highlighted in red and blue, respectively.
+n
+= 3 tumors per group.
+(B)
+Pathway enrichment of downregulated genes
+. Functional enrichment of genes downregulated by doramapimod across Gene Ontology, WikiPathways, Reactome, and KEGG databases. ECM-related categories are highlighted in red, indicating suppression of matrix organization and remodeling.
+(C)
+Proteomic analysis of ECM components
+. Heatmaps show mass spectrometry-based quantification of ECM-related proteins in KPC (left) and E0771 (right) tumors treated with doramapimod versus vehicle.
+n
+= 3 tumors per group.
+(D)
+Reduction of CAF populations in vivo
+. xCell analysis of bulk RNA-seq data from 4T1 and KPC tumors indicates a reduction in CAF signatures following doramapimod treatment.
+(E)
+Gene expression changes in breast CAFs
+. Volcano plot shows significantly upregulated and downregulated genes (>2-fold,
+p
+< 0.05) in primary CAF cultures treated with doramapimod (
+n
+= 3).
+(F)
+Pathway enrichment in CAFs
+. Dot plot showing enriched pathways among doramapimod-downregulated genes in breast CAFs. ECM-related pathways are labeled in red.
+(G)
+Functional protein network analysis
+. Protein interaction network of downregulated genes in doramapimod-treated CAFs, generated using Enrichr-KG. Clusters are labeled based on key functional pathways including ECM-receptor interaction, TGF-β signaling, and axon guidance.
+ECM, particularly collagens, plays a crucial role in cancer cell survival, proliferation, and invasion.
+27
+In desmoplastic tumors, CAFs are major contributors to ECM production. These fibroblasts are recruited and reprogrammed by cancer cells to promote tumor growth, in part by producing collagen-rich ECM.
+28
+Thus, we hypothesized that doramapimod reduces ECM protein expression by impairing CAF function. Supporting this, xCell-based deconvolution
+29
+of gene expression data from 4T1 and KPC tumors showed a decreased CAF population following doramapimod treatment (
+Figure 3
+D). Together, doramapimod treatment seems to reduce both the presence and function of CAFs in breast and pancreatic tumors, potentially limiting tumor progression.
+To assess how doramapimod affects CAFs function, we utilized CAFs isolated from human breast and pancreatic tumors. Doramapimod had no effect on CAF growth or viability (
+Figure S2
+). However, transcriptomic analysis revealed significant downregulation of 1,153 genes in breast CAFs, including ECM-related genes such as collagens, matrix metalloproteinases, CXCL12 (2.4-fold,
+p
+= 1.5E−41), and SPP1 (14-fold,
+p
+= 1.5E−181) (
+Figures 3
+E;
+Table S5
+). Similar reductions in COL1A1, COL1A2, and ACTA2 were observed in pancreatic CAFs (
+Figure S2
+). Pathway analysis showed enrichment for ECM-associated processes, including integrin signaling, collagen degradation, and elastic fiber formation (
+Figure 3
+F). These findings suggest that while doramapimod does not affect CAF viability, it significantly impairs their ECM-remodeling functions, potentially limiting their ability to support tumor progression.
+Doramapimod targets DDR1/2 and MAPK12 kinases to regulate ECM in cancer-associated fibroblasts
+To investigate the molecular mechanisms of doramapimod-mediated ECM regulation in CAFs, we first aimed to identify its direct protein targets. We performed an
+in vitro
+kinase assay using the HotSpot radiometric filter-binding method
+30
+to profile doramapimod against 370 kinases at 500 nM under Km ATP conditions (
+Table S6
+). This assay confirmed known targets of doramapimod, including p38α (
+MAPK14
+) with 0.2% of residual activity, or 99.8% inhibition, p38β (
+MAPK9
+) with 19% residual activity, p38γ (
+MAPK12
+) with 15.4% residual activity, consistent with previous reports.
+16
+,
+31
+Unexpectedly, we also found potent inhibition of kinases not previously linked to doramapimod, including discoidin domain receptor 1 (DDR1) (0.1% residual activity, indicating 99.9% inhibition), DDR2 (3.9% residual activity, or 96.1% inhibition), JNK2 (
+MAPK9
+) (7.8% residual activity), and EphrinA7 (1.6% residual activity) (
+Figure 4
+A). Since EphrinA7 is not expressed in CAFs, it was excluded from further analysis. These findings led us to hypothesize that doramapimod’s effects on CAFs may be driven by inhibition of p38 MAPKs, JNK2, and DDR1/2 kinases. To validate this, we used silencing RNAs to deplete the levels of these kinases in breast cancer-derived CAFs (
+Figure S3
+) and measured the expression of CAF markers (
+Figure 4
+B). Knockdown of DDR1 or MAPK12 significantly reduced ACTA2, a myofibroblast-like CAF marker,
+32
+while silencing DDR1, DDR2, or MAPK12 reduced CXCL12 expression, associated with inflammatory-type CAFs.
+32
+,
+33
+Notably, knockdown of DDR2 increased ACTA2, suggesting a potential compensatory effect. Both DDR1 and DDR2 are receptor tyrosine kinases that serve as collagen receptors,
+34
+reinforcing their role in ECM regulation. Further, CXCL12 expression was not significantly decreased by doramapimod when DDR1/2 or MAPK12 were already knocked down (
+Figure 4
+C), supporting that the drug acts through the DDR1/2-MAPK12 axis. Altogether, these findings identify DDR1, DDR2, and MAPK12 as key functional mediators and potential therapeutic targets of doramapimod in CAFs.
+Figure 4
+Doramapimod unexpectedly targets DDR1/2 and MAPK12, regulating extracellular matrix gene expression in cancer-associated fibroblasts
+(A)
+Kinome profiling of doramapimod
+. Left: residual kinase activity for 370 kinases treated with 500 nM doramapimod using a radioactive ATP assay. Kinases with <20% residual activity are indicated in red. Right: bar chart highlighting top inhibited kinases.
+(B)
+CAF gene expression after kinase knockdown
+. Heatmap showing changes in
+ACTA2
+and
+CXCL12
+expression in breast cancer-derived CAFs following siRNA knockdown of doramapimod target kinases.
+(C) Plot showing qPCR analysis of
+CXCL12
+expression in breast CAFs following siRNA-mediated knockdown of DDR1, DDR2, and MAPK12, with or without doramapimod treatment. Data represent mean ± SEM;
+n
+= 3 per group. Student’s t test, compared with DMSO control. ∗
+p
+< 0.05, ∗∗
+p
+< 0.01, ∗∗∗
+p
+< 0.001, and ∗∗∗∗
+p
+< 0.0001.
+(D)
+Transcriptional changes in CAFs upon DDR1
+,
+DDR2
+,
+or MAPK12 depletion
+. Volcano plots showing DEGs (>2-fold,
+p
+< 0.05) after siRNA knockdown of DDR1 (left), DDR2 (middle), or MAPK12 (right) in primary breast CAFs. Downregulated genes are shown in blue and upregulated in red.
+n
+= 3 per group.
+(E)
+Pathway enrichment of downregulated genes following combined DDR1/2 and MAPK12 knockdown
+. Bar graph showing enrichment across Gene Ontology, Reactome, and KEGG pathways, with ECM-related processes highlighted in red.
+(F)
+Neutralization of CAFs’ growth stimulatory effect through depletion of DDR1/2 and MAPK12 kinase expression
+. Top: schematic of the experimental design showing breast CAFs treated with siRNAs against the indicated kinases, then co-cultured with 4T1 cancer cells labeled with nuclear GFP. Bottom: growth curve of 4T1 cells co-cultured with kinase depleted CAFs, displayed as Mean ± SEM.
+n
+= >3 in each group.
+(G)
+DDR1/2 enhances p38 phosphorylation
+. Western blot analysis showing elevated levels of phospho-p38 in CAFs overexpressing DDR1 or DDR2 compared to GFP control. Total p38 and β-actin are shown as loading controls.
+(H)
+Proposed model of doramapimod action
+. Doramapimod inhibits the DDR1/2–MAPK12 signaling axis, which drives ECM production in CAFs.
+To explore the effects of depleting DDR1/2 and MAPK12 in breast cancer-derived CAFs, we conducted transcriptomic profiling (
+Figures 4
+D;
+Table S7
+). We found that knocking down DDR1 significantly reduced the expression of 423 genes, including
+ACTA2
+(5.4-fold,
+p
+value, 6E−221),
+THBS1
+(5.3-fold,
+p
+value, 3.7E−299), and
+CCL11
+(24-fold,
+p
+value, 2.6E−46). Knockdown of DDR2 decreased the expression of 105 genes, such as
+CXCL12
+(3.7-fold,
+p
+value, 3.2E−134),
+CCL2
+(3.6-fold,
+p
+value, 1.7E−102), and
+PTGS1
+(3-fold,
+p
+value, 4.6E−68). Similarly, silencing MAPK12 resulted in a significant downregulation of 498 genes, including
+ACTA2
+(8-fold,
+p
+value, 4E−317),
+CXCL12
+(6-fold,
+p
+value, 1.1E−224),
+COL11A1
+(5.6-fold,
+p
+value, 1.4E−43), and
+CCL11
+(2500-fold,
+p
+value, 8.4E−69) (
+Figure 4
+D). Integrated pathway analysis of the genes downregulated by DDR1/2 and MAPK12 knockdown further confirmed enrichment of processes related to the ECM and its regulation (
+Figure 4
+E). Taken together, biochemical and transcriptomic profiling revealed that doramapimod targets DDR1/2 and MAPK12, significantly influencing ECM regulation and altering CAF function.
+DDR1/2-MAPK12 signaling axis is important for CAF-mediated cancer cell growth
+CAFs interact with neighboring cells in their TME through direct contact and paracrine signaling.
+35
+Previous studies have shown that CAFs can promote cancer cell growth in serum-free conditions.
+35
+,
+36
+To test whether CAFs from breast and pancreatic tumors support cancer cell growth and whether doramapimod can disrupt this, we performed co-culture experiments. We found that 4T1 breast cancer cells failed to proliferate in serum-free conditions when cultured alone, but grew when co-cultured with breast-derived CAFs, indicating that CAFs promote cancer cell growth through both contact and secreted factors (
+Figure S3
+). Notably, doramapimod treatment reduced 4T1 proliferation in the presence of CAFs in a dose-dependent manner. Similar results were observed with MDA-MB-231 human TNBC cells co-cultured with fibroblasts (
+Figure S3
+), suggesting that doramapimod disrupts CAF-mediated support of cancer cell growth.
+Next, we investigated which doramapimod-targeted kinases contribute to CAF-mediated cancer cell growth. We depleted levels of six kinases identified as doramapimod targets (
+Figure 4
+A) in breast cancer-derived CAFs and evaluated their ability to support breast cancer cell growth under serum deprivation conditions. Depletion of DDR1, DDR2, and MAPK12 (p38γ) significantly reduced CAF-mediated support of cancer cell growth, while silencing the other kinases had no effect (
+Figure 4
+F). These results suggest that doramapimod’s impact on microtumor viability and
+in vivo
+responses is likely driven by its inhibition of the DDR1/2-MAPK12 signaling axis.
+DDR1 and DDR2 are collagen-activated tyrosine kinase receptors that signal through several downstream effectors, including Src, Ras/Raf/MEK/Erk, PI3K/Akt, and Jak2 kinases.
+37
+,
+38
+However, it’s less clear whether DDR1 and DDR2 can directly activate p38 MAPK kinase. Our data indicate that overexpressing DDR1 or DDR2 in untransformed fibroblasts substantially increases p38 MAPK phosphorylation, suggesting that p38 MAPK activation is a downstream effect of DDR1 and DDR2 (
+Figure 4
+G). These findings suggest that doramapimod disrupts CAF-mediated support of cancer cell growth by inhibiting DDR1, DDR2, and MAPK12 (
+Figure 4
+H), highlighting their key role in ECM remodeling and tumor-stroma interactions.
+GLI1, a hedgehog pathway transcription regulator, controls the expression of ECM genes downstream of the DDR1/2-MAPK12 axis
+Our data suggest that DDR1/2-MAPK12 plays an important role in regulating ECM genes in CAFs. However, the mechanisms by which these receptors and kinases regulate ECM genes and support cancer cell growth and which transcription factors are involved remain unclear. To further elucidate the mechanistic details of this pathway, we examined the overlap of genes that are downregulated in response to the knockdown of DDR1/2 and MAPK12 in CAFs. We identified an overlap of 7 genes that are commonly reduced by at least 2-fold due to the knockdown of DDR1/2 and MAPK12 (
+Figure 5
+A). These include several genes involved in immune cell regulation such as
+CXCL12
+,
+CCL11
+, and
+PTGS1
+, as well as collagen (
+COL15A1
+) and glioma-associated oncogene homolog 1 (GLI1). Notably, GLI1 is the only transcription factor found to be downregulated by the knockdown of either DDR1/2 or MAPK12.
+Figure 5
+DDR1/2 and MAPK12 converge at GLI to regulate ECM production and support cancer cell growth
+(A)
+Gene overlap and expression analysis
+. Left: a Venn diagram showing the overlap of genes downregulated in response to knockdown of DDR1/2 and MAPK12 in CAFs. Right: a heatmap displaying changes in the expression of 7 genes commonly downregulated by depletion of DDR1/2 and MAPK12. The transcriptional factors, ECM proteins, and immune regulatory roles of these genes are highlighted.
+(B)
+Doramapimod reduces GLI1 nuclear localization in CAFs
+. Left: representative immunofluorescence images showing reduced nuclear GLI1 signal in CAFs following doramapimod treatment (1 μM for 48 h). Right: quantification of nuclear GLI1 intensity from at least 20 cells per group, indicating significantly reduced nuclear localization. Scale bars, 20 μm; ∗∗
+p
+< 0.01; Student’s t test.
+(C)
+GLI1 transcriptional activity is inhibited by doramapimod
+,
+DDR1/2
+,
+and MAPK12 knockdown
+. Left: luciferase reporter assay in pancreatic CAFs shows decreased GLI1 transcriptional activity upon treatment with doramapimod (1 μM) or GANT61 (1 μM). Right: similar reduction in GLI1 activity observed upon knockdown of DDR1, DDR2, or MAPK12. Data represent mean ± SEM from two-three biological replicates; ∗
+p
+< 0.05 and ∗∗
+p
+< 0.01; unpaired Student’s t test.
+(D)
+GLI1 inhibition downregulates ECM-associated pathways
+. Pathway enrichment plots based on RNA-seq of breast and pancreatic CAFs treated with GANT61. Genes involved in ECM regulation, including integrin signaling, collagen formation, and matrix remodeling, are significantly downregulated (adjusted
+p
+values indicated by color scale).
+(E)
+DDR1/2 promotes nuclear localization of GLI
+. Representative images showing that overexpression of DDR1/2 in normal human pancreatic fibroblasts promotes nuclear localization of phosphorylated p38 MAPK and GLI1. Scale bars, 20 μm.
+(F)
+Neutralization of CAFs' growth stimulatory effect by GLI depletion
+. Left: plot showing growth of GFP-labeled 4T1 cancer cells on CAFs with intact or depleted levels of GLI1, displayed as mean ± SEM.
+N
+= >3 in each group. Student’s t tests with Holm-Sidak correction. ∗∗
+p
+< 0.01. Right: Gant61 treatment does not affect 4T1 cancer cell growth directly in serum-supported monoculture, but significantly reduces 4T1 cell growth when co-cultured with CAFs in serum-free condition, displayed as mean ± SEM.
+n
+indicates at least 3 replicates in each group.
+(G) M
+odel of the non-canonical hedgehog pathway in CAFs
+. Schematic illustrating DDR1/2-mediated activation of p38/MAPK12 and GLI drives ECM production in CAFs and supports cancer cell growth.
+GLI1 is a transcription factor involved in the hedgehog signaling pathway, crucial for embryonic development and tumor progression.
+39
+Upon activation, GLI1 translocates to the nucleus where it binds to DNA, initiating the transcription of genes that regulate cell proliferation, and differentiation.
+39
+We found that doramapimod treatment significantly reduces the nuclear localization of GLI1 in breast cancer-derived CAFs (
+Figure 5
+B). Consistently, doramapimod treatment significantly reduced the transcriptional activity of GLI1 in CAFs (
+Figure 5
+C). Next, we used Gant61, a known inhibitor of GLI1/2,
+40
+to investigate the role of GLI1 in the function of breast and pancreatic CAFs. Treatment of breast cancer CAFs with Gant61 for 24 h resulted in a significant downregulation of genes involved in ECM, collagen formation, and integrin assembly (
+Figures 5
+D;
+Table S8
+). Similar results were observed in pancreatic CAFs treated with Gant61. To determine if DDR1/2 can directly enhance the nuclear localization of GLI1, we overexpressed DDR1/2 in normal pancreatic fibroblasts and monitored the subcellular localization of GLI1. Our data show that the expression of DDR1/2 promotes the nuclear localization of both phosphorylated p38 MAPK and GLI1 (
+Figure 5
+E). Additionally, we observed co-localization of phosphorylated p38 MAPK kinase and GLI1 within the nucleus in DDR1/2-expressing fibroblasts. Similar results were observed in DDR1/2-expressing untransformed mouse fibroblast (
+Figure S4
+).
+As our data show that GLI1, a transcription factor in the hedgehog signaling pathway, can be activated by DDR1/2 kinases, we next explored potential cross-talk between the canonical hedgehog pathway and DDR1/2 kinases. We stimulated breast CAFs with Sonic hedgehog (SHH) ligand. We found that SHH treatment of breast CAFs led to an expected increase in the expression of
+GLI1
+and also increased the expression of ECM markers such as
+COL5A1
+and
+CXCL12
+(
+Figure S4
+). However, treatment with taladegib, a smoothened (SMO) antagonist, or doramapimod inhibited the SHH-mediated increase in these genes, suggesting that doramapimod acts downstream of smoothened to inhibit GLI1 activity. We then investigated whether the targets of doramapimod, DDR1/2, and MAPK12, are downstream of SHH. We found that activation of the SHH pathway did not significantly increase p38 MAPK phosphorylation, which was already elevated at baseline. However, SHH stimulation led to increased (1.5- to 2-fold) mRNA expression of
+DDR1
+and
+DDR2
+in breast CAFs (
+Figure S4
+). These data suggest that DDR1/2–MAPK12 signaling intersects with canonical hedgehog signaling to regulate GLI1 activity; however, whether it acts downstream of or in parallel to SMO remains unclear.
+Next, we investigated the role of GLI1 in CAF-mediated growth of cancer cells. We depleted GLI1 levels in breast cancer-derived CAFs and assessed their ability to support breast cancer cell growth under serum deprivation as described previously. We observed that GLI1 depletion significantly hindered the ability of CAFs to enhance the proliferation of 4T1 cells, while the knockdown of a scramble control did not have this effect (
+Figure 5
+F). Consistently, treatment with Gant61 inhibited the growth of 4T1 cells in a co-culture model in a dose-dependent manner, whereas Gant61 did not affect 4T1 cancer cell growth in serum-supported monoculture (
+Figure 5
+F). Thus, our data indicated DDR1/2-MAPK12-GLI1 signaling influences ECM gene regulation in CAFs (
+Figure 5
+G), and supports cancer cell growth.
+Doramapimod improves the effectiveness of chemotherapy and immunotherapy in preclinical models
+CAFs, one of the critical components of the TME, provide physical support for cancer cells and play a key role in promoting tumorigenesis and resistance to both chemotherapy and immunotherapy in pancreatic cancer.
+28
+,
+41
+,
+42
+,
+43
+Thus, by inhibiting CAF function, one could conceivably enhance response to chemotherapy and immunotherapy. Consistent with our findings from KPC microtumors (
+Figure 1
+E), we found that treating tumor slices from human pancreatic tumors with doramapimod significantly increased apoptosis, as measured by cleaved caspase-3 staining, compared to slices treated with DMSO (
+Figure 6
+A). Further, treatment with doramapimod enhanced the effect of gemcitabine in human PDAC slices (
+Figure 6
+A). Similar results were observed in slices from the KPC tumor model (
+Figure S5
+). Masson’s trichrome staining confirmed that doramapimod treatment reduced collagen levels in PDAC slices (
+Figure 6
+B), supporting its mechanism of action involving ECM remodeling. Many studies have shown that the dense ECM can act as a physical barrier, limiting the effectiveness of chemotherapy in pancreatic cancer.
+44
+To test whether doramapimod-mediated ECM remodeling could enhance gemcitabine efficacy, we treated tumor slices derived from orthotopically generated KPC tumors. While doramapimod alone reduced tissue viability and gemcitabine had little effect, the combination significantly decreased overall tissue viability (
+Figure S5
+). To validate these findings
+in vivo
+, we used an orthotopic KPC pancreatic tumor model and treated mice with vehicle, doramapimod, gemcitabine, or the combination. Both doramapimod and gemcitabine alone led to partial reductions in tumor weight compared to vehicle (
+p
+< 0.01 and
+p
+< 0.05, respectively) (
+Figure 6
+C). Notably, the combination treatment resulted in a dramatic reduction in tumor burden, with final tumor weights less than half of those in the single-agent groups (
+p
+< 0.0001 vs. vehicle). These
+in vivo
+findings are consistent with the
+ex vivo
+tumor slice data and provide strong support for the combinatorial use of doramapimod with gemcitabine to enhance antitumor efficacy in desmoplastic pancreatic cancers.
+Figure 6
+Doramapimod enhances the efficacy of chemotherapy and immunotherapy in human pancreatic tumor slices and preclinical models
+(A)
+Doramapimod promotes apoptosis in pancreatic tumor slices
+. Left: quantification of the percentage of cleaved caspase-3+ cells in three slices from a PDA-47 patient treated with DMSO, 3 μM doramapimod (low), and 5 μM doramapimod (high) over 6 days. Data represent mean ± SEM from three biological replicates. Middle: quantification of cleaved caspase-3+ cells in slices from a PDA-49 patient treated with DMSO, 3 μM doramapimod, 1 μM gemcitabine, and a combination of 3 μM doramapimod and 1 μM gemcitabine over the same period. Data represent mean ± SEM from three biological replicates. ∗
+p
+< 0.05, ∗∗
+p
+< 0.01, ∗∗∗
+p
+< 0.001, and ∗∗∗∗
+p
+< 0.0001 by one-way ANOVA with multiple comparisons. Right: representative IHC images of cleaved caspase-3 staining from PDA-49 slices under indicated treatments. Scale bars, 50 μm.
+(B)
+Doramapimod reduces collagen deposition in ex vivo pancreatic tumors
+. Quantification of collagen-positive staining in PDA-49 tumor slices treated with DMSO, doramapimod (5 μM), gemcitabine (1 μM), or combination for 6 days. Data represent mean ± SEM from three biological replicates.
+(C)
+In vivo combination treatment with doramapimod and gemcitabine enhances tumor suppression in orthotopic pancreatic cancer model
+. Mice were implanted orthotopically with KPC cells in the pancreas and treated with either vehicle, doramapimod, gemcitabine, or the combination. Each dot represents an individual mouse (
+n
+= 7–11 per group); ∗
+p
+< 0.05, ∗∗
+p
+< 0.01, and ∗∗∗
+p
+< 0.001 by one-way ANOVA with multiple comparisons. Error bars indicate SEM.
+(D)
+Doramapimod activates immune-related pathways
+. Pathway enrichment analysis of upregulated genes in E0771 (left) and KPC (right) tumors following doramapimod treatment, showing activation of interferon, cytokine signaling, and antigen processing pathways (highlighted in red). Pathways were curated across Reactome, Kyoto Encyclopedia of Genes and Genomes (KEGG), and Gene Ontology (GO) databases.
+(E)
+Combination of doramapimod and anti–PD-L1 results in enhanced tumor suppression in the E0771 TNBC model
+. Growth curves of E0771 tumors in mice treated with vehicle, doramapimod, anti-PD-L1 or the combination.
+n
+= 5–7 mice per group. Error bars indicate SEM.
+(F) Left: final tumor weights from E0771 tumor-bearing mice treated with vehicle, doramapimod, anti-PD-L1, or the combination. Doramapimod alone led to partial tumor growth inhibition (partial responses [PR]) in 5 of 7 mice, with no response (NR) in 2 mice. Anti-PD-L1 alone resulted in PR in all 5 mice. The combination treatment produced complete tumor regression (CR) in 3 mice and partial suppression in the remaining 3. Right: tumor weight inhibition (TWI) is plotted as a percentage relative to the average tumor weight of the vehicle control. Each dot or bar represents an individual mouse (
+n
+= 5–7 per group); ∗
+p
+< 0.05, ∗∗
+p
+< 0.01, and ∗∗∗
+p
+< 0.001 by one-way ANOVA with multiple comparisons. Error bars indicate SEM.
+Recent studies have shown that DDR1 promotes the alignment of collagen fibers, leading to immune exclusion.
+45
+Further, DDR1/2 kinases have been implicated in the formation of neutrophil extracellular traps, contributing to PDAC tumor progression and metastasis. Thus, we hypothesize that DDR1/2 kinases are crucial in shaping the TME by facilitating ECM release and excluding immune cells. Supporting this, our analysis of pathways enriched in genes upregulated by doramapimod treatment in both E0771 and KPC tumors revealed a significant enrichment of biological processes associated with anti-tumor immunity, including interferon-gamma signaling and cytokine signaling (
+Figure 6
+D). Consistently, we observed a significant increase in CD8
++
+T cell infiltration in both immunologically “cold” KPC and E0771 tumors treated with doramapimod compared to vehicle-treated controls (
+Figure S5
+). Motivated by this, we conducted quantitative multiplex immunohistochemistry to evaluate the broader immune landscape. Doramapimod treatment led to a marked increase in CD3
++
+T cells and a reduction in Ly6G
++
+neutrophils, alongside a modest rise in F4/80
++
+macrophages (
+Figure S5
+). No significant changes were seen in CD11b
++
+or CD11c
++
+populations. Given the increase in CD8
++
+T cell infiltration, we next asked whether doramapimod could enhance the efficacy of immune checkpoint blockade. In
+ex vivo
+tumor slices from the E0771 model, combination treatment with low-dose doramapimod and anti-PD-L1 or anti-PD-1 significantly outperformed either agent alone (
+Figure S5
+). To validate this
+in vivo
+, we performed orthotopic implantation of E0771 tumors and treated mice with doramapimod, anti-PD-L1, or their combination (
+Figures 6
+E and 6F). Doramapimod alone produced partial tumor growth inhibition in 5 of 7 mice, while anti-PD-L1 alone led to partial responses in all 5 mice. Strikingly, the combination treatment resulted in complete tumor growth suppression in 3 of 6 mice and partial responses in the remaining 3. These findings confirm and extend our
+ex vivo
+results, supporting the therapeutic potential of combining doramapimod with immune checkpoint inhibitors. While not a definitive outcome, these results highlight the potential of combining doramapimod with immune checkpoint inhibitors as a promising strategy. The heterogeneity in response underscores the need for further investigation, but the enhanced antitumor activity in a subset of cases supports continued exploration of this combinatorial approach.
+Discussion
+The TME is a mixed ensemble of various cell types and signaling molecules. Targeting key signaling pathways in stromal cells could significantly enhance our understanding and modeling of complex cancer cell-host cell interactions, and open possibilities for therapeutic interventions. However, discovering targets specific to host cells remains challenging. Here, we describe a powerful approach of integrating organotypic tissue slice culture system, phenotypic measurements, and machine learning-based modeling that aims to overcome these limitations and provide a physiologically relevant TME to test and predict drug response. We demonstrated our approach using mouse and human microtumors and discovered numerous drugs that specifically inhibited the viability of microtumors while having no effect on cancer cells in 2D culture. Comparing all three models we screened, we identified 12 drugs that specifically reduce microtumors viability, drugs that might be overlooked by traditional screens using cultured cancer cell lines. We validated drugs predicted by KiR in multiple tumor models, both
+ex vivo
+and
+in vivo
+, and conducted a detailed investigation into the action mechanism of doramapimod. Thus, our findings demonstrate that KiR-based modeling can swiftly and accurately predict drug responses in microtumors, identifying drugs that target the TME effectively.
+Using doramapimod as a chemical probe, we uncovered a previously unrecognized DDR1/2-MAPK12-GLI1 signaling axis that regulates cancer-stroma interactions. Transcriptomic and proteomic profiling of doramapimod-treated tumors revealed that it alters ECM composition in CAFs without affecting their proliferation. Mechanistically, doramapimod targets DDR1/2 and MAPK12, kinases critical for pro-tumorigenic ECM production in CAFs. DDR1/2, activated by collagen and overexpressed in CAFs.
+45
+,
+46
+,
+47
+,
+48
+, promotes MAPK12 activation and nuclear localization, enhancing GLI1 activity, a transcription factor linked to hedgehog signaling. This pathway drives ECM and growth factor expression that supports tumor progression. Doramapimod treatment impaired CAF function, reduced cancer cell growth in co-culture, and suppressed tumor growth
+in vivo
+. These findings highlight a previously unrecognized role of DDR1/2-MAPK12-GLI1 and demonstrate the utility of functional screening to dissect tumor-host interactions within the TME.
+Clinical trials have shown that hedgehog inhibitors targeting SMO have failed to improve survival in pancreatic cancer.
+49
+This newly discovered non-canonical hedgehog pathway may sustain pro-tumorigenic CAF functions despite SMO inhibition. Targeting GLI1 or upstream regulators like DDR1/2-MAPK12 may therefore be more effective. Doramapimod, which inhibits both DDR1/2 and MAPK12, suppressed CAF-derived ECM and inflammatory signals, enhanced immune activation, and increased CD8
++
+T cell infiltration.
+In vivo
+, doramapimod improved responses to anti-PD-L1 therapy in TNBC and potentiated gemcitabine efficacy in a KPC pancreatic model. Previously published single-cell RNA sequencing (RNA-seq) analysis
+50
+of spontaneously arising KPC pancreatic tumors (
+Figure S6
+) revealed that both DDR1 and DDR2 are expressed in fibroblast populations, but in distinct CAF subtypes. Specifically, DDR1 is enriched in antigen-presenting CAFs, whereas DDR2 is predominantly expressed in inflammatory CAFs. Thus, a dual-targeting agent like doramapimod, which inhibits both DDR1 and DDR2, may be particularly effective by broadly suppressing functionally diverse CAF subtypes. Together, these findings support DDR1/2-MAPK12-GLI1 as a therapeutic axis for remodeling the TME and enhancing therapy response in desmoplastic tumors.
+Current preclinical drug testing often fails to translate clinically due to a trade-off between throughput and physiological relevance. Organotypic tissue cultures address this by preserving native tumor architecture, ECM, and key stromal and immune components. Compared to organoids or 2D cultures, microtumors are faster to prepare, maintain critical cancer cell-microenvironment interactions, and yield more clinically relevant data. Our platform enables screening ∼30 drugs in patient-derived microtumors and uses computational modeling to predict responses to hundreds more, all within seven days, advancing precision oncology with greater speed and translational impact.
+Limitations of the study
+While this study highlights the value of combining kinase inhibitor-focused screening with microtumors models to uncover microenvironment-targeted therapies, several limitations should be acknowledged. First, although microtumors offer greater physiological relevance than 2D cultures, they lack long-term immune competence, which limits their ability to fully capture immune-tumor interactions, particularly for therapies that depend on immune cell infiltration. Second, the machine learning approach used in this study was trained specifically on responses to kinase inhibitors, one of the largest class of anti-cancer drugs, but may not be applicable to identifying sensitivities to other drug classes. Finally, while we identified a novel DDR1/2-MAPK12-GLI1 signaling axis regulating CAF activity, the detailed molecular mechanisms and contributions of individual cell types within the complex TME warrant further investigation.
+Resource availability
+Lead contact
+Further information and requests for resources and reagents should be directed to and will be fulfilled by the lead contact, Taranjit S. Gujral (
+tgujral@fredhutch.org
+).
+Materials availability
+This study did not generate new unique reagents.
+Data and code availability
+•
+The raw RNA-seq data have been deposited to the Gene Expression Omnibus repository (
+GSE304108
+). The mass spectrometry proteomics data have been deposited to the ProteomeXchange Consortium via the PRIDE partner repository with the dataset identifier
+PXD066684
+.
+•
+This paper does not report original code.
+•
+Any additional information required to reanalyze the data reported in this work paper is available from the lead contact upon request.
+Acknowledgments
+This work was supported by funding from the
+10.13039/100000054
+National Cancer Institute
+(
+R01CA273081
+and
+R01-CA272677
+) and
+Cancer Center
+Support Grant (
+10.13039/100000054
+NCI
+5 P30 CA015704-49
+),
+10.13039/100001006
+Breast Cancer Research Foundation
+(
+10.13039/100001006
+BCRF
+17-035
+), and Washington Research Foundation.
+N.N.-A
+. is a recipient of the
+10.13039/100005895
+Fred Hutch
+Interdisciplinary Training Grant Dual Mentor Fellowship in Cancer Research and
+10.13039/501100001691
+JSPS
+overseas research fellowship. This research was supported by the Comparative Medicine, Cellular Imaging, and Experimental Histopathology Shared Resources of the
+10.13039/100005895
+Fred Hutch
+/
+10.13039/100007812
+University of Washington
+Cancer/
+Seattle Children’s Cancer Consortium
+(
+P30 CA015704
+).
+Author contributions
+N.N.-A., data curation, methodology, investigation, and writing – review & editing. S.Z., data curation, methodology, investigation, and writing – review & editing. M.C., data curation, methodology, and investigation. Y.K., methodology. M.F., data curation, methodology, and investigation. X.J., data curation, methodology, and investigation. M.M., data curation, methodology, investigation, and writing – review & editing. J.M.V., methodology. N.E.D.: funding acquisition and writing – review & editing. C.M.G., resources and writing – review & editing. K.H., methodology and supervision. A.L.W., methodology, supervision, and writing – review & editing. V.G.P., methodology and supervision. T.S.G., conceptualization, data curation, investigation, methodology, writing – original draft, funding acquisition, and supervision.
+Declaration of interests
+The authors declare no competing interests.
+STAR★Methods
+Key resources table
+REAGENT or RESOURCE
+SOURCE
+IDENTIFIER
+Antibodies
+Rabbit monoclonal Phospho-DDR1/DDR2 (DDR1 Y796, DDR2 Y740) Antibody
+R&D Systems
+; RRID:AB_3095725
+Rabbit monoclonal Phospho-p38 MAPK (Thr180/Tyr182) (12F8) Antibody
+Cell Signaling Technology
+Cat#4631; RRID:AB_331765
+Rabbit monoclonal DDR1 (D1G6) XP Antibody
+Cell Signaling Technology
+Cat#5583; RRID:AB_10694842
+Rabbit monoclonal DDR2 (E6V2N) Antibody
+Cell Signaling Technology
+Cat#25814;RRID:AB_3674514
+Rabbit monoclonal GLI1 (C68H3) Antibody
+Cell Signaling Technology
+Cat#3538; RRID:AB_1903989
+Rabbit Polyclonal p38 MAPK Antibody
+Cell Signaling Technology
+Cat#9212; RRID:AB_330713
+Rabbit Polyclonal p38γ MAPK Antibody
+Cell Signaling Technology
+Cat#2307; RRID:AB_659929
+Mouse monoclonal Anti-β-Actin Antibody
+Sigma-Aldrich
+Cat#A1978;RRID:AB_476692
+Rabbit Polyclonal Cleaved Caspase-3 (Asp175) Antibody
+Cell Signaling Technology
+Cat#9661; RRID:AB_2341188
+Rabbit monoclonal CD8α (D4W2Z) XP Antibody
+Cell Signaling Technology
+Cat#98941;RRID:AB_2756376
+Rabbit monoclonal anti-CD3 epsilon antibody
+Abcam
+Cat#ab215212; RRID:AB_3101752
+Bacterial and virus strains
+pGreenFire1-Gli (virus)+ EF1α-Neo
+System Biosciences
+Cat#TR050VA-N
+Biological samples
+Human Breast cancer Patient-derived xenografts (PDX)
+University of Utah
+HCI-001
+Human PDAC specimen (PDA-47, PDA-49, PDA75, PDA77)
+Obtained via Venu Pillarisetty, UW Department of Surgery
+N/A
+Human HCC1, and HCC2
+Obtained via Raymond S.W. Yeung, UW Department of Surgery
+N/A
+Human: Meningioma
+Holland Lab (Fred Hutch)
+N/A
+Chemicals, peptides, and recombinant proteins
+Kinase inhibitors used for KiR model screening
+Bello, Thomas et al.
+See
+Table S1
+Gant61
+MedChemExpress
+Cat#HY-13901; CAS:500579-04-4
+Doramapimod
+MedChemExpress
+Cat#HY-10320;
+CAS:285983-48-4
+Doramapimod
+Selleck Chemicals
+Cat#S1574;
+CAS:285983-48-4
+Taladegib
+MedChemExpress
+Cat#HY-13242;
+CAS: 1258861-20-9
+Normal saline
+Fisher Scientific
+Cat#50-983-204
+Polysorbate 80 (Tween 80)
+Spectrum Chemical
+Cat#PO138;
+CAS:9005-65-6
+Propylene glycol
+Sigma-Aldrich
+Cat#W294004;
+CAS:57-55-6
+Kollisolv PEG E 400
+Sigma-Aldrich
+Cat#06855;
+CAS:25322-68-3
+Gemcitabine
+MedChemExpress
+Cat#HY-17026;
+CAS:95058-81-4
+InVivoPlus anti-mouse PD-L1 (B7-H1)
+BioXCell
+Cat#BP0101
+InVivoPlus rat IgG2b isotype control
+BioXCell
+Cat#BP0090
+Sodium sulphobutylether-beta-cyclodextrin
+AK Scientific
+Cat#X8426;
+CAS: 182410-00-0
+Critical commercial assays
+Realtime-Glo MT Cell Viability Assay
+Promega
+Cat#G9712
+GenCatch Total RNA Mini Prep Kit
+Epoch Life Science
+Cat#1660250
+TruSeq Stranded Total RNA Sample Preparation Kit
+Illumina
+RS-122-2201
+RT2 HT First Strand Kit
+Qiagen
+Cat#330411
+Bright-Glo Luciferase Assay
+Promega
+Cat#E2620
+HotSpot Kinase Screening Assay
+Reaction Biology
+https://www.reactionbiology.com
+Deposited data
+Bulk RNA sequencing of tumors and CAFs
+This paper
+RNAseq data can be accessed through GEO:
+GSE304108
+A mass spectrometric-based ECM proteomics
+This paper
+Proteomics data can be accessed through Pride:
+PXD066684
+Experimental models: Cell lines
+Mouse: EO771 cells
+ATCC
+CRL-3461
+Mouse: 4T1 cells
+ATCC
+CRL-2539
+Mouse: PY8119 cells
+ATCC
+CRL-3278
+Mouse: MC-38 cells
+Kerafast
+Cat#ENH204-FP
+Mouse: KPC1 cells
+Laboratory of Dr. Sunil Hingorani
+N/A
+Mouse: NIH-3T3
+ATCC
+CRL-1658
+Human: Primary Mammary Tumor-Associated Fibroblasts
+Cell Biologics
+Cat#HC-6071
+Human: Pancreatic Adenocarcinoma Cancer-Associated Fibroblasts
+Vitro Biopharma
+Cat#CAF-08
+Human: Normal Pancreatic Fibroblasts
+Vitro Biopharma
+Cat#SC00A5
+Human: MDAMB-231
+ATCC
+HTB-26
+Experimental models: Organisms/strains
+Mouse: C57BL/6J
+The Jackson Laboratory
+RRID:
+IMSR_JAX:000664
+Mouse: B6.129S7-Rag1
+tm1Mom
+/J
+The Jackson Laboratory
+RRID:
+IMSR_JAX:002216
+Mouse: NOD.Cg-
+Prkdc
+scid
+Il2rg
+tm1Wjl
+/SzJ
+Fred Hutchinson Cancer Center
+N/A
+Mouse: NOD.Cg-
+Rag1
+tm1Mom
+Il2rg
+tm1Wjl
+/SzJ
+The Jackson Laboratory
+RRID:
+IMSR_JAX:007799
+Oligonucleotides
+siRNA targeting sequence: DDR1:
+GGGACACCCUUUGCUGGUA
+GAAUGUCGCUUCCGGCGUG
+GAGCGUCUGUCUGCGGGUA
+AAGAGGAGCUGACGGUUCA
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003111-00
+siRNA targeting sequence: DDR2:
+CCAUGUACAAGAUCAAUUA
+CCAAGUGAUUCUAGCAUGU
+UGACAGGAGGCAACACAUA
+UCAGGUUAAUCCAGCUAUA
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003112-00
+siRNA targeting sequence: MAPK9:
+GAUUGUUUGUGCUGCAUUU
+GGCUGUCGAUGAUAGGUUA
+AGCCAACUGUGAGGAAUUA
+UCGUGAACUUGUCCUCUUA
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003505-00
+siRNA targeting sequence: MAPK11:
+GCCCUGAGGUUCUGGCAAA
+CGACGAGCACGUUCAAUUC
+CCAUAGACCUCCUUGGAAG
+GCGCCGACCUGAACAACAU
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003972-00
+siRNA targeting sequence: MAPK12:
+GAAGCGUGUUACUUACAAA
+GCGCUAAGGUGGCCAUCAA
+GCAAGACGCUGUUCAAGGG
+GGAGACGCCUCUGUGAAGA
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003590-00
+siRNA targeting sequence: MAPK14:
+GGAAUUCAAUGAUGUGUAU
+UCUCCGAGGUCUAAAGUAU
+GUAAUCUAGCUGUGAAUGA
+GUCCAUCAUUCAUGCGAAA
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003512-00
+siRNA targeting sequence: GLI1:
+GCAAAUAGGGCUUCACAUA
+AGGCUCAGCUUGUGUGUAA
+GGACGAGGGACCUUGCAUU
+CAGCUAGAGUCCAGAGGUU
+Horizon ON-TARGETplus siRNA-SMARTpool
+L-003896-00
+Human PrimePCR SYBR Green Assay Primers for ACTA2
+Bio-Rad
+Unique Assay ID: qHsaCID0013300
+Human PrimePCR SYBR Green Assay Primers for COL1A1
+Bio-Rad
+Unique Assay ID: qHsaCED0043248
+Human PrimePCR SYBR Green Assay Primers for COL1A2
+Bio-Rad
+Unique Assay ID: qHsaCED0003988
+Human PrimePCR SYBR Green Assay Primers for COL5A1
+Exon Location: 65 - 66
+IDT (Integrated DNA Technologies)
+Unique Assay ID: Hs.PT.58.39306346
+Human PrimePCR SYBR Green Assay Primers for CXCL12
+Exon Location: 3a - 5
+IDT (Integrated DNA Technologies)
+Unique Assay ID: Hs.PT.58.28013422
+Human PrimePCR SYBR Green Assay Primers for DDR1
+Bio-Rad
+Unique Assay ID: qHsaCED0056863
+Human PrimePCR SYBR Green Assay Primers for DDR2
+Bio-Rad
+Unique Assay ID: qHsaCID0008789
+Human PrimePCR SYBR Green Assay Primers for GLI1
+Bio-Rad
+Unique Assay ID: qHsaCED0043346
+Human PrimePCR SYBR Green Assay Primers for IL6
+Bio-Rad
+Unique Assay ID: qHsaCED0044677
+Recombinant DNA
+pcDNA-DEST47-hDDR1
+Johannessen et al.
+51
+Addgene # #23910
+pcDNA-DEST47-hDDR2
+Johannessen et al.
+51
+Addgene # #23897
+Software and algorithms
+Kinome regularization (KiR) modeling R script
+Bello et al.
+52
+https://github.com/FredHutch/KiRNet-Public
+R Studio Version 1.2.1335
+RStudio Team, 2018
+http://www.rstudio.com/
+Odyssey imaging analysis software Ver 5.2
+LICORbio
+https://www.licorbio.com/image-studio
+HistoQuest software 7.0 for Windows version
+TissueGnostics
+https://tissuegnostics.com/products/single-cell-analysis/histoquest
+ImageJ 1.5j for Windows version
+National Institutes of Health, Wayne Rasband
+https://imagej.net/ij/
+GraphPad Prism 10 for Windows version 10.4.2
+Graphpad Software, Inc.
+https://www.graphpad.com/
+Incuctye ZOOM 2016B
+Essen Biosciences
+https://www.essenbioscience.com/en/products/software/
+Experimental model and study participant details
+Human hepatocellular carcinoma tumor samples (HCC1 and HCC2) were obtained under under IRB-approved protocols (#00001852 [STUDY00001852]) in collaboration with Dr. Raymond Yeung’s lab in the University of Washington, Department of Surgery. Tissues were collected with informed consent and de-identified prior to use. Freshly processed samples were prepared as 3D μtumors for drug screening experiments. Four human pancreatic ductal adenocarcinoma (PDAC) tumor specimens (PDA47, PDA49, PDA75, and PDA77) were obtained under IRB-approved protocol (#FH1765), with informed patient consent. The clinical characteristics of the patients used are described in
+Table S9
+. Human meningioma sample was obtained from the Holland lab (Fred Hutch). PDA75 and PDA77 were specifically used for the isolation of pancreatic CAFs.
+Animals
+All animal studies were approved by the Institutional Animal Care and Use Committee at Fred Hutchinson Cancer Center (Fred Hutch). The animals were housed under standard conditions in Fred Hutch animal facilities. For each experiment, mice of the indicated sex and within the same birth week were randomly assigned to treatment groups.
+Orthotopic studies
+:
+E0771
+;
+TNBC
+. E0771 cells (0.5×10
+6
+cells) were orthotopically injected into the fourth mammary fat pad of 6–8-week-old female C57BL/6 mice (JAX, #000664) obtained from The Jackson Laboratory (Bar Harbor, ME, USA). Tumor sizes were measured daily using calipers, and tumor volumes were calculated with the standard formula 1/2xLxW
+2
+). When tumor sizes reached approximately 100 mm
+3
+, mice were randomized into vehicle and doramapimod treatment groups. Doramapimod at a dose of 30 mg/kg or the equivalent volume of vehicle control was administered daily by oral gavage for two weeks using 20-gauge x 38mm plastic feeding tubes (Instech Laboratories, Inc. Plymouth Meeting, PA, USA). At the experimental endpoint, tumors were weighed to assess the treatment effect. Doramapimod stock was initially dissolved in DMSO and then diluted into a solution comprising 50% PEG400 and 50% of 20% sodium sulphobutylether-beta-cyclodextrin in normal saline.
+KPC1
+;
+PDAC
+. KPC1 cells (0.1×10
+6
+cells) expressing firefly luciferase (fLuc) were orthotopically injected into the pancreas of 6-week-old male B6/129 mice (JAX, #002216), following established protocols (Sunil R Hingorani, Cancer Cell 2003). One week post-injection, bioluminescent signals were measured using an
+in vivo
+imaging system (IVIS) to ensure equivalent tumor burden between the vehicle control and doramapimod treatment groups. The treatment group received doramapimod at a dosage of 40 mg/kg, while the control group received the vehicle solution, both administered orally twice daily for two weeks. At the study endpoint, tumor weights were measured using a precision scale to assess the effect of the treatment.
+4T1
+;
+TNBC
+. 4T1 cells (1-5×10
+6
+cells) were injected subcutaneously into the right flank of 6-12-week-old female NSG mice (bred in-house) in the suspension of 33% (v/v) Matrigel Basement Membrane Matrix (Corning, Corning, NY, USA). When tumor size reached approximately 100 mm
+3
+, mice were randomized into vehicle and doramapimod groups. Doramapimod at 1 mg/kg dose was administered by intratumoral injection twice a week using 29G needles, or the same volume of vehicle injection. Tumor sizes were measured by caliper twice a week and calculated the volume using a standard formula (1/2xLxW
+2
+) or weighed at the experimental endpoint. Doramapimod was dissolved in DMSO and then diluted into a solution of PEG400 (30%), Tween 80 (0.5%) and Propylene glycol (5%) in water.
+PDX
+;
+TNBC
+. Breast cancer PDX (HCI-001) tissues were propagated in NSG mice at the University of Utah. Frozen TNBC PDX tumor fragments (HCI-001) were thawed and implanted into cleared mammary fat pads of 3-week-old NRG mice (JAX, #007799). Doramapimod treatment was performed as described above.
+Combination studies
+E0771 cells (0.2×10
+6
+cells) expressing firefly luciferase (fLuc) were orthotopically injected into the fourth mammary fat pad of 6–8-week-old female C57BL/6 mice (JAX, #000664). One week post-injection, tumor burden was assessed using bioluminescent imaging via the IVIS Spectrum
+In Vivo
+Imaging System (PerkinElmer, Waltham, MA, USA). Mice were then randomized into four treatment groups (
+n
+≥ 5 per group) to ensure equivalent tumor burden across the following conditions: (1) vehicle control, (2) doramapimod monotherapy, (3) anti-PD-L1 monotherapy, and (4) combination therapy with doramapimod and anti-PD-L1. Doramapimod was administered by oral gavage at 65 mg/kg daily for five weeks, using 20-gauge × 38 mm plastic feeding tubes. Anti-PD-L1 monoclonal antibody (BioXCell, #BP0101, Lebanon, NH, USA) was administered intraperitoneally (IP) at a loading dose of 10 mg/kg, followed by maintenance doses of 5 mg/kg twice per week. Control groups received equivalent amounts of isotype control IgG. A total of three doses of anti-PD-L1 doses were administered throughout the course of the study. To monitor tumor growth, tumor sizes were measured three times a week using calipers, and tumor volumes were calculated with the standard formula (1/2xLxW
+2
+). At the experimental endpoint, tumors were weighed to assess the treatment effect. KPC1; PDAC. KPC1 cells (0.1×10
+6
+cells) expressing fluc were orthotopically injected into the pancreas of 6-week-old male B6/129 (JAX, #002216) mice, following the same protocol as previously described. One week post-injection, bioluminescent signals were measured using the IVIS system to ensure equivalent tumor burden among four experimental groups: (1) vehicle control, (2) doramapimod monotherapy, (3) gemcitabine monotherapy, and (4) combination of doramapimod and gemcitabine. Doramapimod at a dose of 50 mg/kg was administered for two weeks as described above. Gemcitabine was delivered via IP at a dose of 30 mg/kg, three times per week. At the study’s endpoint, pancreatic tumors were harvested and weighed using a precision scale to assess the effect of the treatment. The gemcitabine stock solution was prepared in DMSO and further diluted in sterile normal saline before administration.
+Method details
+Cell lines
+The mouse fibroblast cell line NIH/3T3 was purchased from the American Type Culture Collection (ATCC, CRL-1658) and cultured in DMEM supplemented with 10% (v/v) fetal bovine serum (FBS), 100 IU/mL penicillin, and 100 μg/mL streptomycin. The human TNBC cell line MDA-MB-231 was obtained from ATCC (HTB-26) and maintained in DMEM supplemented with 10% FBS, 100 IU/mL penicillin, and 100 μg/mL streptomycin. The mouse colon cancer cell line MC-38 was purchased from Kerafast (Cat#ENH204-FP) and cultured in DMEM supplemented with 10% FBS, 2 mM glutamine, 0.1 mM non-essential amino acids, 1 mM sodium pyruvate, 10 mM HEPES, 50 μg/mL gentamicin sulfate, 100 IU/mL penicillin, and 100 μg/mL streptomycin. Mouse TNBC cell lines, E0771, 4T1, and Py8119 were obtained from ATCC (CRL-3461 for E0771, CRL-2539 for 4T1, and CRL-3278 for Py8119). E0771 cells were maintained in DMEM supplemented with 10% (v/v) FBS, 20 mM HEPES, 100 IU/mL penicillin, and 100 μg/mL streptomycin. 4T1 cells were cultured in RPMI 1640 medium supplemented with 10% (v/v) FBS, 100 IU/mL penicillin, and 100 μg/mL streptomycin. Py8119 cells were cultured in F-12K medium supplemented with 5% (v/v) FBS, 100 IU/mL penicillin, and 100 μg/mL streptomycin. KPC1 cells were obtained from the Hingorani Lab at Fred Hutch and maintained in DMEM/F12 media supplemented with 10% (v/v) FBS, 2.5 μg/mL Amphotericin B, 5 mg/mL D-Glucose. Breast cancer patient-derived CAFs were obtained from Cell Biologics (#HC-6071) and maintained in complete fibroblast medium (#M2267; Cell Biologics, Chicago, IL, USA). Human normal pancreatic fibroblasts were obtained from Vitro Biopharma (#SC00A5), while pancreatic adenocarcinoma CAFs were obtained either from Vitro Biopharma (#CAF08) or derived from fresh pancreatic ductal adenocarcinoma (PDAC) specimens obtained from the University of Washington. These fibroblasts were cultured in DMEM supplemented with 10% (v/v) FBS, 100 IU/mL penicillin, and 100 μg/mL streptomycin. All cells were cultured in 37°C humified incubators with 5% CO
+2
+atmosphere. All cell lines were routinely tested and confirmed to be mycoplasma-free using the MycoAlert PLUS Detection Kit (Lonza, LT07-703). The CAFs were confirmed to be free of cancer cell contamination by verifying the absence of KRAS and TP53 mutations.
+Reagents
+Kinase inhibitors used for KiR model screening were purchased from Selleck Chemicals (Houston, TX, USA) and Cayman Chemical (Ann Arbor, MI, USA). Gant61, gemcitabine, and taladegib were obtained from MedChemExpress (Monmouth Junction, NJ, USA). Doramapimod was sourced from either Selleck Chemicals or MedChemExpress. Expression constructs for DDR1 and DDR2 were obtained from Addgene as described previously.
+51
+InVivoPlus rat IgG2b isotype control and anti-mouse PD-L1 (B7-H1) antibodies were purchased from BioXCell (Lebanon, NH, USA). The solvents for animal studies, sodium sulphobutylether-beta-cyclodextrin was purchased from AK Scientific (Union City, CA, USA). Normal saline and polysorbate 80 (Tween 80) were obtained from Fisher Scientific (Waltham, MA, USA). Propylene glycol and Kollisolv PEG E 400 were purchased from Sigma-Aldrich (St. Louis, MO, USA). DMSO (Dimethyl Sulfoxide) was obtained from Corning (Corning, NY, USA).
+Tissue slices and 3Dμtumors preparation and drug screening
+Organotypic tumor slices were prepared from murine and human tumors as described previously.
+5
+,
+53
+Briefly, tumor slices were prepared from tumors extracted from tumor-bearing mice or human tumors using a Leica VT1200S vibratome (Leica Biosystems, Wetzlar, Germany). Fresh tumor tissues were shaped into 6 mm diameter cylinders using biopsy punches (Integra Miltex, York, PA, USA) and mounted using cyanoacrylate glue. Slices were immersed in ice-cold HBSS during preparation, with vibratome settings set at a blade angle of 18°, a cutting speed set of 0.14 mm/s (with a range of 0.10–0.25 mm/s), and a vibration amplitude of 2.0 mm. Human pancreatic tumors were prepared with a thickness of 250 μm and a diameter of 6 mm. To create μtumors, slices (400 μm thickness, 6 mm in diameter) were arranged in a monolayer on a plastic disc and sectioned using a McIlwain Tissue Chopper (Ted Pella, Redding, CA, USA). Following initial cuts, the disc was rotated 90°, and the process repeated. 3D μtumors were cultured in Williams’ Medium E containing 12 mM nicotinamide, 150 nM ascorbic acid, 2.25 mg/mL sodium bicarbonate, 20 mM HEPES, 50 mg/mL glucose, 1 mM sodium pyruvate, 2 mM L-glutamine, 1% (v/v) ITS, 20 ng/mL EGF, 40 IU/mL penicillin and 40 μg/mL streptomycin.
+Kinase inhibitor screening
+3D μtumors were treated with Realtime-Glo MT cell viability reagent (Promega, Madison, WI, USA) at 1: 1000 dilution in 96-well plates. Following a 24-h incubation, luminescence signals were measured using a Biotek Synergy H4 microplate reader (Agilent Technologies, Santa Clara, CA, USA). Wells with signal levels at least 10 times higher than the blank were selected for kinase inhibitor screening, with each inhibitor tested in duplicate or triplicate. 3D μtumors were maintained and real-time viability was measured for 3 to 7 days post-treatment. The viability was determined by calculating the ratio of the signal at the end of the study to the signals from the same tissue before treatment, which was then normalized to the value of vehicle control 3D μtumors set to 100%.
+Kinome Regularization modeling
+KiR models for three cancer cell lines and μtumors were generated as previously described.
+9
+,
+11
+Briefly, a panel of 427 kinase inhibitors had their pairwise effects on 298 human kinases profiled, resulting in a quantitative drug-target matrix. Each entry in this matrix is a percentage between 0 and 100, representing the residual activity of the kinases (as a percent of control, uninhibited activity) in the presence of each inhibitor. A subset of 25–30 kinase inhibitors was tested on cultured cancer cells in 2D and in μtumors as described above. The outcome was a single response for each drug, representing the change in viability (as % DMSO control) at the profiled dose of the inhibitor (typically 500 nM).
+The kinase inhibition profiles of each inhibitor and the quantitative responses to those inhibitors were used as explanatory and response variables, respectively, for elastic net regularized multiple linear regression models as described previously.
+9
+,
+52
+LOOCV was used to select the optimal value for the penalty scaling factor λ. Models were computed for 11 evenly spaced values of α (the relative weighting between LASSO and Ridge regularization) ranging from 0 to 1.0 inclusive. Model accuracy was assessed via the LOOCV error and the root-mean-squared error of the predictions for the tested inhibitors (
+Figure S1
+).
+Cancer cell-CAF coculture
+Breast cancer patient-derived CAFs were seeded at 1.5 × 10
+4
+cells in 96 well plates and transfected with the indicated siRNAs using Lipofectamine 3000 following the manufacturer’s protocol. After 48 h, 5,000 cells of 4T1 labeled with nuclear GFPs were seeded onto the CAFs layer in a serum-depleted DMEM medium. The cell numbers of 4T1 were counted based on nucleus number by time-course images taken by IncuCyte Live-Cell Imaging System and cell analyzer software (Essen Bio).
+RNA-sequencing
+Total RNA from CAFs was isolated using the GenCatch Total RNA mini prep kit (Epoch Life Science, Inc. Missouri City, TX, USA). Total RNA from control and doramapimod-treated tumors was isolated using Trizol (Invitrogen) according to the manufacturer’s instructions. Library preparation, sequencing, and alignment were conducted by the Novogene. Pair-end sequencing was performed on an Illumina HiSeq 2500 machine using the poly-A capturing protocol with a read length of 43 base pairs. Libraries were prepared with the TruSeq Stranded Sample Preparation Kit (Illumina, RS-122-2201) starting from 1000 ng of total RNA. cDNA libraries were amplified and sequenced on the HiSeq2500. RNA-Seq data were filtered and normalized using the edgeR Bioconductor package in R. DEGs were identified between the two cell-line groups using edgeR with parameters: log fold change >1 (absolute fold change >2) and
+p
+< 0.05.
+Sample preparation for LC-MS/MS
+E0771 and KPC tumors from independent mice treated with doramapimod or vehicle control were lyophilized, ground, and subjected to mass spectrometry (Q Exactive HF Mass Spectrometer, Thermo Fisher) as described previously.
+54
+Fresh frozen samples were milled in liquid nitrogen with a mortar and pestle. Approximately 5 mg of each sample was processed by a stepwise extraction resulting in cellular and ECM fractions for each sample. Glass beads (1 mm) were used to mechanically agitate samples in a Bullet Blender (NextAdvance, Model BBX24) prior to all extraction steps. Samples were decellularized using 3 successive washes of 50mM Tris-HCl (pH 7.4), 0.25% CHAPS, 25mM EDTA, 3M NaCl, 1X protease inhibitor (Halt Protease Inhibitor Cocktail, Thermo Scientific #78429). Glass beads (1 mm) were used to mechanically agitate samples in a Bullet Blender (NextAdvance) after each buffer addition, followed by vortexing at 4
+0
+C for 20 min. Samples were then spun for 20 min at 18,000 x g and the supernatant was collected and pooled (cellular fraction). ECM extraction was performed by reducing and alkylating decellularized tissue pellets before five 10-min rounds of in-solution digestion at 37
+0
+C with ultrasonication using a Bioruptor (Diagenode). The first round of digestion was performed in 4M urea, 10 mM ABC pH 8.0, 0.02% ProteaseMax (Promega #V207A) with 2 μg Lys-C (Wako #121–05063). The second round of digestion was performed by adding 0.2 μg Lys-C and repeating ultrasonication. Third and fourth rounds of digestion were performed by diluting to 0.6M urea with 10 mM ABC, 0.02% ProteaseMax and adding 1 μg of trypsin for each digest followed by 10 min of ultrasonication. Finally, a fifth round of overnight digestion at 37
+0
+C without ultrasonication was performed after the addition of 0.5 μg trypsin to each sample. Samples were then spun for 20 min at 18,000 x g and the supernatant was collected (ECM fraction). Protein concentration of each fraction for each sample was assessed by A660 Protein Assay (Pierce). Proteolytic digestion of cellular fractions was carried out according to the FASP protocol (Wisniewski et al. 2009, Nature
+STAR Methods
+) with 10 kDa molecular weight cutoff filters. Cellular samples were reduced, alkylated, and digested with trypsin (1:100) at 37
+0
+C for 14 h. Peptides were recovered from the filter using successive washes of 50 mM ammonium bicarbonate and 0.2% formic acid. Digested samples were desalted using Pierce C18 Spin Tips (Thermo Scientific #84850) according to the manufacturer’s protocol. Samples were prepared for 4 LC-MS/MS injections. Final volume was adjusted to inject 6 μg of protein for each run.
+MS acquisition
+Global proteomics was carried out (
+n
+= 3 per group) on a Q Exactive HF mass spectrometer (Thermo Fisher Scientific) coupled to an Easy-nLC 1000 system (Thermo Fisher Scientific) through a nanoelectrospray LC-MS interface. Eight μL of each sample was injected into a 20 μL loop using the autosampler. The analytical column was then switched on-line at a maximum pressure of 700 bar over an in house-made 100 μm i.d. × 150 mm fused silica capillary packed with 2.7 μm CORTECS C18 resin (Waters; Milford, MA). After 10 min of sample loading, the flow rate was adjusted to 400 nL/min, and each sample was run on a 120-min linear gradient to separate the peptides. For cellular fractions, a linear gradient from 4 to 24% ACN in 0.1% formic acid was applied from minutes 0–100, followed by an increase to 90% ACN from minutes 100–120 to wash residual peptides from the column. The same LC method was utilized for ECM fractions but with a gradient from 4 to 18% ACN from minutes 0–100. LC mobile phase solvents consisted of 0.1% formic acid in water (Buffer A) and 0.1% formic acid in acetonitrile (Buffer B, Optima LC/MS, Fisher Scientific, Pittsburgh, PA). Data-dependent acquisition was performed using the instrument supplied Xcalibur (version 4.8) software. The mass spectrometer was operated in the positive ion mode. Each survey scan of m/z 300–1,800 was followed by higher-energy collision-induced dissociation (HCD) MS/MS of the 15 most intense precursor ions. Singly charged ions were excluded from HCD selection. Normalized collision energies of 30 eV were employed using helium as the collision gas.
+MS data analysis
+For global LC-MS/MS, raw files were directly loaded into Proteome Discoverer 2.4 (Thermo Fisher Scientific) and searched against the SwissProt database using an in-house Mascot server (Version 2.7, Matrix Science). Mass tolerances were ±15ppm for MS peaks, and ±0.05 Da for MS/MS fragment ions. Trypsin-specific cleavage was used allowing for 1 missed cleavage. Methionine oxidation, proline hydroxylation, protein N-terminal acetylation, deamidation of asparagine and glutamine, and peptide N-terminal pyroglutamic acid formation were allowed as variable modifications while carbamidomethylation of cysteine was set as a fixed modification. Label-free quantification was performed using the Minora Feature detector for precursor peak intensity-based abundance. A protein threshold of 1% FDR was used to filter for high-confidence identifications.
+Small interfering RNA transfection
+All siRNAs were obtained from Dharmacon (Thermo), and a pool of four different siRNAs was used for all knockdown experiments. SiRNA transfections in 6-well plates for expression profiling and in 96-well plates for monitoring changes in cell growth were carried out using Lipofectamine RNAiMax (Invitrogen) according to the manufacturer’s instructions.
+RNA extraction and quantitative PCR
+Total cellular RNA was isolated using the GenCatch Total RNA miniprep kit (Epoch Life Science, Inc.). mRNA expression changes in genes encoding for various cytokines were determined using quantitative real-time PCR (qPCR). Briefly, 0.5–1 μg of total RNA was reverse transcribed into first-strand cDNA using an RT2 First Strand Kit (QIAGEN). The resultant cDNA was subjected to qPCR using a gene-specific primer (Biorad) and GAPDH (housekeeping control). The qPCR reaction was performed with an initial denaturation step of 10 min at 95°C, followed by 15 s at 95°C and 60 s at 58°C for 40 cycles using Biorad CFX384 thermocycler (Biorad). The mRNA levels of genes encoding cytokine expression were normalized relative to the mean levels of the housekeeping gene and compared using the 2
+−ΔΔCt
+method as described previously.
+55
+Western blotting
+Monolayer cells were washed twice with PBS and suspended in the SDS lysis buffer. The remaining debris was removed by centrifuge filtration. Protein concentration was measured by BCA assay with bovine serum albumin as a standard. After denaturing at 95°C for 5 min in reduced conditions, 10–20 μg of proteins per lane were separated with 4–12% Bis-Tris gradient gels in MES SDS running buffer. The proteins were transferred by tank blotting system to the nitrocellulose membrane. The membrane was blocked with LICOR blocking buffer (PBS) for 1 h at ambient temperature, followed by primary antibody at 1:1000 in the blocking buffer at 4°C for 1 h. Primary antibodies used were as follows:
+p
+-DDR1/2 (R&D Systems, MAB25382), phospho-p38 MAPK (Cell Signaling Technology (CST), 4631), DDR1 (CST, 5583), DDR2 (CST, 25814), GLI1 (CST, 3538), p38 MAPK (CST, 9212), p38gamma MAPK (CST, 2307), and β-actin (Sigma, A1978). After washed with PBS, the membrane was incubated with infra-red-conjugated antibodies at 1:5000 for 1 h at room temperature. The signal was imaged by the Odyssey imaging system, and the band intensities were quantified with the Odyssey imaging analysis software. The signal intensities of each protein were normalized with that of β-Actin.
+Immunohistochemistry
+Tumor tissues or drug-treated tissue slices were fixed in 10% formalin and embedded into paraffin block to prepare tissue sections. For anti-cleaved caspase 3 staining, sections were de-paraffinized in xylene and rehydrated through a graded series of ethanol followed by heat-mediated antigen retrieval using 10 mM sodium citrate buffer (pH 6.0) for 20 min with a subsequent cooling period of 20 min. The sections were then soaked in 3% hydroperoxide to quench endogenous peroxidase. Next, the tissue sections were blocked with Background Buster (Innovex, cat# NB306) and stained with rabbit anti-cleaved caspase 3 (CST, 9661) at a dilution of 1:200 in 0.25% goat serum at 4°C overnight followed by ImmPress Rabbit HRP polymer reagent (Vector Laboratories) and color substrates. Color development was performed using Quanto DAB (Fisher) brown and counterstained with Harris hematoxylin (Sigma) as appropriate, dehydrated and mounted. The transverse tissue slides were imaged at 20x magnification to visualize the entire thickness of the slides. slides were digitally scanned using the NanoZoomer Digital Pathology (Hamamatsu) image viewing software. Positive 3,3′-diaminobenzidine (DAB) cells with hematoxylin-stained nuclei were visually counted using Fiji ImageJ software. Counting was performed over at least two high-powered fields (hpf) per slice, and at least two different slices per treatment were analyzed for each individual patient tumor. Anti-CD3 and CD8 staining were performed by the Fred Hutchinson Cancer Center Experimental Histopathology shared resource. Briefly, paraffin sections were cut at 4 μm, air dried at room temperature overnight, baked at 60°C for 1 h. Slides were stained on a Leica BOND Rx autostainer (Leica, Buffalo Grove, IL) using Leica Bond reagents. Epitope retrieval was performed at 100°C for 20 min with Epitope Retrieval Solution 2 (Leica AR9640). Endogenous peroxidase was blocked with 3% H
+2
+O
+2
+for 5 min followed by protein blocking with TCT buffer (0.05M Tris, 0.15M NaCl, 0.25% Casein, 0.1% Tween 20, and 0.05% Proclin 300 at pH 7.6 ± 0.1) for 10 min. Rabbit anti-CD8 clone D4W2Z (CST, 98941) at a dilution of 1:200 or rabbit anti-CD3 clone EPR 20752 (Abcam, ab215212) at a dilution of 1:7000 was incubated for one hour and Refine Rabbit polymer HRP was applied for 12 min, followed by Mixed Refine DAB (Leica DS9800) for 10 min and counterstained with Refine Hematoxylin (Leica DS9800) for 4 min after which slides were dehydrated, cleared and coverslipped with permanent mounting media. To quantification, the images of entire tissue sections were obtained using the TissueFAXS system (TissueGnostics, Austria) with a 10x objective lens in brightfield mode. The percentage of the CD3 or CD8-positive area relative to the scanned non-necrotic tissue area was quantified using HistoQuest software (TissueGnostics, Austria).
+In vitro
+doramapimod target profile
+In vitro
+target profile of doramapimod at 500 nM was determined by Reaction Biology (Reaction Biology Inc. Inc. Malvern, PA) using radioactive kinase assay as described previously.
+56
+,
+57
+GLI1 transcription activity assay
+A GLI1 reporter lentivirus (System Biosciences, Cat # TR050VA-N) was utilized to transduce CAFs to evaluate the GLI1 transcriptional activity using GFP and luciferase following the manufacturer’s protocols. Briefly, breast tumor-derived CAFs were seeded at a density of 250,000 cells per well in a 6-well plate and cultured at 37C in a humidified 5% CO2 incubator for 24 h. After this initial incubation, cells were transduced with lenti reported using 50ul particles per well, in 2 mL of growth medium. The mixture was incubated for 24 h after which the medium was replaced with fresh growth medium, and incubation continued for another 24 h at 37°C and 5% CO
+2
+. Subsequently, cells were treated with 2 μg/mL puromycin in a growth medium to select for transduced cells. Puromycin-resistant cell colonies were expanded in 100 mm cell culture dishes and maintained in DMEM supplemented with 10% FBS and 1 μg/mL puromycin. For GLI1 activity, cells were plated in a 96-well plate at a density of 5,000 cells per well. The following day, the cells were treated with either doramapimod or Gant61 for 48 h. After the treatment period, luciferase activity was measured using the Bright-Glo assay (Promega) and read on a Synergy H4 plate reader.
+Single-cell RNAseq analysis
+Raw gene expression matrices were downloaded from the Gene Expression Omnibus (
+GSE129455
+).
+50
+Data were analyzed using the Seurat R package (v4.4.0).
+58
+Cells were normalized using log-normalization via NormalizeData() with a scaling factor of 10,000, and highly variable genes were identified using the ‘vst’ method. The data were then scaled and subjected to principal component analysis. Clustering was performed using the first 10 principal components and the Louvain algorithm applied to a shared nearest neighbor graph, with resolution parameters of 0.3 for the viable dataset and 0.08 for the fibroblast subset. Non-linear dimensionality reduction was carried out using t-distributed stochastic neighbor embedding (t-SNE). Marker gene expression was visualized using FeaturePlot(), VlnPlot(), and DotPlot(). Cluster-specific marker genes were obtained from Elyada et al., 2019.
+50
+Confocal imaging
+Breast tumor-derived CAFs or untransformed mouse fibroblasts (NIH-3T3) were cultured on 24-well glass bottom dishes (MatTek Corporation). The cells were fixed in 4% paraformaldehyde for 15 min at room temperature and then washed in PBS. They were permeabilized with 0.15% Triton X-100 and blocked for 60 min with PBS containing 3% BSA (w/v). Following this, cells were immunostained with the appropriate primary antibody and subsequently with Alexa Fluor 488-labeled goat-
+anti
+-rabbit antibody or Alexa Fluor 546-labeled goat-
+anti
+-mouse antibody (Molecular Probes). Nuclei were counterstained with Hoechst 33342 (Sigma). Fluorescent micrographs were obtained using a Zeiss LSM780 scanning confocal microscope. Individual channels were overlaid using ImageJ software (National Institutes of Health, Bethesda, MD).
+Quantification and statistical analysis
+The statistics were performed using GraphPad Prism. Statistical details of each experiment (the numbers of trials, statistical test used, and precision measures) are described in the figure legends and related
+STAR Methods
+sections. Significance was defined as a
+p
+-value less than 0.05. Differences between groups were considered significant if they exceeded the average ±standard error of the mean (SEM) and were supported by appropriate statistical tests. Significance levels are denoted as follows:
+p
+< 0.05 (∗),
+p
+< 0.01 (∗∗), and
+p
+< 0.001 (∗∗∗).

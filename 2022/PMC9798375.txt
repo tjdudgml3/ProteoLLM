@@ -1,0 +1,500 @@
+Introduction
+An increasingly relevant approach for
+addressing protein–protein
+interactions (PPIs) is based on the rapidly evolving technology of
+cross-linking coupled to mass spectrometry (XL-MS). The general approach
+of protein XL-MS is based on covalent bonds that are formed using
+cross-linking reagents between proximal functional groups (most commonly
+lysine residues) in their native environment.
+1
+−
+4
+The actual cross-linking sites
+are subsequently identified by mass spectrometry (MS) and reflect
+the spatial proximity of regions and domains within a given protein
+(intra-link) or between different proteins (inter-link). Additionally,
+the cross-linker can react twice within one peptide (loop-link) or
+only on one side with the peptide and hydrolyze on the other side
+(mono-link), revealing information on the accessibility of a specific
+amino acid residue. The field has seen significant technological and
+conceptual progress over the last couple of years, and by now, various
+enrichment strategies, different cross-linking chemistries, and multiple
+detection and annotation strategies have been introduced.
+1
+,
+2
+,
+4
+With the structural probing
+of recombinantly expressed static protein
+complexes now being firmly established, the recent applications of
+XL-MS on the systems level
+5
+and in living
+cells
+6
+that has spurred great interest
+and an ever-increasing number of studies ranging from bacterial, fungal,
+and mammalian cell lysates and cultured cells,
+7
+,
+8
+specific
+cellular organelles,
+9
+−
+11
+and tissues
+12
+,
+13
+have been reported.
+These studies hint at the exciting prospect that XL-MS will soon be
+able to facilitate the structural probing of interaction partners
+of any protein of interest within living cells or even organisms.
+However, the confidence in individual protein–protein interactions
+(PPIs) based on cross-linking data depends on the correct assessment
+of individual inter-protein cross-links. As recent data show that
+erroneous assignments in cross-linking data are frequently underestimated,
+14
+which is particularly the case for inter-protein
+cross-links,
+15
+this can undermine the confidence
+in individual PPIs and protein networks based on cross-linking data.
+In this article, we describe a novel mono- and intralink filter
+(mi-filter) that is applicable to any kind of cross-linking data and
+analysis pipelines. It stipulates that only proteins for which at
+least one monolink or intra-protein cross-link has been identified
+within a given data set should be considered for an inter-protein
+cross-link and therefore participate in a PPI. It is based on the
+observation that if the abundance of protein is high enough to be
+detectable by XL-MS, the formation rate of monolinks and intra-protein
+cross-links will be significantly higher than that of interlinks.
+16
+In other words, if no mono-link or intra-protein
+cross-link can be detected for a given protein, there is a high likelihood
+that this protein is not addressable by XL-MS in this particular sample
+and any inter-protein cross-link that includes this protein is likely
+a false PPI.
+We show that this simple and intuitive filter has
+a dramatic effect
+on all types of cross-linking data ranging from single protein complexes,
+over medium-complexity affinity enrichments to proteome-wide settings,
+and significantly reduces the number of false-positive identifications
+in all these types of XL-MS data.
+Experimental Section
+Mi-Filter Script
+The mi-filter script was written in
+python and is available at the Github repository (
+https://github.com/stengellab/mi-filter.git
+). It is tailored to xQuest
+17
+output tables
+but can, in principle, be applied to cross-linking MS data sets obtained
+by any of the established cross-link-identification software platforms
+such as MeroX,
+18
+Xlinkx,
+19
+Xi,
+20
+pLink2,
+21
+,
+22
+or RNPxl.
+23
+It selects proteins from
+the input data set, which contain at least one mono- or intra-protein
+link and subsequently filters for inter-protein cross-links within
+this list. It also calculates a decoy ratio (using the ratio of the
+target and decoy links) at each ld-Score cutoff for monolinks and
+inter-protein and intra-protein cross-links separately.
+In detail,
+the mi-filter script works as follows: it filters the input files
+for a specified ld-Score, then concatenates the input data frames,
+and, if specified, filters for biological replicates of cross-linking
+sites (therefore, input files must be sorted by biological replicates).
+In the next step, it adds a “decoy” column to the concatenated
+data frame. In the “XLtype” column, strings are replaced
+in a way that only three types of cross-link are left: monolinks and
+intra-protein and inter-protein cross-links. Proteins without a monolink
+or an intra-protein cross-link are then filtered out by the parameter
+“–mi” when running the mi-filter program.
+26S Proteasome Cross-Linking Data Set
+Purification
+of yeast 26S proteasomes was performed as described in a previous
+study.
+24
+S. cerevisiae
+cells (YYS40; MATa rpn11::RPN113FLAG-HIS3) were grown for 48 h and
+harvested in the stationary phase. The purification of 3XFLAG-tagged
+26S proteasome was carried out by affinity purification using M2 anti-FLAG
+beads (Sigma A2220). After incubation for 1.5 h at 4 °C, the
+proteasome was eluted with FLAG peptide. An overnight sucrose gradient
+was carried out for the second purification step. The sucrose gradient
+was centrifuged in a Beckman SW41 rotor for 17 h at 4 °C at 28,000
+rpm. Proteasome-containing fractions were identified by the degradation
+of the peptide suc-LLVY-AMC, SDS-PAGE analysis, and Bradford assay.
+Purified 26S proteasome (1 μg/μL) (100 μg) were
+subsequently incubated with the isotopically labeled cross-linking
+reagent disuccinimidyl suberate d0/d12 (DSS-H12/D12, Creativemolecules
+Inc.) at a final concentration of 1 mM for 30 min at 30 °C while
+shaking at 650 rpm in a Thermomixer (Eppendorf). The reaction was
+quenched with ammonium bicarbonate at a final concentration of 50
+mM for 10 min at 30 °C and 650 rpm. Cross-linked samples were
+dried (Eppendorf, Concentrator plus), resuspended in 100 μL
+of 8 M Urea, reduced, alkylated, and digested with trypsin (Promega).
+Digested peptides were separated from the solution and retained by
+a solid-phase extraction system (SepPak, Waters). Cross-linked peptides
+were enriched by size exclusion chromatography using an ÄKTAmicro
+chromatography system (GE Healthcare) equipped with a SuperdexTM Peptide
+3.2/30 column (column volume = 2.4 mL). Fractions were collected in
+100 μL units and analyzed by liquid chromatography-tandem mass
+spectrometry (LC–MS/MS). For each cross-linked sample, two
+fractions (1.2–1.3 mL and 1.3–1.4 mL) were collected
+and measured in technical duplicates. Absorption levels at 215 nm
+of each fraction were used to normalize peptide amounts prior to LC–MS/MS
+analysis.
+LC–MS/MS analysis was carried out on an Orbitrap
+Fusion Tribrid mass spectrometer (Thermo Electron, San Jose, CA).
+Peptides were separated on an EASY-nLC 1200 system (Thermo Scientific)
+at a flow rate of 300 nL/min over an 80 min gradient (5% acetonitrile
+in 0.1% formic acid for 4 min, 5–35% acetonitrile in 0.1% formic
+acid in 75 min, and 35–80% acetonitrile in 1 min). Full scan
+mass spectra were acquired in the Orbitrap at a resolution of 120,000,
+a scan range of 400–1500
+m/z
+, and a maximum
+injection time of 50 ms. Most intense precursor ions (intensity ≥5.0
+× 10
+3
+) with charge states 3–8 and monoisotopic
+peak determination set to “peptide” were selected for
+MS/MS fragmentation by CID at 35% collision energy in a data-dependent
+mode. The duration for dynamic exclusion was set to 60 s. MS/MS spectra
+were analyzed in the iontrap at a rapid scan rate.
+For the cross-link
+identification of the 26 proteasome in a “proteome-wide
+setting,” a database was compiled which contained the 34 proteins
+of the 26S proteasome plus the 200 most abundant proteins in
+S. cerevisiae
+as annotated in the PAX database (
+https://pax-db.org/
+). MS raw files
+were subsequently converted to centroid files and searched using xQuest
+in ion-tag mode. Cross-links were exported as .tsv files with the
+filter settings Δ
+S
+= 95 and a max. ppm range
+from −5 to 5, containing all (nonunique) identifications. The
+mi-filter was applied to different ld-Score cut-offs (20, 25, 28,
+and 32) before comparing the ratio of target to decoy hits for each
+data set before and after mi-filtering (
+Supplementary Data 1
+and
+Figure
+3
+A,B).
+Pre-60S Ribosome XL-MS Data Set
+The data set consists
+of biological triplicate measurements of 12 different pre-60S ribosomal
+particles, which were enriched using affinity-tagged RBFs and were
+collected as part of another study.
+25
+The
+mi-filter was applied to different ld-Score cut-offs (20, 25, 28,
+and 32) and target to decoy hits compared before and after mi-filtering
+(
+Supplementary Data 2
+and
+Figure
+3
+C,D).
+Proteome-Wide Cross-Linking Data Set
+The data set contains
+biological triplicate measurements of cell lysate in
+Saccharomyces cerevisiae
+and was collected as part
+of another study.
+16
+xQuest results from
+this paper were directly downloaded and the cross-linked sample using
+equimolar concentrations (1×) of BS3 as a cross-linker was chosen
+for further analysis. The mi-filter was applied to different ld-Score
+cut-offs (20, 25, 28, and 32) and target to decoy hits compared before
+and after mi-filtering (
+Supplementary Data 3
+and
+Figure
+3
+E,F).
+Mapping of Filtered Cross-Links
+Cross-link networks
+were visualized with xiNET.
+26
+Data Availability
+The MS raw files, the cross-link
+databases, and the original xQuest result files have all been deposited
+to the ProteomeXchange Consortium via the PRIDE partner repository
+27
+with the project accession number PXD031215.
+The previously published ribosome
+25
+and
+lysate
+16
+data sets have the project accession
+numbers PXD021831 and PXD014759, respectively.
+Results
+Concept of the Mi-Filter
+Our “mi-filter”
+(monolink/intralink filter) is based on the simple idea that only
+proteins for which at least one monolink or intra-protein cross-link
+has been identified within a given data set should participate in
+an inter-protein cross-link and be part of a legitimate PPI (
+Figure
+1
+).
+Figure 1
+Concept of the mi-filter.
+Only proteins that contain at least one
+identified monolink or intra-protein cross-link are considered for
+inter-protein cross-links and can therefore be part of a PPI.
+Our approach is not designed as a contradiction
+to standard FDR
+calculations
+11
+,
+14
+,
+19
+,
+28
+−
+30
+but is rather intended
+as an additional tool that can be applied on the top of the existing
+workflows and before the final FDR estimation in order to minimize
+false-positive assignments of inter-protein cross-links.
+Inter-Protein Cross-Links Are Disproportionally Affected by
+False-Positive Assignments
+Minimizing false-positive assignments
+for inter-protein cross-links is particularly crucial as all PPIs
+based on cross-linking data depend entirely on information from inter-protein
+cross-links (
+Figure
+2
+).
+Figure
+2
+shows
+the amount of detected hits for monolinks and intra-protein and inter-protein
+cross-links for the 26S proteasome at increasingly stringent filtering
+settings, that is, increasing agreement between measured experimental
+and in-silico-generated reference spectra. The decoy ratio is the
+relative proportion of detected decoy hits to all detected links.
+The data show that the relative proportion of detected decoy hits
+for inter-protein cross-links is significantly larger than that for
+mono or intra-protein links for all settings and, importantly, that
+inter-protein cross-links still contain a significant number of false-positive
+identifications at cut-offs where the number of detected decoys for
+intra-protein and monlinks are already negligible.
+Figure 2
+Inter-protein cross-links
+are disproportionally affected from false-positive
+assignments. Bar chart shows the cumulative amount of detected monolinks
+and intra-protein cross-links and inter-protein cross-links (
+y
+-axis, left) of the 26S proteasome at different ld-score
+cut-offs,
+31
+that is, increasing levels
+of agreement between the measured experimental and in-silico-generated
+reference spectra. The relative proportion of detected decoy hits
+to all detected hits (
+y
+-axis, right) versus the respective
+ld-score setting (
+x
+-axis) is plotted on the right
+y
+-axis (symbols).
+Mi-Filter Reduces False-Positive Assignments for Inter-Protein
+Cross-Links for Different Types of Cross-Linking Data
+In
+order to evaluate the effect of the mi-filter on false-positive assignments
+of inter-protein cross-links, we applied it to typical cross-linking
+data sets of different complexities (
+Figure
+3
+).
+Figure 3
+Comparison of false-positive
+assignments for inter-protein cross-links
+with and without the mi-filter. Inter-protein cross-links are shown
+for three different types of datasets representing typical experimental
+set-ups including the 26S proteasome from
+S. cerevisiae
+as an example of an individual protein complex (A and B), affinity
+enrichments of pre-60S ribosomal particles (C and D), and a proteome-wide
+cross-linking experiment using
+S. cerevisiae
+cell lysate (E and F). Panels A, C, and E show the number of decoy
+and target hits (nondecoy hits) in nonfiltered (left bar in each group)
+and mi-filtered samples (right bar in each group) for increasingly
+stringently filtered data. Target hits are shown in blue and decoys
+in red. Panels B, D, and F show the ratio of decoy to target hits
+of nonfiltered (red line) versus mi-filtered results (blue line) for
+the respective data sets.
+Our least complex sample is the 26S proteasome
+from
+S. cerevisiae
+consisting of 34
+proteins (
+Figure
+3
+A,B).
+An intermediate
+one is the combined data set of pre-60S ribosomal particles obtained
+by affinity enrichment, containing a total of around 300 proteins
+(
+Figure
+3
+C,D). We could
+previously show that the application of the mi-filter to this data
+set results in significantly reduced false-positive assignments,
+25
+but only now, we have thoroughly investigated
+the influence of the mi-filter on this and other data sets and for
+various settings of increasingly stringent filtering. The most complex
+sample we evaluated using our mi-filter is a proteome-wide XL-MS data
+set of
+S. cerevisiae
+cell lysate
+16
+(
+Figure
+3
+E,F).
+We first had a closer look at the relative abundance
+of proteins
+that were filtered out by the mi-filter, taking the pre-60S ribosomal
+particle data set as an example.
+25
+Here,
+proteins for which a mono- or intra-protein link was detected are
+in average of significantly higher abundance than proteins without
+mono- or intra-protein links (
+Supplementary Figure 1
+). This effect has been noted also previously for other data
+sets
+30
+and already indicates that proteins
+without mono- or intra-protein links are either not present in the
+sample at a concentration high enough for cross-link identification
+or they are not present at all.
+After the application of the
+mi-filter (right bar of each group),
+all data sets consistently exhibit a significant decrease in the number
+of detected decoy inter-protein links (
+Figure
+3
+A–F). It is interesting to note that
+this is not only true for the different sample types but also for
+the increasingly stringent filtering settings (i.e., increasingly
+good matches between experimental data and in-silico-generated reference
+spectra), where the mi-filter is able to filter out most decoy links
+already at medium filtering settings (
+Figure
+3
+). We have then used the high-resolution
+structure of the
+S. cerevisiae
+26S
+proteasome (PDB
+4CR2
+) and a cutoff of 35 A° (the maximal lysine Cα–Cα
+distance that our cross-linker can bridge) to generate a control data
+set with structurally compatible cross-links (bona fide true-positive
+links) to assess the sensitivity of the mi-filtered data. Using this
+data set, the mi-filter also demonstrates very good sensitivity as
+it is able to retain the majority (>90%) of bona fide true-positive
+inter-protein cross-links (
+Supplementary Table 1
+).
+Taken together, this demonstrates the value of the
+mi-filter as
+a stringent filtering device that results in a significant reduction
+of false inter-protein cross-link identifications in different types
+of cross-linking data.
+Structural Accuracy of the mi-Filtered Data
+In the
+next step, we wanted to test and benchmark the mi-filter also for
+its ability to identify true-positive cross-links in a proteome-wide
+setting. In contrast to mixtures of purified proteins or protein complexes,
+which can be benchmarked against existing atomistic high-resolution
+structures in order to assess true-positive identifications, there
+is no known ground truth in a proteome-wide cross-linking experiment,
+as the precise protein arrangement within a cell or lysate is unknown.
+We, therefore, took the totality of MS and MS/MS spectra that we
+had experimentally obtained from a sample of cross-linked 26S proteasome
+and searched it in a proteome-wide setting (i.e., against a large
+protein database; see
+Experimental Section
+for details) using a constant score cutoff with and without the
+application of the mi-filter (
+Figure
+4
+). Our data show that the application of the mi-filter
+did not only lead to a significant reduction of detected decoy hits.
+When mapped again onto the published high-resolution cryogenic electron
+microscopy structure of the
+S. cerevisiae
+26S proteasome (PDB
+4CR2
+), over 90% of our mi-filtered interprotein cross-links
+fall within 35 A° (
+Supplementary Figure 2
+), indicating that our mi-filtered cross-links are also structurally
+accurate.
+Figure 4
+Quality of the mi-filtered data. Cross-linking data set of the
+26S proteasome represented as a network graph where proteins are shown
+as white nodes and inter-protein links as gray lines. Graph is drawn
+at the constant score cutoff of Id-25 with and without the application
+of the mi-filter and the data were searched against a manually curated
+database mimicking proteome-wide protein distribution (see
+Experimental Section
+and
+Supplementary Figure 2
+for details).
+Discussion
+In this manuscript, we describe and benchmark
+a mono- and intralink
+filter that is in principle applicable to any kind of cross-linking
+data and analysis pipelines. This simple and intuitive mi-filter,
+which removes inter-protein cross-links if the connected polypeptides
+are not additionally represented within their respective intralink
+or monolink pools, reduces false-positive identifications for inter-protein
+cross-links significantly. We show that this is true for different
+types of cross-linking data ranging from individual protein complexes,
+over medium-complexity affinity enrichments to proteome-wide settings.
+Moreover, in addition to reliably reducing the amount of detected
+decoy hits in a given cross-linking sample, the mi-filter is also
+able to identify and retain the majority of true-positive cross-links,
+suggesting very good sensitivity.
+While we have used the
+xQuest
+cross-linking software
+in this manuscript as an example to identify cross-links, our mi-filter
+can in principle be applied to any cross-linking software. We therefore
+suggest its use as a tool to minimize false-positive assignments for
+inter-protein links prior to FDR estimation using the respective workflow
+of choice.
+Taken together, our mi-filter greatly enhances the
+reliability
+of individual inter-protein cross-links in any type of cross-linking
+data and therefore their ability to provide reliable and biologically
+relevant positional information as a source of a PPI.

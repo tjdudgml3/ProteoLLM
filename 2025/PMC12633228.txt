@@ -1,0 +1,592 @@
+The functional integrity of tissue depends on the precise spatial organization of diverse cell types and their dynamic interactions [
+1
+]. This spatial architecture governs tissue homeostasis, orchestrates immune responses, and shapes disease progression [
+2
+]. Biomolecules such as DNA, RNA, and proteins execute cellular functions, thus serving as the key readouts to decode complex cell biology and tissue organization [
+3
+].
+In recent years, spatial “omics” approaches have emerged as transformative platforms, enhancing our understanding of developmental biology, pathogenesis, and therapeutic responses because they resolve functional and phenotypic differences between cells in specific tissue compartments. Among these, spatial transcriptomics enables RNA profiling in the tissue context and achieves subcellular resolution through advanced techniques, such as multiplexed
+in situ
+hybridization and sequencing platforms [
+4
+,
+5
+]. A notable example is the commercialized Visium/Xenium platform by 10x Genomics, which captures mRNA transcripts
+in situ
+using a barcoded oligonucleotide array slide followed by downstream mRNA sequencing [
+6
+–
+8
+]. When combined with single-cell RNA sequencing, spatial transcriptomics further offers a detailed cellular landscape of tissue samples [
+9
+]. However, RNA levels do not always correlate with protein abundance due to translational regulation [
+10
+–
+12
+]. Since proteins are the primary effector molecules of cellular function, spatial proteomics offers a more direct window into cellular mechanisms in the tissue context.
+Various spatial proteomics technologies have recently been developed, many of which rely on antibody-based strategies for targeted protein detection. These include metal-tagged antibodies (i.e., MIBI [
+13
+–
+15
+] and IMC [
+16
+]), oligonucleotide-conjugated antibodies (i.e., CODEX [
+17
+,
+18
+], DBiT-seq [
+19
+], GeoMx DSP [
+20
+], and SUM-PAINT [
+21
+]), and fluorescent antibodies (i.e., cyclic-imaging-based proteomics [
+22
+–
+24
+]). While powerful, these methods are limited by their dependence on prior knowledge of protein targets and the restricted number of proteins that can be simultaneously analyzed. In contrast, mass spectrometry (MS) enables untargeted and comprehensive proteome profiling without antibody labeling. Among various MS-based spatial proteomics approaches, laser capture microdissection (LCM) coupled with MS analysis remains one of the most widely used techniques. This method is often used to isolate mesoscopic tissue regions composed of mixed cell types from thin formalin-fixed paraffin-embedded (FFPE) tissue sections (< 10 μm thick). In LCM, integration with immunofluorescence (IF) staining can help to localize and isolate specific cell types within a tissue section [
+25
+,
+26
+]. However, this approach remains challenging, as it requires manual dissection of individual cells, which is labor-intensive and prone to contamination from adjacent unwanted cell types or extracellular matrix (ECM). These challenges are further exacerbated when isolating irregularly shaped (e.g., neurons and endothelial cells) or small cells located in densely packed areas (e.g., immune cells in lymphoid tissues). High-energy laser cutting in LCM can also damage the cell membrane, leading to the loss of plasma membrane proteins. Despite recent advances in artificial intelligence (AI) to infer cell types from multimodal data [
+27
+], conventional LCM-MS workflows remain limited in achieving cell-type resolution.
+To overcome these limitations, we introduce
+NicheProt
+, a spatial proteomics platform that enables cell-type-resolved and tissue-compartment-specific proteomics with a photobleaching-mediated fluorescence cell barcoding method. Using 400 μm-thick and optically cleared tissue macrosections, we barcode target cells with a clear view of the surrounding three-dimensional (3D) tissue microenvironment with multiplex IF staining and confocal microscopy. Microscopic photobleaching of selected fluorescence signals creates unique optical barcodes for the target cell type located in defined regions of interest (ROIs). Following tissue dissociation, barcoded cells are isolated via fluorescence-activated cell sorting (FACS), preserving cellular integrity and protein content for subsequent MS analysis.
+To validate our technique, we applied
+NicheProt
+to the mouse spleen, a key secondary lymphoid organ that is composed of distinct immune cell populations distributed across regional compartments, such as the T- and B-cell zones in the white pulp, red pulp, and marginal zone. While the splenic architecture is well-defined, the functional characteristics of individual immune cell types associated with their distinct compartments remain underexplored. In this study, we investigated CD11c
++
+dendritic cell (DC) responses to lipopolysaccharide (LPS)-induced inflammation. Using
+NicheProt
+, we isolated and profiled three distinct DC populations defined by their location inside or outside the T-cell zones in normal or inflamed spleen. Our results reveal distinct proteomic signatures between control and inflamed DCs, and between two spatially separated inflammatory DC subsets within the same LPS-treated spleen, identifying differences in 54 proteins. These compartment-specific profiles highlight the spatial regulation of DC function and identify potential biomarkers as well as candidates for novel therapeutics targeting specific cell populations.
+Results
+Development of NicheProt workflow
+Current spatial proteomics technologies face challenges in providing comprehensive proteome profiling along with cell-type information. To address this limitation, we developed
+NicheProt
+, a spatial proteomics workflow that integrates five major steps: tissue cryopreservation and processing, photobleaching-mediated
+in situ
+fluorescence barcoding, tissue dissociation, fluorescence-activated cell sorting (FACS), and LC-MS/MS analysis (
+Figure 1A
+).
+Building on our previous findings, we first optimized tissue fixation and cryopreservation protocols to preserve tissue status at the time of collection. Tissues were fixed in 4% paraformaldehyde (PFA) and then stored in 100% (w/v) D-fructose at −80 °C (
+Figure 1A
+,
+step #1
+). This approach effectively maintains overall tissue, cell, and protein integrity, enabling 3D confocal microscopy and intact cell collection in downstream steps. This preservation method supports a flexible processing timeline and facilitates sample sharing in multi-site studies, which is particularly important for ensuring robustness when handling clinical human specimens.
+In the next step of the
+NicheProt
+workflow, tissues were thawed, washed in PBS, and embedded in agarose gel plugs for subsequent slicing into 400 μm-thick macrosections. Thick tissue macrosections retain 3D tissue architectures and minimize both cell disruption and protein loss. The macrosections were then stained with a cocktail of fluorophore-conjugated antibodies to visualize the distribution of a specific cell type. Tissue clearing is a chemical process that renders tissues optically transparent and is applied to facilitate deep microscopic visualization without disrupting light transmission. By combining D-fructose-based aqueous tissue clearing with multiplex IF microscopy [
+28
+,
+29
+], we achieved 3D visualization of tissue architectures and identified specific cell types within defined ROIs in entire macrosections. To barcode a selective cell type, we used pairs of the same monoclonal antibodies conjugated to different fluorophores. For example, we used Alexa Fluor 488- and Alexa Fluor 647-anti-CD45 antibodies to stain CD45
++
+immune cells in the tissue macrosection (
+Figure 1A
+,
+step #2
+). Using a confocal microscope equipped with 405/488/561/640 nm excitation lasers, we photobleached one of the fluorophores to generate “optical barcodes”, enabling the
+in situ
+encoding of CD45
++
+immune cells with their positional information within three-dimensionally (3D) defined ROIs in the tissue macrosection (
+Figure 1B
+and
+1C
+,
+left
+). Additional fluorescence barcodes could be produced by combining three antibodies conjugated to different fluorophores (
+Figure 1C
+,
+middle
+). Beyond targeting specific cell types, our photobleaching approach can also expand to universal cell barcoding in tissue macrosections stained with lipophilic membrane dyes such as DiI and DiD (
+Figure 1C
+,
+right
+). The volume of each photobleaching region was controlled by adjusting the objective magnification and zoom to precisely photobleach cells within the selected ROI (
+Table S1
+). Photobleaching each 3D region typically takes approximately 20 – 40 seconds using 20× and 40× air objectives with zoom factors, with higher magnifications and smaller regions requiring less time.
+Following microscopic photobleaching, we isolated the barcoded cells from their tissue context. Spleen macrosections were mechanically dissociated, and barcoded cells were collected
+via
+FACS. These cells were identified by fluorescence intensity shifts in flow plots when comparing with “non-photobleaching” control cells dissociated from macrosections that did not undergo photobleaching-mediated barcoding (
+Figure 1A
+,
+step #3–4
+). Specifically, cells that were subjected to Alexa Fluor 647 bleaching exhibited a downward shift on the y-axis, while cells that were subjected to Alexa Fluor 488 bleaching showed a leftward shift on the x-axis in flow cytometry plots (
+Figure 1D
+,
+E
+). We employed a microfluidic-based mechanical cell sorter (MACSQuant
+®
+Tyto) for low-pressure cell sorting (< 3 psi) to ensure gentle handling and minimize the risk of cell rupture during the process. This approach enables the successful isolation of intact mouse splenocytes, mouse breast tumor cells, and human renal carcinoma cells from enzymatically or mechanically dissociated mouse and human tissues (
+Figure 1F
+). Finally, proteins were extracted, digested into peptides through validated methods, and analyzed by LC-MS/MS for bottom-up proteomic profiling (
+Figure 1A
+,
+step #5
+).
+To evaluate cell and protein yields in the
+NicheProt
+workflow, we created 10 photobleached 3D regions using 20× and 40× objectives at different zoom settings in mouse spleen macrosections (
+Table S1
+). Because tissue cell density and protein content vary across different tissues and cell types, a preliminary assessment of cell and protein recovery from each target tissue and cell type is essential for designing a practical
+NicheProt
+analysis plan tailored to specific research goals. This information guides the determination of the number and volume of photobleached regions required per tissue macrosection to ensure sufficient cell and protein yields for subsequent standard LC-MS/MS analysis.
+Protein artifact assessment during NicheProt processing
+Given the multi-step nature of our spatial proteomics workflow, we first evaluated whether tissue cryopreservation introduces protein artifacts or not. We compared protein profiles from mouse spleens processed immediately after fixation with those cryopreserved in 100% D-fructose at −80 °C prior to extraction (
+Figure 2A
+). Our analysis revealed consistency in the protein profiles following D-fructose cryopreservation. We quantified up to 4,818 proteins per sample with a sample-by-sample Pearson correlation ranging from 0.964 to 0.985 and a strong correlation of 0.994 between control and cryopreserved groups (
+Figure 2B
+–
+D
+). In the PCA plot, samples from both groups were intermingled without clear separation, indicating remarkable similarity in their overall features (
+Figure 2E
+). Volcano plot analysis showed no significantly altered proteins, and coefficients of variation (CVs) were below 0.2 in both conditions, indicating that the proteomics data was highly reproducible across biological replicates (
+Figure S1A
+–
+C
+). These results validate that cryopreservation does not introduce detectable protein artifacts and enhances workflow flexibility by allowing long-term storage, simplified sample sharing for collaborative studies, and archiving clinical human tissue samples.
+Next, we tested whether the
+NicheProt
+workflow itself affects protein expression. Using cryopreserved mouse spleens, we compared protein profiles between non-processed controls and
+NicheProt
+-processed tissues (
+Figure 2F
+). The
+NicheProt
+-processed tissues were stained with a cocktail containing DAPI, Alexa Fluor 488-anti-CD45, and Alexa Fluor 647-anti-CD45 antibodies, followed by photobleaching of Alexa Fluor 647 in arbitrary regions to generate the fluorescence barcodes on CD45
++
+immune cells in the spleen macrosection. Optical tissue clearing and reverse clearing (from D-fructose to PBS) were performed before and after photobleaching, respectively. Since the control group was not stained with a fluorescent antibody, the FACS step was excluded from this comparison to avoid potential bias arising from cell type selection in the
+NicheProt
+-processed group. Previous studies have shown that microfluidic cell sorting does not significantly affect protein profiles due to its gentle and low-air pressure (<3 psi) mechanism [
+30
+,
+31
+]. We detected close to 5,000 proteins per sample with Pearson correlations ranging from 0.965 to 1.000 across conditions and an intergroup correlation of 0.99 (
+Figure 2G
+–
+I
+). In the PCA plot, PC1 accounts for 95% of the variance, while PC2 represents less than 5%. Sample separation along PC1 was driven by biological variability among mice rather than by the
+NicheProt
+processing (
+Figure 2J
+). Additionally, no significantly up- or downregulated proteins were observed between the groups in the volcano plot, and CVs remained below 0.2, confirming high reproducibility (
+Figure S1D
+–
+F
+). Together, these findings validate
+NicheProt
+as a reliable spatial proteomics workflow that preserves protein integrity and avoids significant artifacts.
+Proteomic profiling of dendritic cell responses to LPS in mouse spleens
+The spleen is the largest secondary lymphoid organ in the body and plays a vital role in orchestrating innate and adaptive immune responses in mice and humans [
+32
+,
+33
+]. The rodent spleen comprises the red pulp (RP), white pulp (WP), and marginal zone (MZ), which lies between these two regions [
+34
+,
+35
+]. The WP serves as the main immunological hub and is divided into B and T cell zones. Upon encountering antigens or pathogens, DCs in the spleen act as key antigen-presenting cells (APCs) that initiate T cell activation and the subsequent adaptive immune response [
+36
+,
+37
+]. During inflammation, DC migration into the T cell zone (TCZ) is essential for T cell priming [
+34
+,
+38
+]. Previous studies have shown that migratory DCs undergo significant proteomic remodeling, acquiring more mature, stimulatory, and cytokine-secreting phenotypes compared with naïve DCs [
+39
+–
+41
+]. However, spatially associated subtypes and functional roles of migratory DCs in response to immune stimuli require further elucidation.
+In the normal mouse spleen, most DCs reside in the MZ, outside the TCZ. In contrast, multiplex IF confocal microscopy revealed CD11c
++
+DC migration toward the TCZ after lipopolysaccharide (LPS) administration, a gram-negative bacterial cell wall component widely used to induce systemic acute inflammation in mice [
+42
+–
+45
+] (
+Figure S2A
+). Furthermore, we identified two spatially distinct DC populations in the LPS-treated mouse spleen: one that migrated into the TCZ and another that remained outside (
+Figure S2B
+). In this study, we applied
+NicheProt
+to characterize DC subsets and their immunoregulatory functions in distinct tissue compartments. We barcoded and isolated three CD11c
++
+DC groups: (1) DCs located outside the TCZ in the normal spleen (“
+norm
+”), (2) DCs located outside the TCZ in the LPS-treated spleen (“
+outside
+”), and (3) DCs that had migrated inside the TCZ in the LPS-treated spleen (“
+inside
+”) (
+Figure 3A
+). Spleen macrosections were stained with Alexa Fluor 488- and Alexa Fluor 647-conjugated anti-CD11c antibodies to label DCs, and DyLight 550-conjugated anti-CD3 antibody to mark the TCZ. For example, to barcode DCs
+inside
+, we photobleached Alexa Fluor 647-anti-CD11c in the TCZ, converting the pseudocolor of DCs from yellow to green (
+Figure 3B
+,
+C
+). We photobleached multiple ROIs to ensure sufficient cell number and protein yield collected from the target compartment. From a single 400 μm-thick LPS-treated spleen macrosection, we isolated 8.3 ×10
+5
+DCs, yielding 22.37 μg of protein for LC-MS/MS analysis (
+Figure 3D
+). Similar procedures were followed to isolate DCs in
+norm
+and
+outside
+groups from their respective compartments in the normal and LPS-treated spleens (
+Figure 3E
+,
+S3
+).
+Across biological replicates, we quantified 4,741 proteins and observed a clear separation among the three DC subsets
+via
+PCA and heatmap clustering. (
+Figure 4A
+,
+B
+). Several inflammatory proteins, including aconitate decarboxylase 1 (Acod1), radical S-adenosyl methionine domain-containing 2 (Rsad2), interferon-induced protein with tetratricopeptide repeats 3 (Ifit3), 2’−5’ oligoadenylate synthetase 1A (Oas1a), and guanylate binding protein 5 (Gbp5), were significantly upregulated in both DCs from the
+inside
+and
+outside
+groups, consistent with known responses to LPS [
+46
+–
+48
+]. Additionally, S100 family proteins, C-X-C motif chemokine ligand 10 (Cxcl10), and interleukin 4 induced 1 (Il4i1) were markedly elevated in DCs from the
+inside
+group compared to the
+norm
+group (
+Figure 4C
+). These proteins are known for their proinflammatory roles during inflammation. S100 calcium-binding protein A8 (S100A8) and S100 calcium-binding protein A9 (S100A9) are critical calcium-binding proteins that promote immune cell recruitment and cytokine production [
+49
+,
+50
+]; Cxcl10 functions as a chemokine that recruits leukocytes and enhances cytotoxic T cell activation [
+51
+,
+52
+]; and Il4i1, predominantly expressed in antigen-presenting cells like DCs and macrophages, plays an immunoregulatory role during inflammation [
+53
+–
+55
+]. Likewise, numerous inflammatory proteins were differentially expressed in DCs
+outside
+in comparison to DCs
+norm
+(
+Figure 4D
+). Gene ontology (GO) enrichment analysis revealed that DCs from both
+inside
+and
+outside
+groups were enriched for pathways related to type I and II interferon responses, cytokine production, innate immune activation, bacterial defense, and LPS response (
+Figure 4E
+,
+F
+). These results demonstrate successful validation of our
+NicheProt
+analysis in agreement with known reference data reported in multiple studies.
+Spatially distinct dendritic cell populations in the inflamed mouse spleen
+In the LPS-treated spleen, we observed two spatially distinct DC populations: one that migrated into the TCZ (the
+inside
+group) and another that remained outside the TCZ (the
+outside
+group). As no previous study has directly compared these subsets, we utilized
+NicheProt
+to profile their whole proteomes. Differential expression analysis revealed 54 proteins with significantly altered abundance between the two populations (
+Figure 5A
+). GO pathway analysis indicated that DCs from the
+inside
+group were enriched for aggrephagy, a cellular mechanism for clearing protein aggregates to maintain homeostasis and limit excessive inflammation. In contrast, DCs from the
+outside
+group were enriched for pathways related to intermediate filament organization, suggesting increased surface receptor turnover likely due to active endocytosis or antigen patrolling (
+Figure 5B
+). These findings reveal proteomic differences between compartment-specific DCs that could lead to uncharacterized DC subtypes with distinct functional roles in the spleen microenvironment.
+These 54 differentially expressed proteins may serve as potential biomarkers for distinct DC populations as well as possible protein targets for novel therapies. Among the proteins upregulated in
+outside
+DCs, we identified granzyme A (GzmA), granzyme B (GzmB), platelet endothelial cell adhesion molecule 1 (Pecam1, CD31), Acod1, integrin alpha-D (Itgad), normal mucosa of esophagus-specific gene 1 protein (Nmes1), and tubulointerstitial nephritis antigen-like 1 (Tinagl1). GzmA, expressed in plasmacytoid DCs, promotes pro-IL-1β production and enhances cross-priming of conventional DCs [
+56
+,
+57
+]. GzmB is implicated in immune regulation and extracellular matrix (ECM) remodeling. Pecam1 has been associated with reduced proinflammatory DC maturation [
+58
+]. Acod1 modulates immune tolerance to LPS, suppressing overactive responses while supporting antimicrobial activity [
+59
+–
+61
+]. While Itgad (encoding CD11d) is primarily expressed on monocytes and macrophages, its presence on DCs may facilitate ECM adhesion and migration to inflammatory sites [
+62
+,
+63
+]. Nmes1 is recognized as a marker of effector DCs and is strongly upregulated in LPS-treated DCs [
+64
+]. Though understudied in DCs, Tinagl1 has been reported to suppress tumor progression in breast cancer models, suggesting a possible regulatory role in inflammation that warrants further investigation [
+65
+].
+In contrast, proteins significantly upregulate in
+inside
+DCs included apolipoprotein B receptor (Apobr), S100 calcium-binding protein A4 (S100a4), interferon-induced protein with tetratricopeptide repeats 2 (Ifit2), T-cell surface glycoprotein CD8 alpha chain (Cd8a), ITGA4 integrin subunit alpha 4 (Itga4), fascin actin-bundling protein 1 (Fscn1), and SH3 domain binding protein 1 (Sh3bp1). Apobr facilitates the uptake of lipoproteins, such as low-density (LDL) and high-density (HDL) lipoproteins, which may aid in LPS clearance during bacterial inflammation [
+66
+–
+68
+]. S100a4 promotes cytokine production and immune cell recruitment and is linked to inflammatory diseases such as rheumatoid arthritis and systemic sclerosis [
+69
+,
+70
+]. Ifit2 is a key mediator of type I interferon (IFN-1) signaling, drives tumor necrosis factor-alpha (TNF-α) or interleukin 6 (IL-6) production, and is highly responsive to LPS stimulation. Inhibition of Ifit2 reduces inflammatory cytokine levels and mortality in the endotoxin shock model [
+71
+]. CD8a is a surface marker of a specific DC subset and functions as a co-receptor for antigen cross-presentation on MHC class I to CD8
++
+T cells [
+72
+]. Itga4 is involved in adhesion and migration by interacting with fibronectin and VCAM1, marking DC activation and trafficking to inflamed sites [
+73
+–
+75
+].
+To validate our findings with an orthogonal approach, we performed IF staining for two upregulated proteins found in DCs from the
+inside
+group, Fscn1 and Sh3bp. Fscn1 is an actin-bundling protein that is highly induced during DC maturation and is required for effective membrane protrusion and migration. It also serves as a biomarker of effector DCs during allergen responses [
+64
+]. Sh3bp1 is involved in cytoskeletal reorganization and morphological adaptation during cell migration [
+76
+–
+78
+]. Our IF results confirmed higher expression of both proteins in the
+inside
+DCs compared to
+outside
+DCs, consistent with the
+NicheProt
+results (
+Figure 5C
+–
+F
+).
+Discussion
+LCM coupled with MS is an established technology that enables spatially resolved proteomics analysis of tissue subregions. However, LCM-MS has limited ability to provide accurate cell-type specific proteome information because these dissected subregions often contain heterogeneous cell populations and other non-cellular components (e.g., extracellular matrix (ECM)). In our previous attempt to isolate individual cells from FFPE thin tissue sections using a laser microdissection system, we observed frequently damaged cell membranes, leading to protein loss and the need to collect large numbers of cells. In addition, the whole LCM process could be time-consuming and labor-intensive. These challenges highlight the unmet need for a new method that enables the selective and efficient collection of specific cell types from defined tissue compartments for whole-proteome analysis.
+We here demonstrate
+NicheProt
+, a spatial proteomics approach that leverages microscopic photobleaching to optically encode positional information on specific cell types within selected ROIs, thus avoiding the need for genetically engineered mouse models expressing fluorescence proteins [
+79
+]. This capability makes
+NicheProt
+adaptable to a broad range of tissue samples, both in the preclinical and clinical settings. Designed for general laboratory use,
+NicheProt
+is cost-effective and compatible with common reagents, commercially available fluorophore-conjugated antibodies, and standard lab and core facility equipment, unlike many other spatial omics platforms that require specialized instrumentation and costly supplies. In
+NicheProt
+, optical clearing and multiplex IF confocal microscopy of tissue macrosections provide 3D visualization of the tissue microenvironment, enabling precise ROI selection for photobleaching labeling. Using antibody staining, we identified and labeled specific cell populations for collection while preserving their integrity by working on thick tissue slices to avoid cutting through cells. Importantly, IF staining with fluorescent antibodies in
+NicheProt
+is not used for direct detection of proteins in proteome analysis. Instead, we performed unbiased, bottom-up proteome profiling using LC-MS/MS, identifying up to 5,000 proteins per sample collection.
+NicheProt
+substantially expands protein analytical coverage beyond what is achievable with antibody-based detection methods.
+We validated that the
+NicheProt
+workflow does not introduce significant artifacts to the protein profiling results (
+Figure 2
+and
+Figure S1
+). Moreover, our tissue cryopreservation protocol, using PFA fixation followed by incubation and storage in 100% D-fructose at −80 °C, offers flexibility to experimental scheduling and facilitates sample sharing and reproducibility across research sites. Finally, NicheProt captures proteomic information of specific cell types within their niches, revealing how microenvironmental cues and intercellular interactions shape their unique roles in the functional tissue compartment for tissue homeostasis and disease pathogenesis. We validated the feasibility of the
+NicheProt
+method by comparing the proteome of CD11c
++
+DCs located either inside or outside the TCZs of LPS-treated mouse spleen to those in normal mouse spleens. Our results were consistent with the reported protein signatures of LPS-induced immune activation, supporting the reliability of the
+NicheProt
+analysis. Gene ontology (GO) enrichment analysis revealed key pathways associated with cytokine production, interferon responses, innate immune activation, and, most notably, response to LPS, reflecting the expected molecular changes in DCs during inflammatory conditions. Several well-characterized inflammatory proteins, including Rsad2, Ifit3, Oas1a, Gbp5, and Acod1, were significantly upregulated, as shown in the heatmap and differential expression analysis (
+Figure 4C
+,
+D
+), consistent with the previously published studies [
+46
+–
+48
+]. Rsad2 plays a crucial role in DC maturation and immune activation
+via
+Toll-like receptor (TLRs) 7 and 9 signaling [
+80
+,
+81
+]; Interferon-induced proteins with tetratricopeptide repeats (IFITs) are robustly induced by LPS. Specially, Ifit3 promotes innate immune response against bacterial infections via type I interferon (IFN) signaling [
+82
+,
+83
+]; Oas1a is another type I IFN-responsive protein that activates the innate immune system against bacterial infections [
+84
+,
+85
+]; Gbp5 participates in type II interferon signaling and inflammasome complex assembly [
+86
+,
+87
+]; Acod1 is more complex since it is highly induced by LPS in macrophages and DCs and has both pro- and anti-inflammatory roles. While Acod1 supports antimicrobial defense, it also contributes to immune tolerance by attenuating excessive innate responses [
+59
+–
+61
+]. Further mechanistic studies are needed to fully understand the dual functions of Acod1. Additional inflammatory markers, such as S100 family proteins, Cxcl10, and Il4i1, were also significantly upregulated in DCs from both
+inside
+and
+outside
+groups, further supporting the findings in our spatial proteomics results.
+When directly comparing the two spatially distinct DC populations within the LPS-treated mouse spleen, which have not been previously studied, we identified 54 differentially expressed proteins (
+Figure 5
+). Among them, Apobr, S100a4, Ifit2, Cd8a, Itga4, Fscn1, and Sh3bp1 were significantly upregulated in the DCs from the
+inside
+group, while GzmA, GzmB, Pecam1, Acod1, Itgad, Nmes1, and Tinagl1 were upregulated considerably in the DCs from the
+outside
+group. To validate our proteomics findings, we performed multiplex IF confocal microscopy for Fscn1 and Sh3bp1, two proteins that regulate DC maturation and migration [
+88
+,
+89
+] and were enriched in DCs from the
+inside
+group. The imaging results confirmed higher expression of both proteins in DCs from the
+inside
+group compared to those from the
+outside
+group, consistent with the
+NicheProt
+results. Interestingly, GO enrichment analysis did not reveal strong pathway-specific associations that could clearly define either subset as strictly proinflammatory, anti-inflammatory, migratory, or stationary. The DCs in the
+inside
+and
+outside
+groups may represent closely related functional states rather than distinct phenotypes. This result demonstrates that
+NicheProt
+can resolve the spatial and functional dynamics of a specific cell type by detecting subtle protein-level changes during inflammation. Further mechanistic studies will be needed to elucidate the detailed roles of these DC subsets in immune responses. The 54 differentially expressed proteins identified in this study represent may serve as therapeutic targets for inflammatory diseases. For instance, Ifit2, which was significantly upregulated in the DC
+inside
+group, has been strongly associated with gram-negative septic shock. Previous studies have demonstrated that Ifit2-deficient mice exhibit significantly reduced serum levels of IL-6 and TNF-α and improved survival in endotoxin shock models [
+71
+]. These findings suggest that inhibiting Ifit2 using small molecules, such as glucocorticoids [
+90
+], may offer a viable therapeutic strategy for treating septic shock.
+In summary,
+NicheProt
+enables the detection of proteomic differences among the same cell type residing in distinct functional tissue microenvironments. Its sensitivity allows the resolution of protein detection of cellular subsets to as few as a handful of differentially expressed proteins. This platform holds great potential for uncovering previously unrecognized cell subtypes and elucidating their roles within the spatial tissue context in regulating homeostasis and pathogenesis.
+Limitations and future directions
+Several additional optimizations could further advance the
+NicheProt
+workflow in the future, including automated microscopic photobleaching, an increased number of fluorescence barcodes per tissue slice, and enhanced spatial resolution. In the current prototype, photobleaching is performed manually by adjusting the microscope stage to target different ROIs. A key upgrade would be the integration of an automated stage and software system, allowing users to predefine imaging routes, photobleaching sequences, laser exposure time, and other microscope settings. This automation would significantly increase throughput for barcoding specific cell types in multiple ROIs and make the workflow more accessible for new users.
+Secondly, the number of fluorescence barcodes per tissue macrosection is currently restricted by four available excitation lasers (405, 488, 561, and 640 nm) on our confocal microscope. When one channel is reserved for a tissue compartment marker (e.g., CD3 for marking the TCZs in the mouse spleen), the remaining three lasers can generate up to six binary (1 or 0) fluorescence barcodes via complete photobleaching. To expand the number of barcodes beyond this, gradient photobleaching to varying degrees through adjusting laser power and exposure time might be achievable [
+91
+]. Accurate discrimination of these gradient-barcoded cell populations will require optimization of the FACS setup, particularly its sensitivity and gating strategies for detecting varying fluorescence intensities.
+In addition, the spatial resolution of the current version of
+NicheProt
+is determined and affected by the cell loss during tissue dissociation, the sorting efficiency, and the LC-MS/MS sensitivity. To mitigate this limitation, we photobleached multiple areas within the same tissue compartment to ensure adequate recovery of the target cell population. Achieving resolution from a single photobleaching area will require advanced cell separation techniques and ultra-sensitive MS [
+92
+–
+94
+] to minimize loss of barcoded cells during the multi-step workflow and to enable MS sequencing from a smaller starting sample amount. This enhancement will allow proteomic analysis of rare cell populations in a smaller tissue compartment.
+We demonstrated the feasibility of
+NicheProt
+using the mouse spleen as a tissue model due to its accessibility and compatibility with mechanical dissociation, which eliminates the need for enzymatic digestion and minimizes variability during early-stage method development. However, extending
+NicheProt
+to other tissues, such as tumors, brain, and kidney, will require further optimization of enzymatic dissociation protocols and, in some cases, protein (or antigen) retrieval steps to enhance protein detectability in heavily fixed tissue samples.
+Future expansions of the
+NicheProt
+platform could incorporate additional spatial omics methods. For instance, combining
+NicheProt
+with spatial transcriptomics technologies (e.g., Visium/Xenium by 10x Genomics), cyclic multiplex IF imaging platform, or computational image analysis tools [
+22
+,
+24
+,
+95
+,
+96
+] could provide further information on the tissue microenvironment to guide ROI selection for photobleaching-barcoding of the target cell populations. This integration is particularly valuable for tumor specimens, which often lack the well-defined anatomical compartments seen in normal tissues. Furthermore, AI-based data integration of single-cell sequencing or flow cytometry datasets using advanced computational methods (e.g. SCPro [
+97
+]) would support deeper cellular phenotyping. These enhancements would further advance the capabilities of using
+NicheProt
+for discovering novel cell subtypes and therapeutic targets.
+Methods
+Inflammation mouse model
+Normal and inflamed spleens were harvested from 6 to 8-week-old male C57BL/6J mice. Lipopolysaccharide (LPS) purified from Escherichia coli 0111:B4 (Cat# LPS25, Sigma-Aldrich) was reconstituted in ddH
+2
+O to a concentration of 5 mg/ml, and the aliquots were stored at −20 °C until use. The working concentration of LPS was diluted to 0.2 μg/μl on the day of the experiment. Mice were intravenously injected with 15 μg of LPS in the tail vein. After 6 hours, LPS-injected mice were sacrificed, and spleens were collected. Normal spleens were obtained from healthy mice without any treatment. All animal procedures were performed in accordance with an approved protocol (ACC# 24–107) from the Institutional Animal Care and Use Committee at the University of Illinois Chicago.
+Tissue cryopreservation and macrosectioning
+Spleen tissues were harvested from healthy 6 to 8-week-old male C57BL/6J mice without any treatment. Immediately after collection, the tissues were transferred to a 4% paraformaldehyde (PFA) solution prepared in PBS and fixed for 20 minutes at room temperature (RT). Following fixation, tissues were washed three times with cold PBS at 4 °C for 5 minutes each. These spleens were either used immediately or cryopreserved. For cryopreservation, spleens were incubated in 100% (w/v) D-fructose (Cat# F0127, Sigma-Aldrich) solution prepared in 100 mM phosphate buffer (PB) (pH 7.8) with gentle agitation for 1 hour at RT to allow equilibration and then transferred to a −80 °C freezer. On the day of the experiment, frozen spleens were thawed and washed four times with cold PBS at 4 °C for 5 minutes each to remove residual fructose. The spleens were then embedded in 2% agarose gel (LE Quick Dissolve Agarose, GeneMate) dissolved in distilled water and mounted on a vibratome (VT1200S, Leica) once the gel had solidified. The vibratome chamber was filled with cold PB and surrounded by crushed ice in a designated tray to maintain a cold environment. Spleen tissue was serially sectioned into 400 μm-thick macrosections.
+Immunofluorescence (IF) staining
+Monoclonal purified anti-mouse CD3 and CD45 antibodies were purchased from BioLegend and conjugated with fluorophores
+via
+N-hydroxysuccinimide (NHS)-ester chemistry. Other antibodies were purchased pre-conjugated with fluorophores from BioLegend. Detailed information on antibodies and fluorophores is provided in
+Table S2
+. Fluorophore conjugation was performed by incubating a designated ratio of dye to purified antibody overnight at 4 °C under gentle agitation. Unconjugated dye molecules were removed through dialysis in PBS using cassettes (MWCO 10K, Cat# 66383, ThermoFisher Scientific) at 4 °C over three days. PBS was replaced three times during the dialysis process. The final conjugated antibody was transferred to clean microcentrifuge tubes and stored at 4 °C. Staining buffer was prepared by dissolving bovine serum albumin (BSA) (Cat# F0127, Sigma-Aldrich) in RPMI 1640 medium (Cat# 22400089, Gibco, ThermoFisher) at 10 mg/ml. Spleen macrosections were stained with antibody cocktails in the staining buffer for 20 hours at 4 °C under gentle agitation. After the staining, the macrosections were washed three times in cold PBS at 4 °C for 5 minutes each.
+To validate protein upregulation identified in
+NicheProt
+using IF staining, the LPS-treated spleen macrosections were stained with primary anti-Fscn1 (3:500 vol/vol) (Cat# 14384–1-AP, Proteintech, ThermoFisher Scientific) or anti-Sh3bp1 antibodies (3:500 vol/vol) (Cat# 20541–1-AP, Proteintech, ThermoFisher Scientific) in the staining buffer for 18 hours at 4 °C under gentle agitation. Afterwards, spleen macrosections were washed three times in cold PBS at 4 °C for 5 minutes each and stained with secondary Alexa Fluor 488-conjugated goat-anti-rabbit antibody (Cat# 111547003, Jackson ImmunoResearch Laboratories, 2.4 mg/ml) at a 1:100 vol/vol dilution ratio in the staining buffer for 18 hours at 4 °C under gentle agitation. Spleen macrosections were washed again with cold PBS before tissue clearing and microscopy.
+Tissue optical clearing and reverse
+D-fructose (Cat# F0127, Sigma-Aldrich) solutions were prepared in 100 mM PB buffer (pH 7.8) and used as aqueous-based tissue clearing reagents. Following IF staining, spleen tissue macrosections were sequentially incubated in 50% (w/v) D-fructose solution for 20 minutes and then in 80% (w/v) D-fructose solution for 30 minutes at RT. After photobleaching labeling on the tissue, the cleared tissue macrosections were subjected to a reverse tissue clearing process by incubating them in 50% (w/v) D-fructose solution for 20 minutes at RT, followed by four washes in cold PBS at 4 °C for 5 minutes each. This step gradually reversed the tissue status to its original condition.
+Microscopic photobleaching barcoding on cells
+Every cleared spleen macrosection in 80% (w/v) D-fructose solution was placed on a microscope slide (Cat# 125442, Fisher Scientific) and covered with a coverslip (Cat# 12541032, Fisher Scientific) for imaging and photobleaching barcoding. Photobleaching was performed using a Caliber I.D. RS-G4 confocal microscope. The laser channels were calibrated internally to ensure an optimal laser output of 100% before each experiment. The maximum operating laser power of both 488 nm and 561 nm channels is 100 mW, while for the 640 nm channel is 70 mW. To maintain the cold condition during the photobleaching, dry ice was placed on a tray near the microscope stage, and a fan was blowing cool air toward the imaging tissue. For an initial scanning, we used a 10× objective (Olympus UPLXAPO 10×, NA: 0.4, WD: 3.1 mm) to visualize the overall tissue landscape to define ROIs and select target regions for barcoding. A 100 μm z-stack image was captured as a representative pre-photobleaching image. The objective was then switched to a 20× air objective (Olympus UPLXAPO 20×, NA: 0.8, WD: 0.6 mm) to reassure the 3D tissue microenvironment within ROIs. Only regions without compartmental ambiguity were selected for photobleaching barcoding. For barcoding, either the 488 nm or 640 nm laser was set to 95% intensity output and applied for 30–40 seconds to photobleach Alexa Fluor 488 or Alexa Fluor 647 signal, respectively. Zoom factors were adjusted to precisely confine the photobleaching regions within each selected ROI. Multiple photobleachings were generated within a single tissue macrosection to label cells from the same tissue niche. Finally, a post-photobleaching 100 μm z-stack image was acquired using a 10× objective to demonstrate the barcoded regions in each tissue slice.
+Spleen dissociation
+Two to three mouse spleen macrosections were transferred to an EASYstrainer with a 40 μm mesh size (Cat# 07-001-106, Fisher Scientific) positioned atop a 1.5 ml tube. The macrosections were gently minced against the mesh filter using a 1 ml syringe plunger in circular motions. Dissociated splenocytes were washed through the mesh filter by adding 600–800 μl of cold PBS. Additional mincing and PBS were applied if undissociated spleen tissue fragments remained. The resulting cell suspension was centrifuged at 500×g for 5 minutes at 10 °C, and the supernatant was carefully removed without disturbing the cell pellet. The cells were resuspended in 100 μl red blood cell (RBC) lysis buffer (Cat# 11814389001, Roche) for the experiments involving two photobleaching fluorescent barcodes and incubated for 5 minutes at RT. The suspension was then centrifuged at 500×g for 5 minutes at 10 °C, and the supernatant was removed. The RBC lysis step was omitted in experiments involving a single fluorescence barcode on the Alexa Fluor 647 signal, as the autofluorescence impact from blood tends to be lower at this channel. Cell pellet was resuspended in 100 μl PBS, followed by adding 1 μl DAPI (5 mg/ml) to stain cell nuclei for 15 minutes at RT. Subsequently, 400 μl PBS was added, and the cell suspension was centrifuged at 500×g for 5 minutes at 10 °C. The supernatant was removed, and the final cell pellet was resuspended in 1% PFA and stored at 4 °C for FACS the following day.
+Fluorescence-activated cell sorting (FACS)
+Fluorescent barcoded cells were sorted using the MACSQuant Tyto sorter with standard (4 ml/h flow rate) or high-speed (8 ml/h flow rate) cartridges. The temperature was maintained at 4 °C during cell sorting. Mouse splenocytes were diluted with PBS to a concentration of 1 million cells/ml and filtered through a 20 μm mesh (Cat# 07-001-105, Fisher Scientific). For every 10 ml of diluted cell solution, 40 μl of 2.5 mg/ml DNase (Cat# D5025, Sigma-Aldrich) was added and loaded into the sorting cartridge. For initial experiments, a “baseline” control (staining with DAPI only) and a ‘non-photobleaching’ control sample (staining with DAPI and fluorescent antibodies but without photobleaching) were prepared to establish the gating strategy. Unused channels were set to 300 V or lower to minimize background interference. After sorting, the target cell population was collected from the cartridge and transferred to a low-binding tube (Cat# 022431081, Eppendorf). The sample was kept on ice while sorting other groups. Lastly, the sorted cell solution was either processed immediately for protein extraction or stored at −80 °C for later analysis.
+Protein extraction
+To lyse and extract proteins from the sorted cells, we prepared 10× RIPA lysis buffer (Cat# 20188, Sigma-Aldrich), 7× cOmplete protease inhibitor cocktail (dissolved in ddH
+2
+O) (Cat# 4693159001, Sigma-Aldrich), and 20× PhosSTOP phosphatase inhibitor cocktail (dissolved in ddH
+2
+O) (Cat# 4906845001, Sigma-Aldrich). These reagents were added directly to the sorted cell solution with volumes adjusted to achieve a final working concentration of 1× for each reagent. To enhance protein lysis, sodium dodecyl sulfate (SDS) (Cat# L3771, Sigma-Aldrich) was added to achieve a final concentration of 3% (w/v). The cell solution was incubated on a dry block at 95 °C for 30 minutes and then cooled to RT. Subsequently, the solution was further lysed at 65 °C for 1 hour with frequent vortexing, then cooled to RT again. DNase I and its 10× reaction buffer (Cat# 89836, Thermo Scientific) were added to the lysate at a 1:10 dilution ratio to the total volume of the sorted cell solution plus lysis buffer. The mixture was incubated at 37 °C for 30 minutes with frequent vortexing to degrade DNA and improve protein solubilization. Lastly, protein concentration and yield were quantified using a bicinchoninic acid (BCA) assay (Cat# 23227, Thermo Scientific).
+Protein digestion and liquid chromatography-mass spectrometry (LC-MS/MS)
+Extracted and solubilized proteins from the sorted cell solution were mixed with an equal volume of 2× lysis buffer to a final concentration of 5% SDS (Cat# L3771, Sigma-Aldrich) and 50 mM triethanolamine bicarbonate (TEAB) (Cat#18597, Sigma-Aldrich). Tris(2-carboxyethyl)phosphine (TCEP) (Cat# 646547, Sigma-Aldrich) was added to the solution and incubated at 95 °C for 10 minutes to reduce disulfide bonds. Afterwards, iodoacetamide (IAA) (Cat# RPN6302, Cytiva) was added to the solution at a final concentration of 10 mM and incubated for 20 minutes under light protection to alkylate the free cysteines. The solution was then acidified with 2.5% phosphoric acid (Cat# 49685, Sigma-Aldrich), vortexed, and combined with binding/wash buffer (100 mM TEAB/90% MeOH). The sample was loaded onto an S-Trap column in 100 μl aliquots, ensuring the solution did not exceed the neck of the column. Each aliquot was centrifuged at 4,000×g for 30 seconds, and the process was repeated until the entire sample passed through the column. The S-Trap was washed three times with 200 μl of the binding/washing buffer, with each wash followed by centrifugation at 4,000×g for 30 seconds. After the final wash, the column was centrifuged for 1 minute at 4,000×g to ensure complete removal of residual liquid. Proteins retained on the S-trap were then digested overnight at 37 °C with trypsin (Cat# PRV5073, Fisher Scientific, Promega) at a protein-to-enzyme ratio of 10:1 (w/w). The next day, digested peptides were sequentially eluted into a clean low-binding tube using the following solutions, each centrifuged at 4,000×g for 1 minute: (1) 50 mM TEAB, pH 8.5; (2) 0.2% formic acid; (3) 50% acetonitrile/0.1% trifluoroacetic acid (TFA). The combined eluate was dried at −20 °C using a lyophilizer. Dried peptides were submitted to the Proteomics Core Facility at Mayo Clinic (Rochester, MN) for LC-MS/MS analysis.
+Peptides were reconstituted in 40 μl sample buffer of 0.2% HCOOH, 0.1% TFA, 0.0005% z3-16, and 1 nM Pierce RST. After vortexing, the sample was spun for 1 minute at 10,000×g and transferred to autosampler vials. Peptide concentration was determined using Pierce Quantitative Fluorescence Peptide Assay (Cat# 23290, Thermo Scientific), and sample volumes were adjusted to ensure 140 ng of peptides were loaded across samples. LC-MS/MS was conducted on a Vanquish Neo UHPLC equipped with a trap column (Pep Map C18, 300 μm × 5 mm) and an IonOpticks Ultimate C18 column (1.7 μm; 75 μm × 25 cm) coupled to an Orbitrap Exploris 480 mass spectrometer (Thermo Scientific). Peptides were separated using a non-linear 145-minute gradient injecting at with 3% solvent B, increased to 35% over 120 minutes, ramped to 90% in 10 minutes, and held at 90% for an additional 10 minutes. Re-equilibration was performed at 3% solvent B for a duration three times the length of the column to restore starting conditions. Solvent A consisted of 0.1% formic acid and 2.5% acetonitrile in ddH
+2
+O, and solvent B was 0.1% formic acid, 80% acetonitrile, 10% isopropanol, and 10% water. The flow rate was maintained at 300 nL/min, and the column temperature was set to 50 °C.
+The mass spectrometry data was acquired using a data dependent acquisition method with MS1 spectra acquired at 120,000 resolution over an m/z range of 350–1500, with the automatic gain control (AGC) target set at 200% and a maximum injection time of 50 ms. Precursors with charge states of 2+ to 6+ were isolated with a 1.2 Th isolation width and fragmented by higher-energy collisional dissociation (HCD) using a normalized collision energy (NCE) of 30. MS/MS spectra were collected at a resolution of 15,000 with an AGC target of 100%, a minimum intensity threshold of 5 × 10
+4
+, and a maximum injection time of 120 ms.
+Evaluation of protein artifacts in tissue cryopreservation
+Mouse spleens were harvested and fixed in 4% PFA solution for 20 minutes at RT. The spleens were washed in cold PBS three times for 5 minutes each at 4 °C. Each spleen was bisected, with one half designated as the cryopreservation group and the other as the control. Cryopreserved spleens were incubated in 100% (w/v) D-fructose solution prepared in 100 mM PB buffer (pH 7.8) under gentle agitation for 1 hour at RT and stored at −80 °C for a week, while control spleens were dissociated into single-cell suspensions on the same day of harvesting. After one week, the cryopreserved spleens were thawed and washed in cold PBS four times for 5 minutes each at 4 °C to remove residual D-fructose. These tissues were then dissociated into single-cell suspensions following the same protocol described above. All resulting cell suspensions underwent protein extraction, peptide digestion, and LC-MS/MS analysis.
+Evaluation of protein artifacts in the NicheProt workflow
+Mouse spleens were harvested, fixed in 4% PFA solution, and cryopreserved in 100% (w/v) D-fructose at −80 °C. After one week, the cryopreserved spleens were thawed at 4 °C and washed in cold PBS four times for 5 minutes each at 4 °C. Each spleen was bisected, with one half designated as the
+NicheProt
+-processed group and the other as the control group. Control spleens were sliced into 400 μm-thick macrosections and dissociated into single-cell suspensions on the same day. In contrast, spleens in the processed group underwent the
+NicheProt
+workflow, excluding the FACS step. In brief, the spleens were macrosectioned at 400 μm thickness and stained with DAPI (5 mg/ml, 1:500 v/v), Alexa Fluor 488-anti-CD45 (0.5 mg/ml, 1:20 v/v), and Alexa Fluor 647-anti-CD45 (0.5 mg/ml, 1:20 v/v) antibodies in 500 μl staining buffer composed of RPMI with 10 mg/ml BSA for 20 hours at 4 °C. The following day, spleen macrosections were washed, cleared with 50% and 80% (w/v) D-fructose solutions as described above, and photobleached in arbitrary regions by using a 20× air objective and a 640 nm excitation laser. The spleen macrosections were then reverse-cleared from D-fructose solution back into PBS and dissociated into single-cell suspensions following the same protocol as described above. All resulting cell suspensions underwent protein extraction, peptide digestion, and LC-MS/MS analysis.
+NicheProt analysis of DCs in the normal and inflamed mouse spleens
+Spleens were harvested from healthy and LPS-treated mice and fixed in 4% PFA solution for 20 minutes at RT. The spleens were then washed three times in cold PBS for 5 minutes each at 4 °C and cryopreserved in 100% (w/v) D-fructose solution at −80 °C until analysis. On the day of the experiment, spleens were thawed and washed three times in cold PBS for 5 minutes each at 4 °C. The tissues were embedded in 2% agarose gel (LE Quick Dissolve Agarose, GeneMate) dissolved in distilled water and sliced into 400 μm-thick macrosections under cold conditions as described above. The macrosections were stained with 1 μl DAPI (5 mg/ml), 25 μl Alexa Fluor 488-anti-CD11c (0.5 mg/ml), 15 μl DyLight550-anti-CD3 (0.5 mg/ml), and 25 μl Alexa Fluor 647-anti-CD11c (0.5 mg/ml) antibodies in 500 μl staining buffer composed of RPMI with 10 mg/ml BSA. IF staining was carried out for 20 hours at 4 °C with gentle agitation. After staining, the macrosections were washed with PBS and cleared with 50% and 80% (w/v) D-fructose solutions to prepare for microscopic photobleaching. Fluorescence barcodes were generated in ROI regions within spleen macrosections by selectively photobleaching the Alexa Fluor 647 signal using a 20× air objective and a 640 nm excitation laser (intensity: 95%, duration: 20–40 seconds) on a RS-G4 confocal microscope (Caliber I.D.). Once barcoding was completed, the macrosections were reverse-cleared from D-fructose solution back into PBS and dissociated into the single-cell suspensions. FACS was performed to collect barcoded DC populations, followed by protein extraction, peptide digestion, and LC-MS/MS analysis.
+Image data analysis
+Confocal microscopy images taken before and after photobleaching were processed and visualized using open-source Fiji software (
+http://fiji.sc/Fiji
+) and Imaris 10.1 software (Oxford Instrument,
+https://imaris.oxinst.com/
+). In Fiji, z-stack images of each channel were processed for brightness and contrast, and a Gaussian blur filter (radius=1) was applied to each channel before merging to a multicolor composite image. TIFF files were converted to .ims format using the Imaris File Converter (
+https://imaris.oxinst.com/microscopy-imaging-software-free-trial#file-converter
+) and imported into Imaris for further 3D rendering and visualization.
+To estimate the number of splenocytes within photobleaching regions of varying volumes (
+Table S1
+), z-stack images were reconstructed in 3D using Fiji software, and DAPI
++
+nuclei were segmented with the Imaris “Surface” function. In Imaris, the photobleaching volume of each barcode was measured directly from the images, while the corresponding cell numbers were obtained from the segmentation result. Using the resulting cell number–to–volume ratios, we estimated the total number of cells across the 10 photobleaching regions generated with different objectives and zoom factors
+Proteomics data analysis
+Mass spectrometer (MS) raw files were searched against a Swissprot mouse database (SP_mouse_2024_06; 17208 entries) using the Sequest HT node in Proteome Discoverer Software (version 3.0.0.757). The search parameters were set for full trypsin specificity, allowing 3 missed cleavages with oxidized Met and N-term protein acetylation as variable modifications and carbamidomethyl cysteine as fixed modification. Mass tolerances were set at 10 ppm for precursor ions and 0.02 Dalton for MS2 fragment ions. High confidence peptide spectral matches (PSMs) are assigned using the Percolator node and peptide and protein identifications are filtered at a 1% false discovery rate (FDR). Intensity-based absolute quantification (iBAQ) values for each protein were calculated from summed ion peak abundances of the matched peptides divided by the number of tryptic peptides theoretically detectable with the mass spectrometry acquisition parameters. The iBAQ values represent a molar abundance estimate that was used for comparing protein amounts between samples. A blank iBAQ value indicates that protein abundance was below quantitation levels or matched peptides were shared with another protein.
+Proteomics downstream data analysis and visualization were performed using R (version 2024.09.1+394). The filtering criterion was applied to retain only the quantified protein groups with at least two valid values in at least one group. Data normalization was done using a variance-stabilizing normalization (VSN) package. A MeanSD plot was generated in R using the ggplot2 package to evaluate the data distribution and ensure the quality control of the datasets. Missing values were imputed from a normal distribution with a width of 0.3 standard deviations, downshifted by 1.8 standard deviations. Batch effect correction was applied in processing datasets of “Protein artifact evaluation in D-fructose cryopreservation” and “
+NicheProt
+analysis of DCs in the normal and inflamed mouse spleens” using the ComBat method. Proteome correlations across samples or biological replicates were performed after imputation, normalization, and batch correction. Coefficients of variation (CVs) were calculated within experimental groups using imputed and normalized datasets. A principal component analysis (PCA) plot was computed using the method “singular value decomposition (svd)” and visualized in ggplot2. A variance protein heatmap was generated based on the top 50 proteins with significant variation across different groups with normalized rows to better visualize relative expression (scale: “row”). A hierarchical clustering heatmap was computed using the Euclidean method to calculate the differences across samples and compare the clusters with the complete-linkage method. Differential gene expression analysis was performed using the limma and edgeR packages and visualized in ggplot2. A linear model is fitted for each gene, and the
+p
+-value is computed with a moderated t-test with empirical Bayes moderation in limma for differential analysis. Benjamini-Hochberg correction was applied to control the false discovery rate for multiple testing corrections.
+Supplementary Material
+1
+Figure S1. Quantitative assessment of the proteome in control and NicheProt samples
+(A) Volcano plot comparing control and cryopreserved samples. (B, C) Coefficients of variation (CVs) within control (B) and cryopreservation (C) groups were below 0.2, demonstrating high reproducibility between biological replicates. (D) Volcano plot comparing control and NicheProt samples showed no significant protein expression changes. (E, F) CVs plot within the control (E) and NicheProt (F) conditions were below 0.2.
+Figure S2. Dendritic cell migration during LPS-induced inflammation.
+(A) Splenic dendritic cells (DCs) primarily reside outside the T cell zone (TCZ) in a normal spleen. DCs migrate toward the TCZ upon LPS-induced inflammation. DCs were labeled with Alexa Fluor 647-anti-CD11c antibody, while T cells were stained with DyLight 550-anti-CD3 antibody. Scale bars: 50 μm. (B) During inflammation, there are two DC populations located
+inside
+(yellow arrow) and
+outside
+(cyan arrows) the TCZ. Scale bar: 100 μm.
+Figure S3. Photobleaching-mediated barcoding of DCs outside the TCZs in the (left) healthy and (right) LPS-treated mouse spleen macrosections.
+Tissue macrosections were labeled with Alexa Fluor 488-anti-CD11c (green), Alexa Fluor 647-anti-CD11c (red), and Dylight-CD3 (gray). Photobleaching of Alexa Fluor 647 on CD11c
++
+DCs outside the CD3
++
+TCZs converted yellow signals to green. Scale bar: 500 μm.
+Table S1.
+The volumes, estimated cell numbers, and protein amounts of 3D photobleached regions in mouse spleen macrosections using 20× and 40× objectives with varying zoom factors.
+Table S2.
+Antibody information

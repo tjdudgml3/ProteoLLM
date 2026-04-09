@@ -1,0 +1,351 @@
+1 Introduction
+Protein data is abundant and readily accessible in several large databases such as UniProt and AlphaFold (
+UniProt Consortium 2018
+,
+Jumper
+et al.
+2021
+,
+Varadi
+et al.
+2022
+). These contain computed or measured structures, functional annotations, and metadata describing post-translational modifications (PTMs) (
+de Brevern and Rebehmed 2022
+). At the same time, high-throughput experiments can now probe residue-level responses to systemic perturbations (
+Dörig
+et al.
+2025
+,
+Gluth
+et al.
+2024
+,
+Yu
+et al.
+2025
+).Understanding the molecular mechanisms underpinning changes in protein function often requires coupling these data with computation or inference of protein physicochemical properties (
+Cappelletti
+et al.
+2021
+,
+Bludau
+et al.
+2022
+,
+Kim
+et al.
+2025
+,
+Philipp
+et al.
+2024
+,
+Medvedev
+et al.
+2025
+). However, integrating multiple databases with physicochemical calculations to interpret experimental results has a steep learning curve. This can require multiple steps of interconversion between different structures and metadata formats. While there has been recent innovation in protein-ligand interaction mapping tools (
+Panda 2025
+), user-friendly, integrated, and cross-platform tools for visualizing property-mapped protein structures and molecular networks are needed to make protein structural modeling more accessible.
+To address these challenges, we developed the open-source Python library
+ProCaliper
+. It has integrated support for interfacing with UniProt, either through pre-downloaded tables or through the UniProt API via the
+UniProtMapper
+tool (
+Araripe 2025
+). It can store and process protein structures in PDB format. These structure files can be automatically fetched from the AlphaFold database, a user-specified alternate database, or a local file. We implemented several methods to calculate physicochemical properties at the residue level, such as charge, solvent accessible surface area (SASA), acid dissociation constants (typically denoted
+p
+K
+a
+), and more. In addition,
+ProCaliper
+can construct residue contact maps and region-to-region distance networks (e.g. encoding distances between binding domains, disordered regions, etc.) to describe the protein topology. To sparsify these networks,
+ProCaliper
+includes functions for thresholding sparsification and distance backbone methods (
+Simas
+et al.
+2021
+). We support importing custom residue-level and protein-level data, which straightforwardly integrates experimental measurements into a cohesive Python representation of individual proteins. We provide methods for exporting to tabular formats and popular Python data formats (e.g. comma separated values,
+BioPandas
+data frames, or
+BioPython
+structure objects) and tools for interactive visualization in IPython notebooks. In this application note, we describe these features in detail and conduct an example analysis of the human heat shock protein HSP90
+α
+to showcase their utility.
+ProCaliper
+aims to simplify protein analysis pipelines by automatically handling format conversions and tool compatibility issues for researchers whose main expertise is not protein structure analysis.
+2 Features
+See
+https://github.com/PNNL-Predictive-Phenomics/ProCaliper
+, e.g. usage and output. Here, we describe available features.
+2.1 Data import
+ProCaliper
+can import protein data and interface with the UniProt databases. At uniprot.org, UniProt provides tables in a standardized tab-separated value (TSV) format that
+ProCaliper
+natively recognizes. Users also have the option to directly download protein metadata from UniProt using the UniProtMapper API within
+ProCaliper
+by specifying a list of UniProt identifiers. UniProt provides protein-level annotations that indicate residue-level information such as binding sites, active sites, known ligands, and secondary structure annotations. During import,
+ProCaliper
+automatically parses these annotations and assigns attributes to individual residues where appropriate. At the residue level,
+ProCaliper
+stores data in a custom residue annotation object that ensures consistency between fetched datasets and user-supplied data (e.g. from novel PTM measurements).
+2.2 Structure calculation and extraction
+Several online repositories provide protein structure in the form of PDB files. By default,
+ProCaliper
+fetches PDB files from the AlphaFold database, but the user may specify an alternative online source for structure information or provide a local PDB file instead. We provide methods that compute residue- and protein-level features from protein structure and store them within the Protein object. Currently available methods are summarized in
+Table 1
+. Provided PDB files need not be complete;
+ProCaliper
+has support for reading in measured structures that do not capture the entire protein, or which may contain heteroatoms.
+Table 1.
+Structure-derived features supported using built-in
+ProCaliper
+methods.
+a
+Physicochemical property
+Method(s)
+Implementation reference
+Notes
+Active sites
+Experiment data extraction
+UniProt Consortium (2018)
+From UniProt
+Binding properties
+Experiment data extraction
+UniProt Consortium (2018)
+From UniProt
+PTM sites
+Experiment data extraction
+UniProt Consortium (2018)
+From UniProt
+Region annotations
+Experiment data extraction
+UniProt Consortium (2018)
+From UniProt
+Custom residue annotations
+Not applicable
+NA
+From user input
+Charge
+gasteiger, mmff94, eem, qeq, qtpie
+O’Boyle
+et al.
+(2011)
+Uses obabel
+predicted Local Distance Difference Test (pLDDT)
+Prediction confidence metric extracted from AlphaFold predicted PDB file
+Varadi
+et al.
+(2022)
+Notated at b-factor column in PDBs from experiment.
+Acid dissociation (
+p
+K
+a
+)
+PROPKA, pKAI, pypKa
+Olsson
+et al.
+(2011)
+;
+Søndergaard
+et al.
+(2011)
+;
+Reis
+et al.
+(2020
+,
+2022
+)
+As pypKa has proprietary dependencies, only PROPKA is installed by default
+Protonation state
+Method from pypKa
+Reis
+et al.
+(2020)
+Computed from
+p
+K
+a
+SASA
+ShrakeRupley
+Cock
+et al.
+(2009)
+Uses BioPython; available at atomic-level
+Sulfur distance
+Direct calculation in Python
+Not applicable
+Used to identify disulfide bonds
+Secondary structure
+Not applicable
+UniProt Consortium (2018)
+From UniProt
+Distance and proximity networks
+Euclidean distance calculation
+Not applicable
+Includes contact map as a special case. Support for region-to-region distance networks.
+Sparsified distance networks
+Thresholding, Euclidean metric backbone
+Simas
+et al.
+(2021)
+Other backbones supported for advanced users.
+a
+Additional features can be computed externally and are easily imported.
+2.3 Data export and visualization
+Protein objects in
+ProCaliper
+can be compressed and stored in binary format using Python’s built-in
+pickle
+module for fast file reading and writing. We also provide methods to export
+ProCaliper
+objects in a tabular format that is human readable and can be directly imported into popular data frame libraries such as
+pandas
+and
+polars
+for further statistical analysis and visualization. The
+ProCaliper
+objects can be written to disk in plain text or as a spreadsheet file. Protein structures can be exported to
+BioPython
+or
+BioPandas
+formats. We also support visualization using IPython widgets via the
+nglview
+library (
+Nguyen
+et al.
+2018
+);
+ProCaliper
+has methods that embed the protein structure in a 3D interactive view in Jupyter notebooks or Visual Studio Code. It also provides methods to facilitate visualizing residue-level information within these interactive views by automatically converting data to
+nglview
+-compatible color schemes.
+3 Application: heat shock protein HSP90
+α
+We used the human heat shock protein HSP90
+α
+to showcase the functionality of
+ProCaliper
+. HSP90
+α
+is a chaperone protein involved in heat stress response, protein degradation, cell cycle control, hormone signaling, and apoptosis (
+Hoter
+et al.
+2018
+,
+Stetz
+et al.
+2018
+). It is implicated in cancer metastasis and neurodegenerative diseases, possibly due to its role in protecting proteins that can degrade the extracellular matrix (
+Yang
+et al.
+2008
+). It has three primary domains: an N-terminal ATPase domain, an ATPase-activated middle domain that binds co-chaperones and client proteins, and a C-terminal dimer-formation domain. We downloaded the UniProt annotations for HSP90
+α
+(UniProt ID
+P07900
+) and the AlphaFold-predicted structure using
+ProCaliper
+, which we use throughout this section. Retrieved annotations include binding sites, active sites, region annotations, and curated PTM sites. We then used
+ProCaliper
+to compute SASA, charge distribution, and
+p
+K
+a
+values for each atom and amino acid residue. We visualize these quantities in three different structure representations in an interactive IPython environment with
+ProCaliper
+using its built-in support for
+nglview
+(
+Fig. 1A–C
+).
+Figure 1.
+Visualizations of HSP90
+α
+using
+ProCaliper
+. (A–C) Interactive structure visualizations. (A) Cartoon diagram with green intensity representing higher SASA. (B) Surface representation colored by charge (red and blue for positive and negative, respectively). (C) Ball and stick representation where residues are colored by
+p
+K
+a
+values (red for >7, blue for <7). (D–F) Distance networks plotted using the Kamada-Kawaii layout algorithm, edge thickness is inversely proportional to distance. (D) Distance network (69 274 edges) built using a distance cutoff of 30 Å. In (E), a much lower threshold (7 Å) is used to sparsify the distance network, resulting in a contact map with 2633 edges. In (F), the Euclidean backbone is used to sparsify the 30 Å cutoff distance network, resulting in a network with 2275 edges. The Euclidean backbone preserves more long-range connections and global structure than the slightly denser 7 Å threshold network. (G) Region distance graph. Annotated regions (protein interaction regions and motifs) are shown in green, ATP binding sites are shown in purple, and PTM sites are shown in red. Nodes are labeled by residue(s) and node size is proportional to the cube root of the number of residues represented by each node. Edge thickness is inversely proportional to distance plus 1 Å, to avoid divergence. Network layout is computed using the Fruchterman–Reingold algorithm with
+k
+=
+10
+and 1000 iterations.
+In panels D-F of
+Fig. 1
+, we show the analysis of the residue distance network with
+ProCaliper
+in HSP90
+α
+. The distance network function constructs
+networkx
+weighted undirected graph whose nodes correspond to the residues of an input protein and whose edge weights represent the distance (in Å) between residues in the protein’s structure. A configurable cut-off value for distances can be specified. For example, contact maps are typically constructed using a cutoff between 6 and 12 Å. Removing edges in a distance network by lowering this threshold can hide longer-range relationships between residues that may be important, e.g. for forming a binding pocket. In such cases, alternate methods for sparsifying a distance network are desirable, so we have implemented the Euclidean backbone method of
+Simas
+et al.
+(2021)
+in
+ProCaliper
+. This removes any edge with weight
+d
+if there is a path between its endpoints with edge weights
+d
+i
+and
+∑
+i
+(
+d
+i
+)
+2
+<
+d
+. Distance backbone sparsification methods such as this cannot disconnect portions of the network (
+Simas
+et al.
+2021
+) and have been used to focus analysis on salient connections in mathematical, social, and biological settings (
+Correia
+et al.
+2023
+,
+Rozum and Rocha 2024
+). In HSP90
+α
+, the Euclidean backbone reduces the distance network (with initial cutoff of 30 Å) from 69 274 edges to 2275 edges. It preserves more long-range relationships and global structure than a thresholding reduction of 7 Å, which removes a similar number of edges.
+In
+ProCaliper
+, we extend the distance network concept to annotated regions and regulatory sites. In the example of HSP90
+α
+, we highlight protein binding regions and motifs, ATP binding sites, and PTM sites (
+Fig. 1G
+) as annotated in UniProt, but
+ProCaliper
+is flexible enough to incorporate user-provided annotations as well. The NR3C1-interaction region 9–236 in the N-terminal domain contains various PTM sites and ATP binding sites, and partially overlaps the disordered region 225–278. Middle domain regions (284–620, 271–616, and the interdomain region 284–732) contain various PTMs thought to play a role in chaperone binding (
+Stetz
+et al.
+2018
+). Various regions in the C-terminal domain (those containing residues 628 through 732) overlap with one another to form a clique. There is only one nearby PTM, phosphorylation of S641. To the best of our knowledge, the functional role of this PTM, if such a function exists, remains unknown (
+Backe
+et al.
+2020
+).
+4 Discussion
+We have presented
+ProCaliper
+, a cross-platform, open-source Python library designed to facilitate interaction with the UniProt and AlphaFold databases, flexibly allow users to incorporate custom annotations and residue-level data, and to compute residue- and protein-level structural properties. It includes methods for computing residue and atom charges, acid dissociation constants, and SASA. It also provides tools for constructing and analyzing region-region distance networks (and contact maps as a special case), which represent protein structure in matrix form and have machine-learning applications (
+Zheng
+et al.
+2019
+). We have highlighted several of these features in the human HSP90
+α
+protein. We used
+ProCaliper
+to automatically download annotation and structure data, compute and visualize physical properties, and construct various distance networks. Aside from its utility in studying an individual protein,
+ProCaliper
+also aims to facilitate interpretation of PTM proteomics data by providing a unified framework for fetching, storing, processing, and visualizing protein data at the single-residue level. Our future work will leverage
+ProCaliper
+to better understand the molecular mechanisms involved in protein signaling.

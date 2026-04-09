@@ -1,0 +1,393 @@
+Introduction
+The exposome is generally viewed as a measure of all the environmental exposures an individual has had over a lifetime. The systematic stratagem of capturing these exposures under a common rubric and studying them alongside the genome, the epigenome, the transcriptome, the proteome, the lipidome, the metabolome, the microbiome, and other sorts of omics data can be traced at least as far back as the work of Wild.
+1
+Since then, what is currently called the exposome has garnered substantial interest, with highly diverse databases and studies now routinely employed for data collection, curation, and analysis. Representative examples include the Public Health Exposome (PHE),
+2
+the Comparative Toxicogenomics Database (CTD),
+3
+the Human Early Life Exposome Study (HELIX),
+4
+the Geoscience and Health Cohort Consortium (GECCO),
+5
+the Southern Community Cohort Study (SCCS),
+6
+the Toxic Exposome Database (T3DB),
+7
+the Health and Environment-wide Association based on Large population Surveys (HEALS),
+8
+the EXPOsOMICS Project,
+9
+the National Health and Nutrition Examination Survey (NHANES),
+10
+and Exposome Explorer.
+11
+Data captured within these sources range from population-level external exposures to individual-level internal omics measurements, and thus they may find utility at varying stages of analytic pipelines (see
+Table 1
+). This creates a demand for research methods that can fully capture the breadth and richness of an exposomic approach while addressing both the capabilities and limitations of data-driven science. Concomitant with this demand is a new set of analytical challenges and a need for scientific consensus so that the field can continue to flourish.
+Table 1
+A Sampling of exposomic databases.
+Database
+Type
+Granularity
+Public Health Exposome
+2
+External
+County equivalents
+Comparative Toxicogenomics Database
+3
+Internal
+Individual
+Human Early Life Exposome Study
+4
+External/Internal
+Residential/individual
+Geoscience and Health Cohort Consortium
+5
+External/Internal
+Residential/individual
+Southern Community Cohort Study
+6
+Internal
+Individual
+Toxic Exposome Database
+7
+Internal
+Individual
+Health and Environment-Wide Association Based on Large Population Surveys
+8
+Internal
+Individual
+EXPOsOMICS Project
+9
+External/Internal
+Residential/individual
+National Health and Nutrition Examination Survey
+10
+Internal
+Individual
+Exposome Explorer
+11
+Internal
+Individual
+Unlike biological omics data that, in our experience, tend to share common and predictable sources from a limited number of platforms, external exposomic data are highly heterogeneous and may include variables drawn from the built, natural, physical, policy, social, and other domains. These data can be taken from a staggering variety of sources that run the gamut from old-fashioned self-administered questionnaires to high-resolution state-of-the-art satellite and personal air-monitoring sensors. Variables under study may exist in discrete, continuous, nominal, ordinal, categorical, and other forms, representing information as diverse as life expectancies, pollutant concentrations, crime rates, nutrition sources, mobility, and access to medical care.
+12
+Moreover, among the exposomic model’s notable shortcomings are its lack of a unifying ontology and its need for common standards for data collection. These limitations can lead to problems of interpretability and multiple nomenclatures for identical measurements.
+13
+This lies in stark contrast to the extreme level of precision and the wealth of ontological characterizations found, for example, in the analysis of high-throughput transcriptomic data.
+14
+Together, these considerations produce a dire need for exposomic data harmonization so that inputs from highly divergent sources can provide users with comparable and consistent data views.
+We have previously described novel, cutting-edge algorithms for health disparities research.
+15
+At the heart of our approach are powerful techniques for combinatorial optimization and high-performance computing that can solve exceedingly complex exposomic problems at scale. Here, we focus on the front end of this process and analytical issues that arise before external exposomic data reaches toolchains such as ours. A significant concern is noise. We have generally found that exposomic data tend to suffer from missing, duplicated, conflicting, incompatible, incorrect, and outlying values. In some studies, particularly those focused on low-frequency events, this problem is further exacerbated by federal confidentiality, reliability, and race/ethnicity policies, most notably CDC WONDER’s longstanding suppression of classification rates and counts from areas with small numbers of persons at risk in order to try to protect individual privacy.
+16
+Despite much effort, only limited imputation remedies are available.
+17
+–
+19
+The size and complexity of exposomic data also prompt a need for feature selection, in hopes that results may focus on outcomes of interest and that data of marginal utility will not cloud the analysis. To complicate matters further, exposomic data can be rife with multicollinearity and high autocorrelation due to repeated measurements of similar events from differing sources or measurements taken at multiple times. The negative downstream effects of multicollinearity are well known in this setting.
+20
+,
+21
+In the sequel, we will address these concerns and discuss techniques to aid in their resolution.
+The main goals of this seminar are to provide the reader with a modular preprocessing workflow in the context of external exposomic data analysis and to provide an exemplar that can help explicate the positive effects preprocessing can have on subsequent studies. In the remainder of this exposition, we discuss data harmonization, review a variety of statistical techniques for reducing the aforementioned problems associated with noise, describe tools for feature selection that can sharpen analytical focus, and examine multicollinearity and methods to help ameliorate its effects. Furthermore, through a case study, we interrogate the PHE and report a number of empirical results to gauge the effectiveness of our preprocessing efforts. Before closing, we also summarize the topics that we have recounted here, outline their limitations, and mention a few possible avenues for future research.
+Discussion
+Methods
+Data harmonization.
+In the typical case, exposomic data are highly heterogeneous and gleaned from a wide range of disparate sources. But even the simplest downstream computations (e.g., variable comparisons and correlation calculations) require common standards for data fields, formats, ranges, precisions, and dimensions. The quest for such commonality is variously termed harmonization, coherence, and/or standardization.
+22
+The critical significance of this operation has been widely recognized. See, for example, Adhikari et al.
+23
+Consider for instance the transformation of qualitative measurements, such as freeform text recorded on questionnaires, into quantitative data, such as numeric values binned into preset ranges. A well-known method to address this sort of situation is dummy coding,
+24
+which is used to convert categorical classifications into binary values. Other transformation schemes include effect coding,
+25
+which takes into account categorical interactions; Helmert coding and its reverse,
+26
+which can be used to compare ordinal multicategorical variable means; and deviation coding,
+27
+which is useful when making comparisons to the mean of a prespecified independent variable. As a rule, exposomic data harmonization is a reasonably well understood task and an everyday first step in preprocessing.
+Noise abatement.
+Problems associated with noise have been discussed in a great many contexts. For examples, see García et al.
+28
+and Fan et al.
+29
+External exposomic data can be particularly troublesome in this respect. They are often collected from highly heterogenous sources, each with its own types and causes of noise, which then may propagate and aggregate into datasets under study. Techniques designed to reduce the potentially deleterious effects of noise are relatively well known. Data cleaning,
+30
+which is primarily the detection and correction of data abnormalities, is often crucial. The choice and sequence of cleaning methods can depend on data types, distributions, and error sources. Study contexts, objectives, limitations, and domain science expertise may also play a role.
+Missing values can be troublesome, for example, whenever downstream analysis depends on correlation. At least one study
+31
+has suggested that randomly missing values may safely be ignored until their number reaches 40% of the total. Previously mentioned imputation methods may also be helpful. Variance should be considered as well. A variable without variance provides no information and should of course be eliminated.
+32
+Low but nonzero variance, however, is generally treated on a case-by-case basis, since no universal threshold is known.
+Outliers can pose special problems, particularly when parametric distributions are assumed. If they can be identified, then simply discarding them may be an option.
+33
+In this event, we encourage practitioners to document the fact that they were removed and the rationale for doing so. Outliers may also arise from the limits of detection, which will vary depending on the measurement used, and may be detected, handled, and imputed using a variety of methods.
+34
+Conversely, an outlier that denotes some sort of novel measurement may require further study.
+35
+Otherwise, their presence can frequently be mitigated through the use of rank correlations, scaling, log-normalization, and similar techniques. Imputation methods may additionally be employed to fill in missing values, depending on analytical requirements. For the external exposome, this is often based on geographical proximity.
+17
+We note that imputation models should generally include only a modest number of variables due to issues of collinearity.
+36
+Feature selection.
+In the present context, feature selection denotes a process by which only relevant variables are retained for investigation. Relevance is sometimes defined in terms of classification accuracy,
+37
+but without ground truth, this may be unknowable. In contrast, irrelevant features are generally defined as those that do not affect outcome variables or contribute to the analysis.
+38
+By removing irrelevant and redundant features, we hope to reduce the dimensionality of data under study, decrease its sheer size, simplify and improve mathematical model accuracy, sharpen analytical focus, and increase interpretability. We will henceforth use the terms feature and variable synonymously. In other applications, a feature might represent more general or synthetic attributes, such as variable restrictions, variable subsets, or even arithmetic variable combinations.
+Algorithms for feature selection are generally classified into four rather broad categories: wrapper, filter, embedded, and hybrid.
+39
+,
+40
+Wrapper methods, such as forward feature selection and backward feature elimination,
+41
+utilize a machine learning model to determine a feature’s relative importance and thus its possible retention. Filter methods require a predefined metric of success for a feature that, if met, will cause the feature to be retained. Classic metrics include ANOVA (analysis of variance)
+42
+and the Pearson correlation coefficient.
+43
+,
+44
+Embedded methods operate in a fashion similar to both wrapper and filter methods, except that feature selection is typically built into or subsequently incorporated with the methodology rather than serve as its primary purpose. A well-known example is LASSO (least absolute shrinkage and selection operator),
+45
+–
+47
+which was originally designed for regression analysis. Hybrid methods, as their name suggests, employ assorted elements of the three previously described techniques. Within each category, methods can be further described as targeted or untargeted, depending on the availability of labeled data and whether the focus is on one or more outcome variables. Due perhaps to the sudden resurgence of artificial intelligence, this natural distinction is sometimes mistakenly conflated with the supervised vs. unsupervised dichotomy used in machine learning.
+48
+All four categories have found use in an exposomic setting,
+49
+with targeted wrapper and untargeted filter methods seemingly gaining popularity due to the former’s ability to generate interpretable models and the latter’s capacity to operate without dependence on outcome variables. Targeted wrapper methods notably include tree-based learning algorithms
+50
+,
+51
+that generate a set of reasonably simple rules for classification or regression. Examples include random forests,
+52
+iterative random forests,
+53
+and gradient boosted trees.
+54
+These techniques may be augmented with recursive feature elimination
+55
+and feature importance scores
+56
+–
+58
+that can make them especially useful. In contrast, untargeted filter methods tend to favor graph theoretical algorithms and the elimination of features based on prespecified criteria, often with an emphasis on increasing relevance while reducing dimensionality.
+59
+These methods include graph clustering algorithms
+60
+,
+61
+that identify densely connected subgraphs, graph centrality measures
+62
+that utilize graph topology, and hybrid implementations
+63
+,
+64
+that combine two or more dissimilar techniques. Other proposed alternatives include those that focus on minimal vertex cover,
+65
+a small set of vertices whose removal leaves an edgeless graph, and spectral methods,
+66
+which utilize eigenvectors from a graph’s Laplacian matrix.
+Confounders and covariates that may point to spurious relationships will need to be considered as well,
+67
+dependent on the subsequent analyses to be performed. A variety of classical methods may be employed for this task, including stratification,
+68
+,
+69
+multivariate models,
+70
+linear regression,
+71
+and of course analysis of covariance.
+72
+Domain knowledge should also be consulted in the course of study development to determine whether any known or potential confounders may be present.
+73
+Automated methods for confounder selection is an active area of research, with promising results utilizing modern machine learning methods.
+74
+Multicollinearity reduction.
+Multicollinearity
+75
+and high autocorrelation
+76
+are subtle but thorny problems that can arise, for example, from repeated measurements. Multicollinearity can disrupt targeted wrapper feature selection methods by distorting model interpretability.
+77
+This may in turn result in gross mis-assignments in feature importance.
+78
+,
+79
+Regression and its many variants may also suffer.
+80
+,
+81
+The sobering effects of multicollinearity can be seen when highly collinear variables overpopulate sophisticated downstream analyses such as paraclique,
+82
+a graph-based clustering method, and in the prediction of graph edge directionality based on Bayes’ Rule.
+83
+Even simple correlate lists can be overwhelmed.
+84
+Targeted wrapper methods have been proposed in an attempt to reduce multicollinearity in the context of transcriptomic data analysis.
+85
+These operate by identifying variables that are highly relevant to an outcome while simultaneously eliminating variables that merely increase redundancy. Because these techniques were designed for high-quality, high-throughput data, it remains to be seen whether they will translate effectively to the exposomic setting. More importantly, these methods require advance selection of one or more outcome variables, rendering untargeted studies unamenable to their approach.
+Recent advances in discrete optimization have seen the introduction and application of novel multicollinearity reduction algorithms based on the classic graph theoretical notion of network domination.
+86
+These remarkably effective methods are highly scalable in that real-time solutions to rapidly growing problems can be attained using high-performance platforms and modern optimization software.
+87
+This comes in spite of their proven computational recalcitrance (the decision version of minimum dominating set is both
+NP
+-complete
+88
+and W[2]-complete
+89
+). These methods are able to combine both numerical and textual correlation thresholding and require no outcome variables in order to winnow out all but a canonical collection of noncollinear representatives.
+90
+Case Study: The Public Health Exposome
+We now demonstrate how a series of preprocessing tasks can be put into practice, using the PHE2 as an archetypal example. The PHE is maintained as a central repository at Meharry Medical College. Version 5.0 currently swells with over 75,000 external exposomic variables recorded at every one of the 3,141 counties, parishes, and boroughs in the United States. PHE variables are generally recorded on a yearly basis. At last count (November 2023), it had been populated from 174 diverse data sources. Notable examples include CDC WONDER (
+http://wonder.cdc.gov/
+), the U.S. Census (
+https://data.census.gov/
+), the U.S. EPA (
+https://www.epa.gov/data
+), the National Archive of Criminal Justice Data (
+https://www.icpsr.umich.edu/web/pages/NACJD/index.html
+), and the Dartmouth Atlas of Health Care.
+91
+PHE variables are classified into five disjoint domains: built, health care, natural, policy, and social environment. Its data dictionary contains detailed information about each variable and typically provides specifics such as a variable’s date of record, what it represents, and how it was collected and/or calculated. The PHE has seen numerous applications and been used in a wide variety of studies focused on exposome-relevant life science topics. Timely examples include cardiovascular disease,
+92
+obesity,
+93
+lung cancer,
+94
+preterm births,
+95
+and health disparities.
+96
+Due to computational demands, we limited our attention to the 6,694 PHE variables recorded since 2014.
+Approach.
+A flow diagram of our approach is depicted in
+Figure 1
+. For the sake of exposition, we tried to keep each step as simple as reasonably possible. To harmonize or standardize the data, we flagged missing values, generated names for unlabeled variables, and classified each by source and domain. To lessen the effects of noise, we removed variables missing 40% or more of their values and those with no variance, and mean normalized all variables that were left. We then used
+p
+-values as follows to select the most relevant features. Let
+G
+denote a graph of order
+n
+. Each variable,
+v
+, was correlated with all others, producing for
+v
+a list of
+n-1
+correlation
+p
+-values. The median
+p
+-value was computed from this list, and if it exceeded 0.05, then
+v
+was removed from
+G
+. For this simple exemplar, missing data were neither kept nor flagged. Neither was imputation performed lest it affect downstream correlations.
+97
+Figure 1.
+Preprocessing. A flow diagram of major operational steps.
+Figure 1 is a flow diagram of major operational steps in sequence, namely, raw data capture, data harmonization, noise abatement, feature selection, multicollinearity reduction, and downstream analyses.
+Finally, to reduce multicollinearity, we constructed a similarity graph and extracted from it a representative set of variables using highly innovative graph theoretical algorithms and modern thresholding techniques
+87
+,
+90
+,
+98
+,
+99
+whose presentation was viewed by the editors to be beyond the scope of this seminar.
+Effectiveness.
+Real data such as that found in the PHE present extraordinary challenges. Just as data independence is a foundational assumption for numerous statistical tests, assumptions of data normality support the application of many analytical tools. This is especially true for thresholding algorithms that rely on distributional tails whose shapes should be akin to those of the classic bell curve.
+100
+To gauge overall preprocessing utility, we examined both the effective problem size as measured by the number of variables remaining after each step and the amenability of correlation distributions to subsequent analyses as measured by the apportionment of values greater than one standard deviation from a distribution’s mean. See
+Table 2
+and
+Figure 2
+.
+Table 2
+Variables remaining after each preprocessing step.
+Step
+Variables still under analysis
+Data harmonization
+6,694
+Noise abatement
+4,714
+Feature selection
+4,286
+Multicollinearity reduction
+1,466
+Figure 2.
+Histograms of pairwise variable correlation values greater than one standard deviation from the mean. As per the sequence of steps listed in the flow diagram of
+Figure 1
+, panel A illustrates these correlation values just prior to noise abatement, while panel B displays them immediately after multicollinearity reduction.
+Figure 2 is a set of two histograms. On the left, Figure 2A plots y-axis, ranging from 0 to 5 in unit increments, across correlation values (x-axis), ranging from 0.42, in increments of 0.04 and then 0.03 uniformly, up to 0.98. On the right, Figure 2B plots y-axis, ranging from 0 to 5 in unit increments, across correlation values (x-axis) 0.29, 0.33, 0.37, 0.42, 0.46, 0.50, 0.54, 0.59, 0.63, 0.67, 0.72, 0.76, 0.80, 0.84, 0.89, 0.93, and 0.97.
+We also considered the effect of preprocessing on downstream analytics in the context of exposomic data clustering. The aforementioned paraclique algorithm
+82
+is a more or less ideal method for this application, largely due to its use of modern graph theoretical techniques and its resilience to noise. In the life sciences alone, we have employed it not only in the study of the exposome,
+15
+but also in the study of lung cancer,
+94
+,
+101
+transcriptomics,
+102
+proteomics,
+103
+epigenetics,
+104
+,
+105
+aging,
+106
+diabetes,
+107
+allergic rhinitis,
+108
+obesity,
+93
+community-acquired pneumonia,
+109
+pregnancy-related mortality,
+84
+molecular subtyping,
+110
+and even in studying the effects of radiation on living organisms.
+111
+In brief, the paraclique algorithm interleaves extreme edge density with noise resilience and soft thresholding. It decomposes a graph into clusters (paracliques) by recursively isolating a maximum clique
+112
+and then augmenting it with highly correlated vertices adjacent to all but a predetermined number of clique elements.
+113
+The paraclique algorithm is known to excel in both cluster quality
+114
+and robustness/reproducibility.
+115
+To gauge its relative effectiveness both with and without preprocessing, we compared PHE paraclique structures derived before and after applying the flow diagram of
+Figure 1
+. Without these steps, only about 30% of the clusters extracted by the paraclique algorithm could be augmented with nonclique vertices. With these steps, on the other hand, over 43% of paraclique’s clusters were successfully augmented. Domain diversity also increased. Without preprocessing, only some 9% of paraclique’s clusters contained variables from multiple domains. In contrast, with preprocessing, this number advanced to roughly 23%. Note that increased variable diversity boosts the potential for latent relationship discovery. These are of course but rough measures of improvement. Any in-depth appraisal would likely hinge on a plethora of possible downstream analytics and be well beyond the purview of this seminar.
+Conclusions
+The emergent field of exposome science can be characterized by the need to analyze and interpret a complex confluence of highly inhomogeneous spatial and temporal data. When combined with difficulties in curation and a dearth of automation, this data can present formidable challenges to even the most powerful analytical tools. In response, we have outlined a systematic approach to preprocessing that can help address this conundrum. While the presence of noise and irrelevant features can of course be problematic, we have found multicollinearity to be particularly troublesome for data as widely encompassing as that of the PHE. And, although advances in omics technologies may help in the design of analytical toolchains for the internal exposome, the external exposome can present much more onerous challenges. It is perhaps no surprise then that so few preprocessing workflows seem to have been designed for it. See, for example, the software described in Escriba-Montagut,
+116
+whose only preprocessing operations are data normalization and missing value imputation.
+The scope of our experimental investigation was limited by a few constraints. As previously noted, to keep computational needs in check, we restricted the analysis to data that had been recorded since 2014. Due to inconsistencies in curation, we were confined to metadata that was generally brief, sometimes imprecise, and occasionally terse to the point of ambiguity. The
+p
+-value selection criterion of 0.05 was chosen rather arbitrarily in an effort to match statistical significance to the nature of the data under study. Additionally, in the absence of parametric distributional knowledge, comparisons to normalesque histograms were used as but a default for large, diverse data such as that we have studied here.
+We hasten to add a few notes of caution. Potential bottlenecks abound. At a minimum, we recommend committed investment in data curation, dedicated access to high-performance computation, and multidisciplinary collaborations that can leverage domain knowledge with analytical expertise. And, as more data comes online and the research community moves the analysis from the county/parish/borough level to that of census tracts and remotely sensed grids, users must be wary of ecological fallacy
+117
+and HIPAA (Health Insurance Portability and Accountability Act) concerns.
+118
+Moreover, as a wider range of variables comes under study, exhaustive downstream analyses may introduce false positives
+119
+and thus require the application of Bonferroni corrections,
+120
+,
+121
+false discovery rate methods,
+122
+,
+123
+or other forms of adjustment for multiple hypothesis testing. We are especially concerned with potential obstacles posed by exposomic database integrations. Even well-understood tasks, such as data harmonization may become problematic because of as yet unrealized hopes for an adoption of common data elements across clinical research and health care.
+124
+Finally, we posit that preprocessing methodology such as that described in this seminar may inspire and motivate complementary work on systematic approaches for exposomic data postprocessing. In our experience, paracliques for example are generally small enough to be analyzed with traditional but unscalable techniques such as factor analysis, Bayesian networks, and structural equation modeling.

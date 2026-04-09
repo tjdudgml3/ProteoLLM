@@ -1,0 +1,600 @@
+Introduction
+Breast cancer is the most prevalent malignancy among female worldwide, posing a severe burden on public health [
+1
+]. The long-standing oncological priorities aim to elucidate its molecular mechanisms and develop precise diagnostic/therapeutic strategies. For example, significant progress has been made in the diagnosis of breast cancer with artificial intelligence assistance [
+2
+]. MEG3 plays a regulatory role in the development and progression of breast cancer through protein modification interactions and is a potential biomarker [
+3
+]. With the advancement of proteomics, S-palmitoylation (hereinafter referred to as palmitoylation)-the covalent attachment of a 16-carbon palmitate to proteins-has gained attention for its roles in cancer proliferation, metastasis, and chemotherapy resistance [
+4
+]. Unlike other post-translational modifications (e.g., phosphorylation, ubiquitination), palmitoylation can uniquely mediate protein membrane anchoring and directly regulate the activity of membrane-localized proteins in key signaling pathways of breast cancer (e.g., PI3K-Akt, Wnt) [
+5
+]. Palmitoylation is a reversible post-translational modification with a crucial role in numerous cellular processes, including protein trafficking, membrane localization, and signal transduction [
+6
+,
+7
+]. Currently, hundreds of mammalian proteins - many are cancer-related - have been found to be palmitoylated [
+8
+,
+9
+]. Notably, palmitoylation exerts a significant effect on initiation and progression of breast cancer [
+5
+], such as regulating key proteins encompassing the estrogen receptor and caveolin-1 [
+10
+–
+12
+].
+However, existing palmitoylation studies in breast cancer have certain limitations. Individual enzymes (e.g.,
+ZDHHC7
+) regulating specific proteins (e.g., estrogen receptor α [ERα] [
+13
+]) are mostly investigated, while lacking genome-wide screening of palmitoylation-related biomarkers, and multi-omics data with interpretable models or spatial transcriptomics is rarely integrated. Traditional machine learning (ML) models, due to their inherent “black-box” nature, make it impossible to pinpoint exactly which features govern the emergence of a specific outcome. This characteristic—coupled with the resulting lack of clarity regarding feature contributions—has hindered the application of high-performance ML methods in clinical decision support scenarios [
+14
+]. To address this limitation, the present study innovatively integrates cutting-edge ML algorithms with a framework based on SHapley Additive exPlanations (SHAP) [
+15
+,
+16
+]. This integrated framework enables researchers to accurately pinpoint the key factors that impact palmitoylation and other molecular markers, thereby markedly improving the model’s interpretability and speeding up the translation of research findings into clinical practice.
+In our study, transcriptomic data from GEO and TCGA were combined to find palmitoylation genes specific to breast cancer. Using the ComBat algorithm to correct batch effects, accurate diagnostic models were established with machine learning methods such as LASSO, SVM-RFE, and random forest. Gene contributions were analyzed using SHAP. Spatial transcriptomics were conducive to the exploration of gene-histology links. Experiments on CTHRC1 confirmed its function. CTHRC1 (collagen triple helix repeat-containing 1), a secreted glycoprotein highly expressed in breast cancer tissues, is associated with the progression of breast cancer13. It correlates with advanced tumor stage and poor prognosis, and regulates TME remodeling and immune cell infiltration [
+17
+]. Our work shows the key role of CTHRC1 in breast cancer, shedding light on precise treatment.
+Methods and materials
+Data collection
+Gene expression profiling datasets were obtained from two public repositories. Several datasets were downloaded from the Gene Expression Omnibus (GEO) database (
+https://www.ncbi.nlm.nih.gov/geo/
+), namely
+GSE162228
+,
+GSE20865
+,
+GSE2071
+,
+GSE22219
+,
+GSE42608
+,
+GSE5812
+, and
+GSE65194
+. Additionally, relevant data were retrieved from the UCSC XENA database (
+https://xena.ucsc.edu/
+). Batch effects across datasets were corrected using the ComBat algorithm (implemented in the R package “sva”) to ensure data homogeneity and eliminate technical variability. The palmitoylation gene set was acquired from GeneCards (
+https://www.genecards.org/
+).
+Differential expressed genes (DEGs) analysis​
+A differential expression analysis was carried out via the limma package [
+18
+]. To pinpoint the significantly different genes (DEGs) between the disease group and the control group, the significance thresholds were set at an absolute log₂ fold - change greater than 0.585 (|log₂FC| >0.585) [
+19
+] and an adjusted
+p
+- value of less than 0.05 (adjusted
+P
+< 0.05). Heatmap of differential analysis targeting breast cancer data(adjusted
+P
+< 0.05) was drawn. A volcano plot serves as a graphical tool to illustrate the distribution of differentially expressed genes (DEGs). In this visual representation, upregulated genes are denoted in red, while downregulated genes are signified in blue (adjusted
+P
+< 0.05).
+Functional enrichment analysis
+Gene Ontology (GO) [
+20
+] functional annotation was executed using the clusterProfiler package, including biological processes, molecular functions, and cellular components. Additionally, a Kyoto Encyclopedia of Genes and Genomes (KEGG) [
+21
+] pathway enrichment analysis were carried out. With a significance threshold of
+P
+< 0.05, enrichment results were visualized via bar charts, highlighting the major biological processes and signaling pathways involving DEGs.
+Feature gene selection and model construction
+To further pinpoint the core genes associated with palmitoylation, the process was initiated by determining the overlap between the differentially expressed genes and the palmitoylation gene set. Subsequently, machine-learning algorithms were employed to sift through the genes in the overlapping region and identify Hub genes. To identify Hub genes and construct a predictive model, three complementary approaches were employed. First, LASSO Regression with 10-Fold Cross-Validation. Using the glmnet [
+22
+] package, a LASSO regression model was built to select key feature genes. The regularization parameter (λ) was optimized through 10-fold cross-validation, minimizing the mean squared error (MSE) to prevent overfitting and ensure model generalization. Second, Support Vector Machine Recursive Feature Elimination (SVM-RFE). Leveraging the e1071 package [
+23
+], irrelevant features were iteratively pruned by the SVM-RFE algorithm, which ranks genes by their contribution to the SVM model, retaining only the most discriminative features as core genes. Third, Random Forest (RF). The random Forest package was used to construct an RF model, calculate variable importance, and screen significant genes. A Venn diagram integrated results from LASSO, RF, and SVM-RFE to identify common feature genes.
+Model evaluation and validation
+Ten machine learning algorithms (PLS, RF, DTS, SVM, logistic regression, KNN, XGBoost, GBM, NeuralNet, glmBoost) were used for model training. The caret package was utilized to conduct 5-fold cross-validation, which was repeated five times to optimize hyperparameters. The model’s performance was gauged by calculating the area under the receiver operating characteristic curve (AUC) on the test dataset. Multi-model ROC curves were plotted, and AUC values were compared to select the optimal model for subsequent analysis.
+SHAP interpretability analysis
+The optimal model and the kernelshap package were used to calculate SHAP values, which is beneficial for us to measure the contribution of each gene to the prediction. To visualize the importance of these features, four different and complementary methods were used. Bar charts were created to rank genes by average absolute SHAP values. Swarm plots were used to show the distribution of SHAP values across individual samples. Dependence plots were employed to explore the relationships between gene expression levels and their corresponding SHAP values. Waterfall or single-sample force plots was utilized to explain the prediction contribution trajectories for specific samples. Such complete analytical framework enables us to understand how genes affected the prediction of the model from multiple aspects, including the overall impact on all samples and on each individual sample.
+HUB gene differential expression analysis
+Non-parametric Wilcoxon rank-sum tests were used to compare intergroup differences, with statistical testing implemented via the stat_compare_means function in ggpubr.
+Genomic annotation
+A circular layout was constructed using the circlize package. The hg38 reference genome was loaded via genomicIdeogram, and gene labels were annotated in an “inside” orientation using genomicLabels.
+Pathway enrichment analysis
+To identify enriched biological pathways, Gene Set Enrichment Analysis (GSEA) was carried out using the clusterProfiler package with the c2.cp.kegg.v7.4.symbols.gmt gene set. Samples were stratified into high- and low-expression groups according to the median expression values of target genes. A gene list ranked by log₂ fold change (log₂FC) was then generated to assess pathway enrichment. Enrichment significance was filtered by
+P
+< 0.05 and |NES| >1.
+Immune infiltration
+The CIBERSORT algorithm (Cell-type Identification By Estimating Relative Subsets Of RNA Transcripts) is used to estimate the relative proportions of 22 types of immune cells in a sample, such as M1/M2 macrophages, CD8 + T cells, regulatory T cells (Tregs), and natural killer (NK) cells.
+Spatial transcriptomic analysis
+For data processing, the raw data (
+GSE290924
+)(Including 6 tumor groups) was preprocessed with tools such as Seurat for normalization and background correction. Afterwards, clustering algorithms and R packages were used to analyze and visualize gene expression.
+Cell culture
+MCF10A, SUM149, and CAL − 51 were procured from the Shanghai Institute of Cell Biology, Chinese Academy of Sciences. Resuscitation & Passaging: Frozen cells were thawed in 37℃ water bath, resuspended in complete medium with 10% FBS, centrifuged, and cultured at 37℃/5% CO₂. Cells were treated with trypsin to detach them from the culture vessel when their confluence reached 80% − 90%. After neutralizing the trypsin, cells were subcultured at a 1:3 dilution ratio. The culture medium was refreshed every 2–3 days to maintain optimal growth conditions.
+RT-PCR
+Total RNA isolation was carried out with Trizol reagent (Invitrogen). Subsequently, the isolated RNA was reverse-transcribed into complementary DNA (cDNA) by employing the PrimeScript RT Kit (TaKaRa). Following that, the cDNA underwent amplification through SYBR Green- based quantitative polymerase chain reaction (qPCR) using the LightCycler 480 system. For data analysis, GraphPad Prism software was utilized. Specifically, Student’s t - test or analysis of variance (ANOVA) was applied, with statistical significance set at
+P
+< 0.05. The results were presented in the format of “Mean ± Standard Deviation (SD)” and visualized using bar or line charts. See Supplementary Table 1 for primer sequences.
+Western blot
+For protein extraction, cells were first lysed in RIPA buffer containing protease inhibitors. Subsequently, lysates underwent sonication to further disrupt cell components. Following sonication, samples were centrifuged to separate cellular debris. The protein concentration of the supernatants was then determined using the BCA assay. Finally, samples were denatured at 95℃ with SDS loading buffer to prepare for subsequent analysis. 12% SDS-PAGE gels were run at 80–100 V, transferred to PVDF (200 mA, 60 min), and validated by Ponceau staining. For immunoblotting, membranes were first blocked using 5% milk to prevent non-specific binding, then incubated with primary antibodies, followed by the application of secondary antibodies to enhance detection sensitivity. Finally, target proteins on the membranes were visualized and detected through ECL (Enhanced Chemiluminescence) imaging. The CTHRC1(catalog number:16534-1-AP) antibody and GAPDH (catalog number:60004-1-Ig) antibody purchased derived both from San Ying Company in Wuhan, China (
+https://www.ptgcn.com/
+). All antibody dilutions are at a ratio of 1:1000.
+SiRNA knockdown
+For the transfection procedure, cells reaching 70–80% confluence and seeded in 24 - well plates were subjected to transfection. A complex consisting of 15 pmol of siRNA and Lipofectamine 3000 was used to transfect cells for a duration of 4–6 h. qPCR (48 h post-transfection) and WB (48–72 h) assessed mRNA/protein knockdown (≥ 70% efficiency). The sequences for small interfering RNA (siRNA) - mediated knockdown are provided in Supplementary Material 1.
+CCK-8 assay
+For the cell proliferation assay, cells, with a density ranging from 1 × 103 to 1 × 104 cells per well, were plated into 96 - well plates, treated with CCK-8 (10µL/well) for 1–4 h, and measured at OD₄₅₀. Cells were treated with drugs for 24–48 h; viability = (experimental OD/control OD)×100%.
+Colony formation assay
+In the colony formation experiment, single-cell suspensions, each containing 500–1000 cells per well, were plated into 6-well plates and allowed to grow for a span of 7 to 14 days. Afterward, cells underwent fixation with methanol and staining with crystal violet. Only those colonies with a diameter of 0.5 mm or larger were enumerated. The calculation of the colony formation rate was carried out as Formation rate = (colony number/seeding cells)×100%.
+Statistical analysis
+R 4.4.3 along with GraphPad Prism 9.0 served as the tools for statistical analysis. The specific methods are as follows. For data preprocessing, the ComBat algorithm (from the sva package) was used to correct batch effects across multiple datasets, with parameters detailed in the “Data Collection” section; For differential analysis, differential expression analysis was performed using the limma package, with the significance threshold set as |log₂FC| > 0.585 and adjusted
+P
+< 0.05; For functional enrichment, GO/KEGG enrichment analysis was conducted using the clusterProfiler package, with the significance threshold set at
+P
+< 0.05; For machine learning model validation, 10-fold cross-validation was adopted for LASSO, while 5-fold cross-validation was used for SVM-RFE and random forest, and the performance of all models was evaluated using AUC; For intergroup comparison, independent samples t-test was used for intergroup comparisons, one-way analysis of variance (ANOVA) was employed for multi-group comparisons, and Wilcoxon rank-sum test was utilized for non-parametric data; For statistics of functional experiments, repeated-measures ANOVA was applied to CCK-8 and colony formation assays (
+n
+= 3 independent experiments); Finally, the significance level for all statistical tests was set at
+P
+< 0.05, where ***
+P
+< 0.001, **
+P
+< 0.01, and *
+P
+< 0.05.
+Results
+Data preprocessing and differential expression analysis
+Flowchart of this study is shown in Fig.
+1
+. Before batch correction (Fig.
+2
+A), samples from diverse datasets (Table
+1
+) were sparsely distributed in principal component analysis (PCA). Post-correction (Fig.
+2
+B), the samples clustered tightly, demonstrating effective elimination of batch effects. This analysis led to the identification of 1,782 differentially expressed genes (DEGs) in total. Specifically, 727 genes were upregulated and 1055 genes were downregulated (Fig.
+2
+C). To display the differential analysis outcomes from the data of breast cancer, a heatmap was plotted (Fig.
+2
+D).
+Fig. 1
+Flowchart of the article
+Fig. 2
+Batch effect correction and differential expression analysis.
+A
+PCA plot of gene expression datasets before batch correction, showing dispersed clustering by dataset origin.
+B
+Post-correction PCA demonstrates improved biological clustering.
+C
+A volcano plot was generated to visualize genes exhibiting differential expression, defined by a fold change threshold of |log₂FC| >0.585 and statistical significance at
+P
+< 0.05; upregulated genes are color-coded in red, while downregulated genes are shown in blue.
+D
+Heatmap of differential analysis of breast cancer data
+Table 1. Descriptive statistics.
+.
+Data number
+Normal
+tumor
+Species
+GSE2071
+2
+88
+Homo sapien
+GSE20685
+0
+327
+Homo sapien
+GSE22219
+0
+216
+Homo sapien
+GSE42568
+17
+104
+Homo sapien
+GSE45725
+0
+340
+Homo sapien
+GSE58812
+0
+107
+Homo sapien
+GSE65194
+11
+153
+Homo sapien
+GSE162228
+24
+109
+Homo sapien
+TCGA
+113
+1113
+Homo sapien
+Functional enrichment results
+GO analysis revealed significant enrichment of DEGs in biological processes such as extracellular matrix organization (
+P
+< 0.001) and external structure organization (
+P
+< 0.05) (Supplementary Fig. 1 A). The results of KEGG pathway analysis revealed significant enrichment in the PI3K-Akt signaling pathway (
+P
+< 0.01) and the MAPK signaling pathway (
+P
+< 0.05), as depicted in Supplementary Fig. 1B. These findings strongly imply that the pivotal role of differentially expressed genes (DEGs) in regulating cell proliferation and facilitating the process of signal transduction.
+Feature gene selection and model performance
+To further screen the core genes associated with palmitoylation, Ten-fold cross-validation (10-fold CV) was used to optimize the regularization parameter λ, with a value of 0.004277196, at which the model screened out 37 palmitoylation-related core genes (Fig.
+3
+A and B). SVM-RFE was implemented using the e1071 package with the following parameter settings: kernel type: linear kernel (kernel = “linear”); Feature elimination strategy: 10% of features with the lowest weights were removed in each iteration until the model performance no longer improved, and finally 25 core genes were retained (Fig.
+4
+A and B). A random forest model was constructed using the random Forest package, with the number of trees (ntree) set to 500-verified by preliminary experiments, when ntree ≥ 500, the model’s OOB error stabilized at 0.08. A further increase in the number of trees did not significantly improve the performance; Meanwhile, mtry was set to sqrt(ncol(data)) (default parameter to ensure balanced feature sampling), and 70 important genes were finally screened out (Fig.
+5
+A and B). A Venn diagram was used to illustrate the intersections among the results of LASSO regression, SVM-RFE, and random forest (Fig.
+6
+A), revealing 5 common genes:
+HBB
+,
+BGN
+,
+CTHRC1
+,
+FABP4
+, and
+CD34
+.
+Fig. 3
+Variable selection based on lasso regression.
+A
+Variation characteristics of variable coefficients.
+B
+Binomial deviance curve (red) with minimal deviance at
+n
+= 37 features (deviance = 0.0176; gray: cross-validation variability)
+Fig. 4
+SVM algorithm for feature gene screening.
+A
+Cross validated accuracy (10x CV) peaks at 98.2% with 25 features.
+B
+Cross-validation error stabilizes at 25 features
+Fig. 5
+Screening based on Random Survival Forest
+A
+Random forest error decreases with increasing tree count (black curve: OOB error; pink: model stability).
+B
+Feature importance ranking (e.g., SCN4B, SPRY2, PDE2A)
+Fig. 6
+A
+Venn diagram.
+B
+and
+C
+SHAP analysis.
+D
+Dependence plot.
+E
+. Force plot.
+F
+Waterfall plot.
+G
+AUC values.
+H
+Interactions among HBB, BGN,CTHRC1, FABP4, and CD34
+Contribution analysis of key genes
+SHAP analysis identified significant contributions of 5 core genes to classification (Fig.
+6
+B and C).
+CD34
+had the highest mean absolute SHAP value (0.0602), indicating the greatest impact of its expression changes on predictions, followed by
+BGN
+(0.0551),
+HBB
+(0.0313),
+CTHRC1
+(0.028), and
+FABP4
+(0.0222). A dependence plot revealed a non-linear positive correlation between
+BGN
+,
+CTHRC1
+and SHAP values (Fig.
+6
+D). Force Plot revealed the prediction of relevant features of individual patients, and the contribution of each feature gene to mortality prediction. (Fig.
+6
+E). A waterfall plot revealed that 5 feature genes constituted a prediction value capably of successfully predicting the occurrence of breast cancer (Fig.
+6
+F).
+Model performance comparison
+The AUC values for the 10 constructed models spanned from 0.881 to 0.994, as depicted in Fig.
+6
+G and Supplementary Material 2. Interactions among
+HBB
+,
+BGN
+,
+CTHRC1
+,
+FABP4
+, and
+CD34
+were predicted using the GeneMANIA (
+https://genemania.org/
+) database (Fig.
+6
+H).
+Differential expression and genomic distribution features
+HBB, BGN, FABP4, CD34 and CTHRC1 were annotated on human chromosomes (Fig.
+7
+A). BGN and CTHRC1 were significantly upregulated in the experimental group (Fig.
+7
+B).
+Fig. 7
+Gene correlation and pathway enrichment.
+A
+Chromosomal circle plot (based on the hg38 genome) illustrating the distribution of candidate genes on chromosome . The outer circle shows the karyotype banding pattern of all 24 chromosomes, while the inner circle labels gene names.
+B
+Expression differences of five candidate genes (
+HBB
+,
+BGN
+,
+CTHRC1
+,
+FABP4
+,
+CD34
+) between the treatment (red) and control (blue) groups. (
+P
+< 0.001***,
+P
+< 0.01**, and
+P
+< 0.05*)
+C
+Analysis of the Correlation Between Core Genes and Immune Cell Infiltration Patterns.
+D
+The high-expression group exhibited prominent enrichment in extracellular matrix (ECM) remodeling-associated pathways (NES > 0).
+E
+The low-expression group is primarily enriched in metabolic regulation pathways (NES < 0). (
+P
+< 0.001, **
+P
+< 0.01*, and
+P
+< 0.05)
+Immune cell heterogeneity
+Bar chart analysis revealed significant correlations among immune cells in the immune microenvironment of breast cancer (
+P
+< 0.05) (Supplementary Fig. 3 A). Box-and-whisker plots demonstrated that the significantly changed content of immune cells in the immune microenvironment of breast cancer (
+P
+< 0.05) (Supplementary Fig. 2 A). To investigate the relevant causes, a correlation analysis was conducted between the 5 feature genes and immune cells, and results showed strong correlations of these 5 feature genes with most immune cells in the immune microenvironment of breast cancer (Fig.
+7
+C) (
+P
+< 0.05).
+Pathway regulation and immune cell distribution
+TGF-β and Wnt signaling pathways were notably activated in the group with high CTHRC1 expression, as depicted in Fig.
+7
+D. Conversely, the group with low CTHRC1 expression exhibited significant enrichment in fatty acid metabolism and oxidative phosphorylation. These findings uncovered the dual regulatory roles of CTHRC1, as illustrated in Fig.
+7
+D and E.
+Spatial heterogeneity of gene expression
+As shown in Fig.
+8
+,
+CTHRC1
+expression varied greatly among samples (Fig.
+8
+A–F). Different color patterns in tissue sections indicated varying gene expression in different areas. Compared with histological images, areas of high or low
+CTHRC1
+expression corresponded to certain tissue structures, which is conducive to understanding gene functions and tissue conditions.
+Fig. 8
+The expression of CTHRC1 in spatial transcriptomics.
+A
+-
+F
+: Each panel presents the spatial distribution maps of gene expression, accompanied by their corresponding histological images. In these visuals, the intricate patterns of gene expression are vividly illustrated, and when juxtaposed with the histological counterparts, they offer a comprehensive view that facilitates a deeper understanding of the biological context
+Gene expression profiles and functional validation
+Figures
+9
+A-C illustrate the relative mRNA expression of
+HBB
+,
+BGN
+,
+CTHRC1
+,
+FABP4
+, and
+CD34
+genes across MCF10A, SUM149, and CAL- 51 cell lines, highlighting significant inter-line variations, such as the elevated
+BGN
+expression in CAL-51 cells. Figure
+9
+D reveals that the
+CTHRC1
+gene is highly expressed in SUM149 cells compared with MCF10A and CAL-51. Consequently,
+CTHRC1
+was selected as the core gene for our study. Additionally, validation at the protein level indicated the highest expression level of
+CTHRC1
+in SUM149PT cells.(Supplementary Fig. 4 A, Supplementary Material-Fig. 1, Supplementary Material-Fig. 2 and Supplementary Material-Fig. 3) Using siCTHRC1-1, siCTHRC1-3, and siCTHRC1-2 in SUM149 cells (Fig.
+9
+E), all siRNA-treated groups showed a significant reduction in
+CTHRC1
+mRNA levels, validating the interference efficiency of siRNA. Functional assays in SUM149 cells demonstrated that
+CTHRC1
+gene silencing led to multifaceted effects: WB grayscale analysis (Fig.
+9
+F) confirmed decreased protein expression(Supplementary Fig. 4B, Supplementary Material-Fig. 4,Supplementary Material-Fig. 5 and Supplementary Material-Fig. 6); Colony formation assays (Fig.
+9
+G) showed that siCTHRC1 −3 and siCTHRC1-2 can notably reduce colony numbers(Supplementary Fig. 4 C, Supplementary Material-Fig. 7,Supplementary Material-Fig. 8 and Supplementary Material-Fig. 9); Proliferation analysis (Fig.
+9
+H) indicated that siCTHRC1-3 can significantly suppress cell growth at multiple time points, as measured by OD450 values.
+Fig. 9
+Functional experiment.
+A
+–
+C
+: Relative mRNA expression levels of
+HBB
+,
+BGN
+,
+CTHRC1
+,
+FABP4
+, and
+CD34
+in three cell lines: MCF10A, SUM149, and CAL-51.
+D
+Comparison of relative CTHRC1 mRNA expression levels across MCF10A, SUM149, and CAL-51 cell lines.
+E
+CTHRC1 knockdown efficiency in SUM149 cells transfected with different siCTHRC1 constructs (siCTHRC1-1, siCTHRC1-3, siCTHRC1-2) versus control (Control), measured by relative
+CTHRC1
+mRNA expression.
+F
+CTHRC1 protein expression levels in SUM149 cells after transfection with siCTHRC1 or control, analyzed by Western blot (WB) densitometry (
+P
+< 0.05).
+G
+Colony formation assays in SUM149 cells transfected with siCTHRC1 or control siRNA revealed that
+CTHRC1
+knockdown significantly impaired clonogenic capacity (
+P
+< 0.05).
+H
+Cell proliferation curves of SUM149 cells transfected with siCTHRC1-3, siCTHRC1-2, or control, monitored by OD450 values over 0–80 h. Asterisks denote significant differences in growth rates (
+P
+< 0.05)
+Discussion
+In our research, important palmitoylation - related biomarkers in breast cancer were thoroughly searched, and
+CTHRC1
+was found to be a crucial gene by combining and analyzing multi-center transcriptomic data from GEO and TCGA databases.
+CTHRC1
+outperformed as a key gene in different models, with its ability to promote cancer growth through functional tests, which may be conducive to early screening and diagnosis of breast cancer.
+LASSO, SVM - RFE, and random forest algorithms were employed for cross-validation, pinpointing
+HBB
+,
+BGN
+,
+CTHRC1
+,
+FABP4
+, and
+CD34
+as core genes.
+CTHRC1
+stood out across various models, highlighting its key role in palmitoylation networks. SHAP analysis showed that
+CTHRC1
+can boost the prediction of the experimental group. Validated by plots and value distributions, these findings reveal gene-palmitoylation links, with the expression of
+CTHRC1
+as a possible breast cancer-related indicator.
+CTHRC1
+was initially identified for its role in vascular remodeling in the abnormal intima and adventitia of rats, Subsequent studies have revealed that the elevated expression of
+CTHRC1
+is associated with the tumor microenvironment (TME), positioning it as a key focus in cancer research [
+24
+,
+25
+]. A study in 2022 first reported that
+CTHRC1
+was highly expressed in breast cancer and positively correlated with macrophage infiltration, providing an important foundation for the present study [
+17
+].
+In this study, spatial transcriptomics technology confirmed that regions with high expression of
+CTHRC1
+colocalized with areas dense with tumor cells (Fig.
+5
+). This result not only uncovers the role of
+CTHRC1
+in the spatial heterogeneity of the TME, but also supplements the cellular and biological mechanisms underlying its promotion of cancer development and progression. Multiple studies have revealed that
+CTHRC1
+is associated with the occurrence and development of multiple tumors, including colorectal cancer [
+26
+], gastric cancer [
+27
+–
+29
+], renal cell carcinoma [
+30
+], bladder transitional cell carcinoma [
+31
+], and prostate adenocarcinoma [
+32
+]. Results from functional experiments showed that silencing
+CTHRC1
+can significantly inhibit the proliferation and colony-forming abilities of SUM149 breast cancer cells, further validating the tumor-promoting function of
+CTHRC1
+.
+Consistent with findings of Wang et al. [
+17
+], this study also demonstrated an association between CTHRC1 and immune cell infiltration (Fig.
+4
+C). However, a key distinction lies in that the present study focuses more on palmitoylation-mediated regulatory pathways, offering a new perspective for in-depth understanding of the upstream regulatory mechanisms of
+CTHRC1
+. Pathway enrichment analysis revealed that in samples with high expression of
+CTHRC1
+, the transforming growth factor-β (TGF-β) signaling pathway and Wnt signaling pathway were significantly activated, both of which are closely associated with the maintenance of tumor cell stemness and metastatic potential. In contrast, samples with low expression of
+CTHRC1
+showed enrichment in fatty acid metabolism and oxidative phosphorylation pathways. Together, these results suggest that
+CTHRC1
+may restructure the TME by regulating energy metabolism pathways.
+There is currently no direct experimental evidence confirming the palmitoylation modification of
+CTHRC1
+. In this study, the association of
+CTHRC1
+with the palmitoylation network was inferred based on the following indirect evidence. The phosphatidylinositol 3-kinase-protein kinase B (PI3K-Akt) pathway was significantly enriched in the high-
+CTHRC1
+expression group (Fig.
+4
+D), in which key proteins (e.g., AKT1) require palmitoylation modification to achieve membrane localization and activate their activity [
+33
+]. In future studies, co-immunoprecipitation combined with mass spectrometry (IP-MS) experiments should be conducted to directly verify the palmitoylation modification sites of
+CTHRC1
+and its regulatory enzymes (e.g.,
+ZDHHC7
+), thereby clarifying its specific regulatory mechanism.
+This study has several limitations. Targeted optimizations are required in subsequent research. The machine learning model showcases the following shortcomings. It relies on the GEO and TCGA datasets for training and has not been validated using independent external cohorts such as local databases. Differences in population characteristics may hinder the model’s performance. Only transcriptome data was used, without integrating multi-omics information, which may lead to the omission of key signals such as palmitoylation. Functional experiments based on the SUM149 breast cancer cell line showed significant differences from the in vivo microenvironment. The in vitro model only contained tumor cells and failed to simulate the interaction between
+CTHRC1
+and stromal cells. It lacks microenvironmental factors such as angiogenesis, making it difficult to detect the pro-angiogenic effect of
+CTHRC1
+. A
+CTHRC1
+knockout mouse xenograft model needs to be established for verification in subsequent studies. The spatial transcriptome analysis has three potential confounding factors, which have been initially controlled: the sample size of 6 cases may lead to sampling bias, and more samples need to be collected for verification in the later stage; Seurat package was used to correct the impact of RNA degradation; Preliminary experiments suggested that
+CTHRC1
+was mainly expressed by tumor cells, requiring further confirmation combined with single-cell spatial transcriptome data in subsequent research. In-depth subsequent studies can be performed from the perspective of multi-omics integration: the expression of
+CTHRC1
+and the abundance of palmitoylation modification can be detect using proteomics; The association of
+CTHRC1
+with fatty acid metabolism can be explored using metabolomics. This study provides a potential target for targeted therapy of breast cancer. In the future, large-sample clinical cohorts are essential to verify the diagnostic value of
+CTHRC1
+, the effect of targeted intervention should be evaluated in combination with in vivo experiments (such as mouse xenograft models), and the possibility of clinical transformation should be gradually explored. Based on the findings of this study, the development of
+CTHRC1
+-targeted therapies can be advanced in two key directions: Development of small-molecule inhibitors: Targeting the secretory domain or palmitoylation modification sites of
+CTHRC1
+, small-molecule compounds capable of blocking
+CTHRC1
+secretion or palmitoylation will be identified via virtual screening (e.g., molecular docking). These compounds will then be evaluated in SUM149 xenograft models to assess their inhibitory effects on tumor growth.Combination therapy strategies: Given the association between
+CTHRC1
+and the PI3K-Akt pathway, the combination of
+CTHRC1
+inhibitors with
+PI3K
+inhibitors (e.g., alpelisib) will be explored. The synergistic anti-tumor effects of this combination will be assessed in breast cancer models.
+Conclusion
+In this study, we have systematically uncovered important palmitoylation-related biomarkers and regulatory networks in breast cancer by integrating multi - omics data and using machine learning models. Our results showed that
+CTHRC1
+is crucial for tumor growth and microenvironment regulation. These findings offer a new angle for the molecular classification of breast cancer and lay the groundwork for developing precise treatments based on palmitoylation modifications.
+Supplementary Information
+Supplementary Material 1: Supplementary Figure 1 Functional analysis (A-B) The subsequent figures depict the findings from Gene Ontology (GO) functional annotation and Kyoto Encyclopedia of Genes and Genomes (KEGG) pathway enrichment analyses. Supplementary Figure 3A. Box plots were employed to compare the relative abundances of 22 distinct immune cell subsets between Control and Treatment cohorts. Non-parametric statistical tests were used to assess significance (∗
+P
+< 0.05, ∗∗
+P
+< 0.01, ∗∗∗
+P
+< 0.001). Immune cell types are denoted on the x-axis, with proportional values presented on the y-axis, visually highlighting differential immune cell distributions. Supplementary Figure 2A. The heatmap depicting Spearman correlations among immune cell types in the treatment group reveals pairwise relationships, with green-to-red color gradients indicating negative to positive correlations. Color intensity reflects correlation strength, while white signifies no association, providing a visual summary of immune cell interaction patterns in treated samples. Cell types are clustered using hierarchical clustering (hclust), and correlation coefficients are annotated within each heatmap cell. Supplementary Figure 4 Efficacy verification of
+CTHRC1
+knockdown and its impact on proliferation function. (A) Western blot showing protein expression of
+CTHRC1
+in three breast cancer cell lines (MCF10A, SUM149, and CAL-51). (B) Western blot indicates the efficacy verification of
+CTHRC1
+knockdown in the breast cancer cell line SUM149PT. (C) Colony formation assay shows that
+CTHRC1
+knockdown affects the proliferation ability of SUM149PT.

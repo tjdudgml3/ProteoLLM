@@ -1,0 +1,1262 @@
+Introduction
+The past decade has seen continuous improvements in the field of crosslinking mass spectrometry (XLMS) on both the experimental
+1
+,
+2
+and the data analysis side
+3
+,
+4
+with numerous new software being released for crosslink identification
+5
+–
+7
+. Today the technique of XLMS has matured into a powerful tool for structural, molecular, and systems biology
+8
+which enables the structural analysis of proteins and protein complexes
+9
+,
+10
+, as well as capturing protein–protein interactions potentially up to system-wide scale, allowing in-depth studies of large interactomes
+11
+,
+12
+. Plenty of comprehensive reviews highlighting successful XLMS applications, potential pitfalls and drawbacks have been published in recent years
+13
+–
+18
+. However, while XLMS has seen substantial advancements, there is one major challenge that still exists: computational analysis of mass spectra originating from non-cleavable crosslinking reagents poses a complex problem that is largely unexplored due to its
+n
+-squared nature. Contrary to cleavable crosslinkers like DSSO
+19
+and DSBU
+20
+, non-cleavable reagents such as DSS
+21
+and BS3
+22
+do not incorporate an off-centre labile moiety that is cleaved during fragmentation and as a result do not yield characteristic doublet ions required for mass calculation of the individual crosslinked peptides. Therefore, only the mass of the complete non-cleavable crosslinked entity is known and all peptide combinations arising from the protein database that match the entity’s mass have to be considered for identification. The number of combinations grows with the square of the protein database size, hence the name
+n
+-squared problem
+23
+. Moreover, accurate estimation of the false discovery rate (FDR) used for crosslink validation is also more complex for non-cleavable crosslinks as peptide identifications are interdependent on each other
+24
+. This behaviour renders large proteome-wide studies with non-cleavable crosslinkers largely unfeasible, ultimately because most crosslink search engines are unable to deal with the enormous search spaces that have to be accounted for in such studies. Nevertheless, despite the computational challenges, non-cleavable crosslinkers are still the most used class of crosslinking reagents
+25
+due to very distinct advantages: non-cleavable crosslinkers are simpler in chemical structure and hence easier to synthesise, making them the more cost-effective option compared to cleavable reagents. For large-scale studies or routine analyses, non-cleavable crosslinkers offer a budget-friendly option without compromising the quality of the data
+15
+. Furthermore, because of their simpler structure, non-cleavable crosslinkers also feature less chemical groups that are prone to introducing potential side reactions which are undesirable especially in whole-cell crosslinking experiments
+26
+. Contrary to cleavable crosslinkers, non-cleavable reagents do not require optimisation of mass spectrometry worflows for detection of signature ions that are integral for cleavable searches
+27
+. Most importantly, a non-cleavable crosslinker’s backbone is stable and chemically inert to side reactions during sample preparation, making them suitable for applications where structural integrity and long-term stability are critical
+26
+. Their usage is also in many cases attractive because of their chemical properties such as various levels of hydrophobicity and membrane permeability.
+Several crosslink search engines that can tackle the
+n
+-squared problem already exist, employing either fast exhaustive approaches like Xolik
+28
+or non-exhaustive approaches such as Kojak
+29
+,
+30
+and pLink
+31
+. However, all of these search engines are limited in either sensitivity, robustness or performance, which is why large-scale proteome-wide non-cleavable crosslink studies are still uncommon. This ultimately highlights the need for an efficient and robust crosslink search engine capable of analysing data from complex non-cleavable crosslink samples such as proteome-wide studies of large biological systems.
+One such biological system that would greatly benefit from the insights from non-cleavable crosslinking is the
+Caenorhabditis elegans
+nucleus, specifically the Box C/D ribonucleoprotein (RNP) complex which is a crucial molecular assembly involved in RNA modification processes, primarily catalysing the 2’-O-methylation of specific nucleotides in ribosomal RNA (rRNA). This modification is essential for the proper functioning of ribosomes, the cellular machinery responsible for protein synthesis. The complex is composed of small nucleolar RNAs (snoRNAs) and core proteins, including fib-1 (fibrillarin), nol-56 (Nop56), nol-58 (Nop58), and SNU13 (M28.5)
+32
+. These components assemble into a functional unit that directs the methylation machinery to precise sites on the pre-rRNA, guided by sequence complementarity between the snoRNA and the target rRNA sequence
+33
+. Recent studies have uncovered a novel role for the Box C/D RNP complex beyond its traditional function in rRNA modification
+34
+–
+37
+. In
+C. elegans
+, this complex plays a significant role in mitochondrial surveillance and regulating innate immune responses
+38
+. Tjahjono et al.
+38
+have shown that Box C/D small nucleolar ribonucleoproteins (snoRNPs) are essential for the proper activation of mitochondrial stress response pathways, including the unfolded protein response in mitochondria (UPR
+m
+t
+) and the Ethanol and Stress Response Element (ESRE) network. These pathways are crucial for maintaining mitochondrial health and functionality, particularly under stress conditions. Understanding the multifaceted roles of the Box C/D RNP complex in
+C. elegans
+provides valuable insights into the intricate regulation of cellular homoeostasis and immune responses, which are conserved across species, including humans
+39
+. This knowledge has potential implications for understanding the mechanisms underlying mitochondrial health, immune responses, and their impact on ageing and disease.
+In the following study we present a non-exhaustive algorithm, MS Annika 3.0, for proteome-wide identification of non-cleavable crosslinks which unifies high sensitivity, robust and accurate FDR estimation, and computational performance. We employ this algorithm to study the structural arrangement and interaction landscape of the
+C. elgeans
+Box C/D RNP complex, uncovering new insights.
+Results
+We here introduce a non-exhaustive algorithm for identification of non-cleavable crosslinks implemented in our search engine MS Annika
+5
+,
+40
+which is capable of analysing proteome-wide studies in reasonable time on commodity hardware. Moreover, to show the applicability of this approach we performed crosslinking experiments with
+C. elegans
+nuclei and successfully searched the mass spectrometry data against the full
+C. elegans
+proteome of over 26,000 proteins. Using the identified crosslinks we were able to conclude a comprehensive structural analysis that provides a detailed view of the Box C/D RNP complex in
+C. elegans
+. Finally, we compared our algorithm against other state-of-the-art crosslinking search engines commonly used in the field and proved that MS Annika is either on par or better than competing tools.
+Implementation of a non-exhaustive algorithm for identification of non-cleavable crosslinks
+Identification of crosslinks originating from non-cleavable crosslinkers poses a big computational challenge due to the combinatorial explosion of the search space that we describe earlier. In order to successfully apply crosslink identification beyond human proteome-wide scale, crosslink search engines need to be extremely efficient in their choice of peptide candidates to consider for crosslink detection. We here introduce a non-exhaustive algorithm implemented in our search engine MS Annika that can accurately determine good peptide candidates for crosslink identification in reasonable time on commodity hardware, enabling crosslink searches for protein databases of up to 20 million peptides. Figure
+1
+shows a schematic overview of the complete algorithm as implemented in MS Annika. At the core, this algorithm approximately scores all peptides in the database against every experimental mass spectrum and yields the top candidates for each spectrum to consider for crosslink search which drastically reduces the search space. This approximate scoring of all peptides against a spectrum is possible because peptides and spectra are represented as (sparse) vectors and the problem of calculating the scores of every peptide in the database can be denoted as a simple sparse matrix multiplication. An in-depth description of the algorithm is given in Section “Implementation of a non-cleavabe search algorithm in MS Annika”.
+Fig. 1
+Schematic overview of the algorithm for identification of non-cleavable crosslinks in our search engine MS Annika
+5
+,
+40
+.
+Mass spectra and peptides arising from the in silico digestion of the protein database are encoded as sparse vectors and subsequently scored by matrix multiplication. The highest scoring hits are considered for the identification of potential alpha peptides with our in-house developed peptide search engine MS Amanda
+67
+,
+75
+,
+76
+. Identified alpha peptides are used to find complimentary beta peptides and ultimately alpha and beta peptides matching the mass spectrum’s precursor mass are combined to crosslinks. Crosslink-spectrum-matches (CSMs) and crosslinks are validated using a transparent target-decoy approach for false discovery rate (FDR) estimation.
+Identification of crosslinks in
+C. elegans
+using a proteome-wide non-cleavable search
+The main advantage of the non-cleavable search algorithm in MS Annika is its ability to efficiently process very large protein databases. This is a distinct feature of MS Annika since most non-cleavable crosslink search engines are not able to handle protein databases consisting of more than a couple of thousand proteins. In order to demonstrate the applicability of MS Annika for large proteome-wide studies, we searched mass spectrometry data of
+C. elegans
+nuclei that we crosslinked with DSG against the full
+C. elegans
+proteome, amounting to 26,695 proteins in total. Furthermore, to study the impact of protein database size we compared the results against the same search using a filtered proteome containing only proteins that occurred in more than two high-confidence peptide-spectrum-matches (PSMs) in a preliminary linear search for identification of non-crosslinked peptides. The filtered proteome consisted of 3266 proteins in total. Figure
+2
+shows the number of identified crosslinks at 1% estimated FDR per biological replicate for both protein databases using MS Annika for identification and xiFDR
+24
+for validation: remarkably, despite the large difference in protein database size, the number of identified crosslinks at 1% estimated FDR shows only small variation regardless of the used database. The biggest change is observed for replicate one where using the filtered proteome causes a gain of 45 crosslinks, resulting in 250 crosslinks instead of 205. The total number of identified unique crosslinks at 1% estimated FDR across all three biological replicates is 476 when using the filtered proteome and 435 when using the full proteome. Supplementary Fig.
+1
+shows the overlaps in crosslink identifications between the replicates and between filtered and full proteome identifications with generally good agreement.
+Fig. 2
+Influence of protein database size on the non-cleavable search of MS Annika.
+Mass spectrometry data of
+C. elegans
+nuclei was searched with MS Annika once using the full
+C. Elegans
+proteome (
+n
+= 26 695) and once using a filtered proteome of abundant proteins identified in a linear search (
+n
+= 3266). Results were validated for 1% estimated FDR with xiFDR
+24
+. Interestingly, the number of identified crosslinks does not show large variation, regardless of database size with the biggest difference observed in replicate one where the filtered database search reports 45 more crosslinks. Overall 476 unique crosslinks are identified across the three replicates using the filtered proteome and 435 unique crosslinks using the full proteome which shows the applicability of MS Annika for large proteome-wide studies.
+Supplementary Figs.
+2
+,
+3
+depict the results using MS Annika with the built-in validation algorithm instead of validation with xiFDR: the differences in results between using the filtered and full proteome are more pronounced, especially for replicate one where using the full proteome for search causes a loss of more than half of the identified crosslinks. Initially it might seem counter-intuitive that usage of the larger database yields less crosslinks, however as the size of the database grows, so does the chance of randomly matching a false positive hit which has to be accounted for during validation. Specifically, the greater chance to match false positive hits results in higher score cut-offs to preserve the 1% FDR threshold and therefore leads to less reported crosslinks. This highlights the benefit of using more sophisticated validation tools like xiFDR for larger protein databases which we explore further in the section Validating MS Annika Results with xiFDR Boosts Identifications and Provides Better FDR Estimation.
+Most of the 435 crosslinks identified with MS Annika using the proteome-wide search are intralinks with 354 crosslinks connecting residues within the same protein. On the other hand, 81 crosslinks spanning different proteins (interlinks) were found across the three replicates. Table
+1
+shows the total number of unique intra and inter crosslinks that pass the 1% FDR threshold for each replicate and a complete list of these crosslinks is given in Supplementary Data
+1
+.
+Table 1
+Number of unique intra and inter-crosslinks identified with MS Annika and validated with xiFDR
+24
+for 1% residue pair FDR across the three replicates
+Replicate
+Crosslinks (total)
+Crosslinks (intra)
+Crosslinks (inter)
+S1
+205
+158
+47
+S2
+301
+255
+46
+S3
+210
+176
+34
+S1 & S2 & S3
+435
+354
+81
+Subsequently we collapsed crosslinks to self interactions (SIs, interactions within one protein) and protein–protein interactions (PPIs, interactions between different proteins) using xiFDR to validate for 1% PPI FDR which resulted in 244 interactions that passed the FDR threshold across the three replicates. Expectedly, interactions within the same protein were a lot more common, making up 192 SIs while interactions between different proteins made up around 21% of all interactions at 52 PPIs as depicted in Table
+2
+. Moreover, we used all inter crosslinks that satisfied 1% PPI FDR to create a protein interaction network with xiView
+41
+as shown in Supplementary Fig.
+4
+which highlights interactions of the Box C/D RNP complex that we studied in more detail next.
+Table 2
+Number of unique self interactions (SIs) and protein–protein interactions (PPIs) identified with MS Annika and validated with xiFDR
+24
+for 1% PPI FDR across the three replicates
+Replicate
+Interactions (total)
+SIs (intra)
+PPIs (inter)
+S1
+137
+108
+29
+S2
+182
+149
+33
+S3
+146
+115
+31
+S1 & S2 & S3
+244
+192
+52
+All searches were run on a desktop PC with moderate hardware (12-core AMD Ryzen R9 7900X 4.7GHz CPU with 64 GB of memory) at a mean runtime of 6 hours and an average of 549 460 mass spectra per replicate for the full proteome-wide search. The exact time measurements for each replicate and hardware specifications are given in Supplementary Table
+1
+and
+2
+, respectively. It should be noted however, that even though the system had 64 GB of memory installed, the full memory capacity was never utilised. In fact, such a proteome-wide search does run on a normal laptop with a 4-core CPU and 16 GB of memory, albeit MS Annika does heavily benefit of additional CPU cores due to the parallel nature of the algorithm.
+Structural analysis of the Box C/D RNP complex in
+C. elegans
+The structural organisation and interaction network of the Box C/D RNP complex in
+C. elegans
+were elucidated through an integrative approach combining XLMS using the data and results as described in the section Identification of Crosslinks in C. elegans Using a Proteome-wide Non-cleavable Search and structural modelling. The interaction map, presented in Fig.
+3
+, highlights the spatial arrangement and connectivity among the core components of the complex, including nol-56, nol-58, and fib-1, along with M28.5 and NEDG-01330. Figure
+3
+A illustrates an AlphaFold2 Multimer
+42
+–
+45
+screening of potential complex interactors with nol-58 as bait protein against a fasta file containing 29 known and potential interactors of the Box C/D RNP complex. The screening results are shown with all nol-58 candidate predictions (
+n
+= 29) as circles and ranked by the average interface prediction TM score (interface pTM). Interestingly, the prediction of the core complex revealed two new potential interactors NEDG-01330 (top hit) and NEDG-01670 (fourth top hit). Additionally, nol-58 establishes robust interactions with both nol-56 and fib-1 as well as M28.5, consistent with its central role in the complex assembly known in the literature (Fig.
+3
+E)
+38
+. The interaction of the core complex was further confirmed by crosslinking mass spectrometry as shown in Fig.
+3
+B. Identified crosslink sites were mapped onto their respective protein sequences using xiView
+41
+. While nol-58 exhibits only one PPI link to nol-56, it established two interaction sites with fib-1, reinforcing their cooperative function within the complex. The snoRNP M28.5, with its distinct secondary structure, anchors these proteins, facilitating the formation of a stable and functional RNP complex. Crosslink restrains could not be identified by mass spectrometry for NEDG-01330 and NEDG-01670 although the AlphaFold2 Multimer screening predicted both proteins as strong interactors. Remarkably, the predicted tertiary structure of NEDG-01330 is very similar to M28.5 and its predicted position in the complex suggests a similar role in complex assembly compared to M28.5 (Fig.
+3
+C). The fib-1 protein, represented in light pink, occupies a central position, interacting with both nol-56 (firebrick) and nol-58 (orange), while M28.5 (pink) wraps around these proteins, ensuring their proper orientation and function within the RNP assembly. The predicted three-dimensional structural model of the Box C/D RNP complex, integrating the crosslinking data, shows a clear violation of PPI links (light green) exceeding the maximum allowed distance of 19-22 Å, resulting from the DSG crosslinker backbone of 7.7 Å and two times the lysine side chain of 6-7 Å (Fig.
+3
+C). Hence, to refine the structure of the Box C/D RNP complex we employed AlphaLink2
+46
+,
+47
+and integrated our crosslink restraints into the prediction process. This resulted in a refined model with crosslink restraints fulfilling the distance limit of 22 Å except for two inter-crosslinks that remained violated (Fig.
+3
+D). The refinement by AlphaLink2 demonstrates an improvement in structure prediction, as indicated by an increase in the ipTM score from 0.689 to 0.721, accompanied by a reduction in crosslink violations (from 3 to 2) and, more importantly, shorter distances for all crosslinks (Fig.
+3
+F). Despite the refinement, two crosslinks still exceeded the distance limit due to the inherent symmetry of the complex. As illustrated in Fig.
+3
+E, the complex consists of two M28.5 and two fib-1 proteins, one on each side. The long-distance crosslink between M28.5 and nol-56 can be attributed to a second M28.5 protein interacting with the C-terminal region of nol-56, like the predicted interaction between M28.5 and nol-58. This interaction with a second M28.5 protein would satisfy the crosslink distance limit. However, due to limitations in the number of complex members that can be provided for structure prediction, it was not possible to test this hypothesis. The same symmetrical consideration applies to the long-distance link between fib-1 and nol-58, with the potential formation of a new interaction interface between fib-1 and NEDG-01330. It is plausible that fib-1 and NEDG-01330 form a dimer that binds to nol-58 at residue 194 and adjacent residues. Although the predicted model of the Box C/D snoRNP complex raises questions that require further investigation in future experiments, the structural analysis offers a detailed and improved view of the Box C/D RNP complex in
+C. elegans
+.
+Fig. 3
+Modelling and structure refinement of the Box C/D RNP complex using AlphaFold2 and AlphaLink2.
+A
+AlphaFold2 Multimer
+42
+–
+45
+protein interaction screen to identify and confirm interactors of nol-58. The screening results are shown with all nol-58 candidate predictions (
+n
+= 29) as circles and ranked by the average interface prediction TM score (interface pTM). The colour code represents the best ipTM score across all five structure predictions per protein. The top five predicted interactors are highlighted with corresponding gene names.
+B
+Crosslink visualisation by xiView
+41
+of identified links from the Box C/D RNP complex. Intra-protein links are coloured in dark blue while interlinks between proteins are coloured in light green.
+C
+AlphaFold2 prediction of the Box C/D RNP complex as cartoon schematic with nol-58 in orange, M28.5 in pink, NEDG-01330 in violet, nol-56 in firebrick and fib-1 in light pink. Inter (light green) and intra (dark blue) crosslinks are plotted on top of the structure to visualise the interaction relations between the complex members.
+D
+AlphaLink2 refinement of the predicted Box C/D RNP complex with nol-58 in orange, M28.5 in pink, NEDG-01330 in violet, nol-56 in firebrick and fib-1 in light pink. Inter (light green) and intra (dark blue) crosslinks are plotted on top of the structure.
+E
+Figure adapted from Tjahjono et al. 2022
+38
+showing the current Box C/D RNP complex model currently available in the literature.
+F
+Summary of inter-links after AlphaFold2 and AlphaLink2 prediction.
+MS Annika accurately identifies non-cleavable crosslinks in benchmark datasets
+We further evaluated the non-cleavable search algorithm of MS Annika by analysing the crosslinking benchmark datasets of Beveridge and co-workers
+48
+and Matzinger and co-workers
+49
+that were specifically designed to assess the quality of crosslinking search engines and which allow for the computation of an experimentally validated FDR. Moreover, we compared the results of MS Annika against other state-of-the-art tools commonly used in the field for identification of non-cleavable crosslinks, namely Kojak
+29
+,
+30
+, MaxLynx
+6
+(part of MaxQuant
+50
+), MeroX
+51
+,
+52
+, pLink
+31
+, xiSearch
+53
+(including xiFDR
+24
+), XlinkX
+54
+, and Xolik
+28
+.
+The dataset of Beveridge and co-workers
+48
+consists of three technical replicates of synthetic peptides from
+Streptococcus pyogenes
+Cas9 crosslinked with the crosslinker DSS
+21
+. The mass spectrometry data was searched against a protein database of Cas9 and 10 contaminant proteins. Figure
+4
+shows the results of the different tools at 1% estimated FDR: Reporting 218 unique true positive crosslinks MS Annika detects 29 more true positive crosslinks but also 45 less false positive crosslinks than Kojak on average across the three replicates, outperforming Kojak in both number of crosslinks and FDR estimation. While Kojak does identify 189 crosslinks on average, its average experimentally validated FDR is far above the target of 1% at 20%, in line with the original observations made by the authors of the dataset
+48
+. MaxLynx reports on average 8 more true positive crosslinks than MS Annika at 226 identifications, however at the cost of 7 more false positives and therefore—at 4.31%—yielding a 2.94 percentage points worse experimentally validated FDR than MS Annika. In contrast, while MeroX yields the best experimentally validated FDR at zero false positive hits, it also identifies only 46 unique true positive crosslinks on average. The crosslinking search engine pLink reports the highest number of true positive crosslinks on average at 242, however this is at the cost of 17 false positive hits and yielding an experimentally validated FDR of 6.52% on average. Furthermore, at 220 true positive identifications, which is 2 more than MS Annika, and only 2 false positive crosslinks (1 less than MS Annika) on average xiSearch reports arguably the best result for this dataset, yielding an average experimentally validated FDR of 1.05%, very close to the target of 1% estimated FDR. On the other hand XlinkX returns an average of 31 false positive identifications and an experimentally validated FDR of 15.19% while reporting 173 unique true positive crosslinks. The crosslink search engine Xolik lands in last place for all the compared tools with an average of 11 false positive identifications and an experimentally validated FDR of 55.31% while detecting only 9 unique true positive crosslinks. Despite this being a rather simple dataset with only 11 proteins, Kojak, MaxLynx, pLink, XlinkX and Xolik noticeably underestimate the actual FDR, reporting a lot more false positives than allowed. Supplementary Fig.
+5
+shows the intersection and union of results from MS Annika, MaxLynx and pLink for all three replicates including calculated experimentally validated FDRs. The venn diagrams show high agreement in identifications and intersections consist of zero false positive hits.
+Fig. 4
+Identified crosslinks and experimentally validated FDRs of the different crosslinking search engines using the benchmark dataset by Beveridge and co-workers where synthetic peptides were crosslinked with DSS
+48
+.
+Both MS Annika and xiSearch
+53
+report very good results at around 220 true positive crosslink identifications and experimentally validated FDRs that are very close to the target FDR of 1%. On the other hand, both MaxLynx
+6
+and pLink
+31
+report more true positive crosslinks but at the cost of more false positive hits and higher experimentally validated FDRs of up to 6.52%, already far off the 1% target. Kojak
+29
+,
+30
+, XlinkX
+54
+, and Xolik
+28
+yield very high experimentally validated FDRs of 20.04%, 15.19%, and 55.31% on average, demonstrating that their results have to be considered very carefully in practice. MeroX
+51
+,
+52
+is an outlier with a very distinct result reporting only 46 crosslinks on average but all of them correct. Results were validated for 1% estimated FDR. All numbers are averages from three technical replicates (
+n
+= 3), the number of crosslinks was rounded to the closest integer value. Percentage numbers above the bars denote the average calculated experimentally validated FDR rounded to two decimal places. Error bars denote the standard deviation, in green for true positive crosslinks and in red for false positive crosslinks.
+The dataset by Matzinger and co-workers is more complex, attempting to more closely resemble real crosslinking experiments while still relying on synthetic peptides and therefore also allowing the calculation of an experimentally validatable FDR
+49
+. For this dataset synthetic ribosomal peptides from
+Escherichia coli
+were crosslinked with ADH, an acidic crosslinker primarily reacting with aspartic acid and glutamic acid. The mass spectrometry data consisting of three technical replicates was searched against 171 sequences of the E. coli ribosomal complex which is a database size that is large enough to pose a challenge for crosslinking search engines such as MaxLynx that use an exhaustive search for crosslink identification. Figure
+5
+shows the results achieved by the different crosslinking search engines on this dataset when validating for 1% estimated FDR. Evidently, all search engines are underestimating the actual FDR, reporting more false positive hits than what would be allowed at 1% FDR. For this dataset MS Annika yields the lowest experimentally validated FDR at a mean of 3.92%, identifying on average 89 unique true positive crosslinks and 4 false positive crosslinks, which is arguably the best result for this dataset as all other tools either substantially underestimate the FDR (MaxLynx, pLink, xiSearch, XlinkX, Xolik) or detect a lot less crosslinks (Kojak, MeroX, Xolik). In detail, even though Kojak identifies crosslinks in all three replicates, none pass the 1% estimated FDR threshold resulting in zero identifications for all replicates. MaxLynx reports 10 more true positive hits than MS Annika on average, however at the cost of also 10 additional false positive crosslinks. MeroX identifies only a single false positive crosslink on average but since it overall detects rather low numbers of crosslinks at a mean of 15 true positive hits, the average experimentally validated FDR is still above target at 4.23%. The search engine pLink yields a similar result to MaxLynx reporting 103 true positive and 14 false positive crosslinks on average across the three replicates with an experimentally validated FDR of 11.85%. Performing slightly better than pLink is xiSearch with an average of 120 unique true positive crosslink identifications and a mean experimentally validated FDR of 11.24%, resulting from 15 false positive hits on average. The search engine XlinkX yields 92 true positive identifications and an experimentally FDR of 27.89% on average, more than 25 percentage points off the target FDR of 1%. Lastly, Xolik reports the weakest result also for this dataset, identifying 8 true positive and 47 false positive unique crosslinks on average, severely underestimating the FDR at an average experimentally validated FDR of 71.03% which effectively means that three out of four identified crosslinks are false positive hits. Xolik also shows high variability in number of identified false positives which ranges from 9 in replicate three to 121 in replicate two. It should also be noted here that XlinkX failed to search the first of the three replicates due to a recurring arithmetic overflow error, therefore the presented results for XlinkX are averages from replicate two and three. In Supplementary Fig.
+6
+we again show the intersection and union of results from MS Annika, MaxLynx and pLink for all three replicates including calculated experimentally validated FDRs. Agreement for this dataset is not as high as for the dataset by Beveridge and co-workers, noticeable also in a higher error rate among intersections, yielding up to two false positive hits per replicate that are reported by all three search engines.
+Fig. 5
+Identified crosslinks and experimentally validated FDRs of the different crosslinking search engines using the benchmark dataset by Matzinger and co-workers where synthetic peptides of their acidic library were crosslinked in seperate groups with the crosslinker ADH
+49
+.
+MS Annika reports the lowest experimentally validated FDR at 3.92%, identifying 89 true positive and 4 false positive crosslinks on average. MaxLynx
+6
+, pLink
+31
+and xiSearch
+53
+detect more true positive crosslinks but also severely underestimate FDR, reporting experimentally validated FDRs of more than 10% above the 1% target. XlinkX
+54
+and Xolik
+28
+show the highest experimentally validated FDRs at 27.89% and 71.03% respectively. MeroX
+51
+,
+52
+and Xolik report low numbers of identified true positive crosslinks at an average of 15 and 9 respectively, however MeroX only reports a single false positive on average. None of the crosslinks identified by Kojak
+29
+,
+30
+pass the estimated 1% FDR threshold resulting in zero reported identifications, calculating an experimentally validated FDR is therefore not possible (denoted as “not available/NA” in the figure). Results were validated for 1% estimated FDR. All numbers are averages from three technical replicates (
+n
+= 3) except for XlinkX which failed to search replicate one (
+n
+= 2), the number of crosslinks was rounded to the closest integer value. Percentage numbers above the bars denote the average calculated experimentally validated FDR rounded to two decimal places. Error bars denote the standard deviation, in green for true positive crosslinks and in red for false positive crosslinks.
+Despite the non-exhaustive nature of the MS Annika algorithm for non-cleavable crosslink identification, MS Annika still outperforms other exhaustive approaches in terms of sensitivity such as XlinkX and Xolik. Non-exhaustive approaches always come with the associated risk of potentially missing some crosslink identifications because in contrast to exhaustive strategies they do not consider every possible peptide combination for search. MS Annika can optionally also be run in exhaustive mode which is selectable via a user-definable parameter, however we only recommend this option for small protein databases because of the aformentioned
+n
+-squared complexity. In Supplementary Fig.
+7
+we explore the differences between the exhaustive and non-exhaustive search approach in MS Annika for the dataset by Beveridge and co-workers
+48
+and show that the non-exhaustive approach is arguably better but at least on par in terms of identifications at 1% estimated FDR, yielding 218 true and 3 false crosslinks on average while the exhaustive search reports 215 true and 3 false crosslinks on average. The total, non-validated number of identified crosslinks is vastly different for the two approaches as shown in Supplementary Table
+3
+with 289 target crosslinks and 56 decoy crosslinks on average for the non-exhaustive search and 647 target crosslinks as well as 523 decoy crosslinks on average for the exhaustive search. Even though the total number of non-validated crosslinks is not a good metric for comparing results, the distribution of target and decoy crosslinks gives a possible explanation for the better performance of the non-exhaustive search: while the non-exhaustive search only considers peptides that are likely to be present in a specific mass spectrum, the exhaustive search considers all possible peptides (within constraints of the precursor mass) for crosslink identification which leads to a much higher chance of randomly matching a false positive or decoy hit. Consequently the score cut-off is higher for the exhaustive search to preserve 1% estimated FDR which is reflected in slightly fewer identifications.
+MS Annika unifies high sensitivity, robustness and performance
+In the section MS Annika Accurately Identifies Non-cleavable Crosslinks in Benchmark Datasets we show that MS Annika is at least on par or better than competing crosslink search engines in terms of number of identifications and robustness of FDR estimation. In order to assess the computational performance of MS Annika we compared the time a traditional crosslink search takes against the runtimes of Kojak
+29
+,
+30
+, pLink
+31
+and Xolik
+28
+which were reported to be fast and support protein databases beyond a few thousand proteins, which were not the case for the remaining tools. Runtimes were measured using replicate one of the dataset by Beveridge and co-workers
+48
+as described in the section MS Annika Accurately Identifies Non-cleavable Crosslinks in Benchmark Datasets containing around  ~5200 MS2 spectra, and protein databases of different size with the smallest consisting of 11 proteins and the largest of the whole human SwissProt proteome (
+n
+= 20 433). Every search was repeated five times consecutively and the average runtime was used for comparison. Figure
+6
+demonstrates that MS Annika outperforms both pLink and Kojak, taking second and third place for both the mid-sized and large protein database with the GPU- and CPU-based versions, respectively. For the smallest database MS Annika and pLink are both outperformed by Kojak and Xolik which is likely due to the different input formats, while MS Annika and pLink both read mass spectra in RAW format, Kojak and Xolik only support mzML input. Xolik outperforms all other crosslink search engines for all database sizes, taking an average of 2 min 25 s for the human proteome-wide search while MS Annika takes 3 min 46 s on average using the GPU-based approach or 4 min 6 s using the CPU-based approach. Slightly slower than MS Annika is pLink at 4 min 18 s on average for a full proteome-wide search. Lastly, Kojak takes a total of 20 min 29 s on average, way above the mean runtime of the other tested tools. Supplementary Fig.
+8
+shows a zoomed in version of Fig.
+6
+excluding Kojak for a more detailed view. Moreover, Supplementary Fig.
+9
+depicts a comparison between different MS Annika approaches. The specific runtimes of all tools are listed in Supplementary Table
+4
+and hardware specification of the test system are given Supplementary Table
+5
+.
+Fig. 6
+Comparison of runtimes of the different crosslink search engines capable of processing large proteome-wide studies.
+Kojak
+29
+,
+30
+, MS Annika, pLink
+31
+and Xolik
+28
+were used to search replicate one of the dataset by Beveridge and co-workers
+48
+employing protein databases of increasing size up to human proteome scale. Xolik outperforms all other tools in search speed, taking first place regardless of database size. MS Annika is generally slightly faster than pLink and outperforms Kojak for medium and large sized database searches. Kojak is the slowest of the crosslink search engines for large-scale searches. All depicted values are averages from five consecutively repeated runs (
+n
+= 5). Error bars denote the standard deviation.
+Diagnostic ions are not sufficient for crosslink spectrum detection
+Steigenberger and co-workers suggest the usage of diagnostic ions for distinguishing mass spectra that contain crosslinked species from mass spectra that do not contain them
+55
+. Due to the complexity of non-cleavable crosslink searches it would be highly beneficial to be able to filter out mass spectra that do not contain crosslinked peptides which therefore would avoid spending computational resources on searching a spectrum with no valid result. We investigated the usage of diagnostic ions for our non-cleavable search algorithm and again used the dataset by Beveridge and co-workers for reference
+48
+where peptides were crosslinked with DSS
+21
+. However, contrary to the results reported in the publication by Steigenberger and co-workers, we observed a severe drop in true positive crosslink identifications when only searching mass spectra that contained at least one diagnostic ion as shown in Supplementary Fig.
+10
+. On average across the three replicates, 118 less unique true positive crosslinks are identified at 1% estimated FDR when searching only mass spectra with at least one diagnostic ion compared to searching all mass spectra. This constitutes an overall worse result as the number of false positive identifications does not change, therefore yielding a higher experimentally validated FDR of 2.62%. Furthermore, only about 19.5% of mass spectra contain diagnostic ions (exact numbers given in Supplementary Table
+6
+), substantially speeding up the search process; however, at a cost in result quality which we do not deem worth it. Nevertheless, if the used non-cleavable crosslinker gives raise to diagnostic ions at a sufficient frequency that allows efficient distinction between crosslinked and non-crosslinked spectra, diagnostic ions can be specified in MS Annika to be considered for search, but by default MS Annika searches all MS2 spectra.
+Validating MS Annika results with xiFDR boosts identifications and provides better FDR estimation
+Validation of crosslinking results has been a widely discussed topic in the crosslinking community ever since its inception, with no clear consensus on how to perform proper validation. Most crosslinking search engines provide their own validation tools that range from simple peptide-spectrum-match (PSM) validation, as for example in pLink
+31
+, to more refined approaches that can even validate on protein–protein interaction level, as in xiSearch
+53
+with xiFDR
+24
+. MS Annika follows a very strict validation approach where results can be either validated at crosslink-spectrum-match (CSM) or crosslink level, both using a target-decoy approach
+5
+. In the section MS Annika Accurately Identifies Non-cleavable Crosslinks in Benchmark Datasets we show that this strategy works very well for estimating FDR, however, for larger studies and protein databases a more sophisticated approach might be beneficial to improve MS Annika results. In that regard we explored integrating the tool xiFDR
+24
+into our crosslink identification workflow which handles validation of MS Annika results. xiFDR allows a more nuanced control over validation and is able to boost the number of crosslink identifications by accounting for different crosslink or protein groups while keeping the overall FDR constant. We show the applicability of xiFDR with MS Annika using a dataset by Lenz and co-workers that allows calculation of an experimentally validated FDR for inter crosslinks
+56
+. The dataset consists of over 2.1 million mass spectra of proteins from E. coli which were crosslinked with BS3
+22
+. Moreover, it is known which proteins are able to interact and therefore inter crosslinks can be assessed for their validity depending on if they form a possible protein–protein interaction or not. Mass spectra were searched with MS Annika against the full E. coli proteome (
+n
+= 4350) as provided by the authors of the dataset via the ProteomeXchange
+57
+partner repository JPOSTrepo
+58
+with accession codes PXD019120 and JPST000845. Supplementary Fig.
+11
+depicts a comparison of results using either MS Annika with the built-in FDR validation or MS Annika with validation by xiFDR: using xiFDR for crosslink validation not only boosts the total number of identified crosslinks from 5134 to 6594 but also lowers the experimentally validated FDR for inter crosslinks from 3.1% to 0.42%, reporting only three crosslinks that constitute a protein–protein interaction that is not valid. This demonstrates the advantage of using more sophisticated validation approaches like xiFDR for larger studies and protein databases, enhancing results by reporting more crosslinks with less false positive hits.
+Discussion
+The algorithm presented here is an efficient and robust solution for the identification of non-cleavable crosslinks in up to proteome-wide studies that runs smoothly on commodity hardware. Even though Kojak
+29
+,
+30
+, pLink
+31
+and Xolik
+28
+are technically also able to search large proteome-wide experiments, our results show that these tools suffer from low sensitivity or underestimation of FDR, reporting substantially more false positive identifications than permissible - even for less complex samples. Moreover, it should be noted that all the other search engines evaluated within this study are not capable of analysing crosslinking experiments that need to consider protein databases of more than a couple of thousand proteins. In contrast, our algorithm suffers none of these drawbacks and shows high numbers of crosslink identifications while keeping FDR and search times low. We postulate that this will not only enable researchers to perform large-scale experiments with non-cleavable crosslinkers that were previously unfeasible, but also allows re-analysis of the vast amount of already published crosslinking data with bigger protein databases, potentially uncovering new protein interactions and biological insights.
+Furthermore, the implemented approach of using sparse matrix multiplication for candidate selection is a transferable solution for large search space problems where theoretical ions need to be matched against experimental mass spectra which occur in other areas of proteomics
+59
+, as well as metabolomics
+60
+and lipidomics
+61
+. The design of a scoring function purely based on sparse matrix operations proved to be highly efficient in both time and memory complexity which causes it to be a compelling method for large problems. Additionally, the memory requirements of sparse matrices do not grow with their dimensions but rather with the number of non-zero elements, in theory enabling scoring functions of almost infinite precision as binning windows can be made arbitrarily small. Another advantage are the on-going developments and optimisations of sparse matrix multiplication
+62
+potentially making this approach even more attractive in the future. Finally, we propose that new and more sophisticated scoring functions for database search could be built using sparse tensors such as implemented in TensorFlow
+63
+,
+64
+which are similarly optimised but would allow the incorporation of additional features like peak intensity for scoring, effectively improving score quality and better reflecting how good a match between a peptide and spectrum is.
+Even though we did not find the inclusion of diagnostic ions to improve results, their presence could potentially be an important feature for rescoring of crosslinking results. Rescoring of database search engine results has already been widely adopted in standard bottom-up proteomics to improve identifications
+65
+–
+67
+and has been an active field of research for crosslinking proteomics as well
+68
+,
+69
+. The addition of observed diagnostic ions as complimentary features could be a way to further increase confidence of crosslink identifications.
+Moreover, to show the applicability of our non-cleavable search algorithm, we crosslinked
+C. elegans
+nuclei and performed a proteome-wide search on the measured mass spectrometry data. The identified crosslinks allowed us to conduct a comprehensive structural analysis of the Box C/D RNP complex by combining the crosslinking results with structural modelling: we could confirm the interaction of nol-58 with nol-56 and fib-1 as well as the interaction between nol-56 and M28.5 which facilitate the formation of a stable and functional RNP complex. The AlphaFold2
+42
+–
+45
+predicted three-dimensional structure showed clear violation of PPI links exceeding the maximum allowed crosslink distance of DSG. We refined the structure with AlphaLink2
+46
+,
+47
+incorporating the identified crosslink restraints which resulted in a better structural model, both in terms of higher ipTM score as well as in reduction in the number of crosslink distance violations. Despite the refinement, two crosslinks still exceeded the distance limit due to the inherent symmetry of the complex and limitations in the number of complex members for structure prediction. Nonetheless, our structural analysis offers a detailed and improved view of the Box C/D RNP complex in
+C. elegans
+.
+Methods
+Implementation of a non-cleavabe search algorithm in MS Annika
+The general idea of the non-cleavable search algorithm in MS Annika is a two-step approach: first, identify one of the two peptides (from hereon denoted as alpha peptide), and second, identify the complementary peptide (from hereon denoted as beta peptide) that makes up the complete crosslink. The second step is a trivial problem as the mass of the beta peptide can be inferred from the precursor mass of the spectrum, the mass of the alpha peptide, and the mass of the crosslinker as shown in Equation (
+1
+).
+1
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$Mas{s}_{beta}=Mas{s}_{precursor}-Mas{s}_{alpha}-Mas{s}_{crosslinker}$$\end{document}
+M
+a
+s
+s
+b
+e
+t
+a
+=
+M
+a
+s
+s
+p
+r
+e
+c
+u
+r
+s
+o
+r
+−
+M
+a
+s
+s
+a
+l
+p
+h
+a
+−
+M
+a
+s
+s
+c
+r
+o
+s
+s
+l
+i
+n
+k
+e
+r
+The identification of the alpha peptide is more challenging: as there is no information about the mass of the peptide available, all peptides in the database have to be considered as candidates for each spectrum. For large protein databases the number of candidate peptides easily reaches several millions, especially when decoys have to be considered. Therefore, a search algorithm is needed that is able to efficiently score several million peptides in a reasonable time. Over the last two decades computational vector and matrix operations have seen continuous improvement, ultimately giving rise to the now widely spread use of artificial neural networks and similar machine learning approaches in all areas of life which in turn further drove optimisation
+70
+. The time efficiency of vector and matrix operations triggered us to design a search approach that is purely based on vector and matrix multiplications, however there was one problem that still remained: with potentially millions of peptide candidates the encoding matrix would grow to an enormous size that would be impossible to store in memory. Nonetheless, since most of the elements in the encoding matrix are zero, we explored the usage of sparse matrices which drastically reduced the memory footprint and allowed us to save complete encoded databases of even proteome-wide studies in memory. In the final implementation peptides are encoded as sparse vectors and mass spectra are either encoded as dense or sparse vectors, depending on the algorithm, which is a user-definable parameter.
+The idea of encoding mass spectra as vectors or matrices has been previously explored for fast calculation of the cross-correlation score in Comet
+71
+,
+72
+or for spectral library search using an approximate nearest neighbour approach in ANN-SOLO
+73
+. Comet encodes mass spectra as sparse matrices by binning peaks in very small
+m/z
+windows where the matrix index corresponds to the
+m/z
+window and the matrix value to the observed intensity. Similarly, ANN-SOLO bins peaks into vectors also applying very small
+m/z
+windows where the vector index indicates the
+m/z
+window and the vector value the observed intensity. Moreover, ANN-SOLO also hashes the encoding vectors to reduce the vector dimensions and speed up the approximate nearest neighbour search. In MS Annika we employ an analogous approach, however with two significant changes: firstly, peaks are modelled as Gaussian distributions with a mean corresponding to the peak’s
+m/z
+value and a standard deviation equal to
+tolerance
+/3, where tolerance is user-definable parameter and has to be given in Dalton. The Gaussian peaks are then binned into vector indices using 0.01
+m/z
+windows. Secondly, instead of using the peak intensity for the values of the vector, the values are given by the probability density function of the Gaussian distribution of each peak as described in Eq. (
+2
+)–(
+4
+). In Eq. (
+2
+) the parameter
+y
+denotes the vector value and
+x
+the vector index while
+μ
+and
+σ
+are given in Eqs. (
+3
+) and (
+4
+), respectively.
+2
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$y=\frac{1}{\sigma \sqrt{2\pi }}{e}^{-\frac{1}{2}{(\frac{x-\mu }{\sigma })}^{2}}$$\end{document}
+y
+=
+1
+σ
+2
+π
+e
+−
+1
+2
+(
+x
+−
+μ
+σ
+)
+2
+where
+3
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\mu = {m/z}\,{{\rm{value}}}\, {{\rm{of}}}\, {{\rm{closest}}}\, {{\rm{peak}}} * 100[{{\rm{rounded}}}\,{{\rm{to}}}\,{{\rm{closest}}}\,{{\rm{integer}}}]$$\end{document}
+μ
+=
+m
+/
+z
+value
+of
+closest
+peak
+*
+100
+[
+rounded
+to
+closest
+integer
+]
+4
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\sigma =\frac{{{tolerance}}}{3}* 100[{{\rm{rounded}}}\,{{\rm{to}}}\,{{\rm{closest}}}\,{{\rm{integer}}}]$$\end{document}
+σ
+=
+t
+o
+l
+e
+r
+a
+n
+c
+e
+3
+*
+100
+[
+rounded
+to
+closest
+integer
+]
+The idea is that experimentally measured peaks have to be considered with a certain tolerance to account for instrument errors and we postulate that errors are normally distributed with smaller errors being more likely than larger errors which is modelled by the gaussian distribution. Choosing a standard deviation of
+tolerance
+/3 denotes that more than 99% of the errors are within the instrument’s tolerance. Summarising, every mass spectrum can be encoded as a single sparse float vector and since we only consider peaks up to 5000
+m/z
+the dimensionality of such a vector is 500,000. Supplementary Section
+1
+and Supplementary Fig.
+12
+describe the spectrum encoding in more detail including pseudo-code and graphical explanation.
+MS Annika goes one step further by also representing the protein database that is used for search as a sparse matrix: after in silico digestion of the proteins into peptides, all
+m/z
+values of the theoretical ions for each peptide are calculated and each peptide is encoded as a vector by binning the theoretical ion
+m/z
+values into vector indices using 0.01
+m/z
+windows. The vector values for the given indices are either all one or one divided by the peptide’s length if the user wishes to normalise for peptide length. As a result each peptide in the database is represented as a sparse float vector with 500,000 dimensions, as again we do not consider theoretical ions beyond 5000
+m/z
+. The whole database can therefore be encoded as an
+M
+x 500,000 sparse float matrix where M is the number of peptides in the database. More in-depth examples illustrating the peptide encoding are given in Supplementary Section
+1
+and Supplementary Fig.
+13
+.
+MS Annika uses this representation to calculate an approximate score for each peptide for a given mass spectrum to find likely candidates for crosslink identification. The approximate score for a peptide
+p
+given a mass spectrum
+s
+is calculated as shown in Equation (
+5
+): in brief the score is the dot product of the encoding vector of
+p
+and the encoding vector of
+s
+. This score can be interpreted as a measure of correlation between the ion series of
+p
+and the peaks of the experimental mass spectrum
+s
+. In the simplest case, when the Gaussian peak modelling for the spectrum encoding is disabled, the score represents exactly the number of matched peaks between
+p
+and
+s
+. Enabling Gaussian peak modelling gives a deviation of this score, where higher scores denote that peaks were matched with higher precision. Optionally MS Annika normalises this score by peptide length, as described in the peptide vector encoding.
+5
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{Score}}}(p,s)=\overrightarrow{p}\cdot \overrightarrow{s}$$\end{document}
+Score
+(
+p
+,
+s
+)
+=
+p
+→
+⋅
+s
+→
+This approach can be easily extended to score all peptides against one or more given mass spectra by using all peptide encoding vectors (therefore a matrix) where the problem then can be denoted as simple matrix multiplication. In order to calculate the scores for all peptides in the database for all mass spectra, Equation (
+5
+) can be rewritten as in Equation (
+6
+). Essentially
+p
+and
+s
+become matrices instead of vectors,
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\overrightarrow{P}$$\end{document}
+P
+→
+is the sparse encoding matrix of all peptides
+P
+in the database while
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\overrightarrow{S}$$\end{document}
+S
+→
+is the encoding matrix of all mass spectra
+S
+.
+S
+c
+o
+r
+e
+s
+(
+P
+,
+S
+) becomes an
+M
+x
+N
+-dimensional matrix of all scores
+S
+c
+o
+r
+e
+(
+p
+,
+s
+) where
+M
+is the number of peptides in the database and
+N
+is the number of mass spectra.
+6
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$${{\rm{Scores}}}(P,S)=\overrightarrow{P}\cdot \overrightarrow{S}$$\end{document}
+Scores
+(
+P
+,
+S
+)
+=
+P
+→
+⋅
+S
+→
+In total MS Annika implements 11 different algorithms to calculate Eq. (
+6
+) out of which eight run on the CPU using the linear algebra library Eigen
+74
+which leverages modern CPU instruction sets for fast matrix operations and three run on the GPU using Nvidia CUDA cuSPARSE. All algorithms produce identical results (with the exception of possible small deviations due to floating point arithmetic inaccuracies) but may differ in performance. Table
+3
+lists all algorithms available in MS Annika and Supplementary Figs.
+14
+and
+15
+show an overview of the performance for each algorithm. The choice of algorithm is up to the user and depends on the available hardware, by default MS Annika uses algorithm
+i32CPU_DM
+which works on all systems and which was used for all results presented in this study. All algorithms are implemented in the C++ programming language.
+Table 3
+Overview of the different matrix multiplication algorithms implemented and available in the MS Annika non-cleavable search
+Name
+Compute type
+Peptide encoding
+Spectrum encoding
+Device
+f32CPU_SV
+32-bit Float
+Sparse Matrix
+Sparse Vector
+CPU
+i32CPU_SV
+32-bit Integer
+Sparse Matrix
+Sparse Vector
+CPU
+f32CPU_SM
+32-bit Float
+Sparse Matrix
+Sparse Matrix
+CPU
+i32CPU_SM
+32-bit Integer
+Sparse Matrix
+Sparse Matrix
+CPU
+f32CPU_DV
+32-bit Float
+Sparse Matrix
+Dense Vector
+CPU
+i32CPU_DV
+32-bit Integer
+Sparse Matrix
+Dense Vector
+CPU
+f32CPU_DM
+32-bit Float
+Sparse Matrix
+Dense Matrix
+CPU
+i32CPU_DM
+32-bit Integer
+Sparse Matrix
+Dense Matrix
+CPU
+f32GPU_DV
+32-bit Float
+Sparse Matrix
+Dense Vector
+GPU
+f32GPU_DM
+32-bit Float
+Sparse Matrix
+Dense Matrix
+GPU
+f32GPU_SM
+32-bit Float
+Sparse Matrix
+Sparse Matrix
+GPU
+For algorithms using a vector-based spectrum encoding the multiplication is repeated
+n
+times, where
+n
+is the number of mass spectra. Usually it is impossible to score all mass spectra in a single computation as the resulting matrix would not fit in memory, therefore matrix-based spectrum encoding algorithms batch the computation using batches of 100 mass spectra per computation. For integer compute types the original float values are multiplied by 1000 and then rounded to the closest integer.
+For optimal computational performance MS Annika by default scores all peptides against multiple mass spectra at once because sparse matrix * matrix multiplication is generally faster than multiple sparse matrix * vector multiplications (as presented in Supplementary Fig.
+15
+). Using sparse matrix multiplication for approximating scores is extremely efficient both in terms of computational speed as well as in memory consumption: calculating the approximate scores for all peptides of the human SwissProt proteome (including decoys,  ~ 4.4 million peptides) for one spectrum takes less than a second on a quad core mobile CPU while storing the complete sparse matrix of peptide candidates requires less than 8 GB of memory, allowing for proteome-wide searches on normal office laptops and other standard commodity hardware.
+Subsequently, when the computation of these approximate scores for all peptides for a given mass spectrum is finished, the scores are used to take the top
+N
+peptide candidates to consider for crosslink identification, where
+N
+is user-definable parameter which by default is 100. MS Annika generates every possible peptidoform (peptides with different crosslinker localisations and other possible post-translational-modifications) for each of the top peptide candidates and our in-house developed peptide search engine MS Amanda
+67
+,
+75
+,
+76
+is used to calculate a more sophisticated score for each peptidoform. Even though multi-step search approaches are quite common in the field of computational proteomics and especially in crosslinking search engines
+77
+, it has been argued that multi-step approaches might hinder robust FDR estimation as decoy peptides might not pass at the same rate as target peptides
+78
+. In MS Annika this problem is avoided as candidate peptides are not directly provided to MS Amanda but rather only their mass is given for identification. This ensures that even at the second step where peptidoforms are accurately scored, the number of potential decoy candidates is the same as the number of potential target candidates. The result of scoring with MS Amanda is a list of peptidoform candidates with a score highly reflective of match quality. MS Annika takes the top
+M
+peptidoforms of this list, where
+M
+again is a user-definable parameter and by default 10, and considers them to be possible alpha peptides for crosslink search. Furthermore, MS Annika then tries to identify complementary beta peptides that would make up a complete crosslink. As noted above in Equation (
+1
+), this is a trivial problem as the mass of the beta peptide can be easily calculated by subtracting the mass of the alpha peptide and the mass of the crosslinker from the precursor of the mass spectrum. Using the calculated mass the beta peptide is again identified and scored with MS Amanda.
+Finally, if any beta peptides are identified, crosslink-spectrum-matches (CSMs) are constructed for any combination of alpha and beta peptides that match the total precursor mass of the mass spectrum. The score of the CSM is the minimum score of the two peptides - this is identical to the cleavable search that we published previously
+5
+. The remaining steps of the search are all equal to the cleavable search: the CSM with the highest score is reported and used for validation, multiple CSMs denoting the same crosslink are grouped and the score of the crosslink is the maximum score of all CSMs.
+CSMs and crosslinks are validated using a transparent target-decoy approach as described in the original MS Annika publication
+5
+. In short, target-target hits are considered as targets and target-decoy, decoy-target and decoy-decoy hits are considered as decoys. The false discovery rate (FDR) is then estimated as given in Eq. (
+7
+) where
+#decoys
+is the number of decoy identifications and
+#targets
+the number of target identifications.
+7
+\documentclass[12pt]{minimal}
+				\usepackage{amsmath}
+				\usepackage{wasysym} 
+				\usepackage{amsfonts} 
+				\usepackage{amssymb} 
+				\usepackage{amsbsy}
+				\usepackage{mathrsfs}
+				\usepackage{upgreek}
+				\setlength{\oddsidemargin}{-69pt}
+				\begin{document}$$\widehat{FDR}=\frac{\#decoys}{\#targets}$$\end{document}
+F
+D
+R
+^
+=
+#
+d
+e
+c
+o
+y
+s
+#
+t
+a
+r
+g
+e
+t
+s
+In order to retrieve identifications that satisfy a specific FDR threshold, identifications are sorted by score and the lowest observed score is initially used as a cut-off for FDR estimation. Subsequently, all identifications that pass the score cut-off are used to calculate the FDR as given in Equation (
+7
+) and should the estimated FDR value be equal or below the desired FDR threshold, all eligible identifications are returned. If the estimated FDR value is higher than the desired threshold, the score cut-off is increased to the next greater score and this process is repeated until the estimated FDR value is equal or below the desired FDR threshold, or no identifications are left that pass the score cut-off, in which case no identifications are reported. MS Annika estimates FDR for both CSMs and crosslinks.
+Nuclei isolation from
+C. elegans
+Worms were maintained at 20 °C on Nematode Growth Medium (NGM) agar plates seeded with
+Escherichia coli
+OP50
+79
+. Hermaphrodites were used in all experiments unless otherwise stated. The strain
+M01E11.3(jf92[M01E11.3::unc-119(+)])I; jfsi38[gfp::rmh-1;cb-unc-119(+)]II; unc-119(ed3)III;vieSi146(pAD860;pCFJ151 ppie1::SV40::vhh4GFP4::TurboID::tbb-2UTR; cb unc-119(+))IV
+(available upon request) was used for nuclei isolation and crosslinking experiments.
+Worm nuclei extraction was performed as previously described
+79
+,
+80
+. For this, one-sixth of a starved 60 mm plate was transferred onto a 100 mm plate seeded with freshly grown OP50 E. coli and worms were grown at 20 °C for 3 days. Worms were then collected in M9 buffer and washed at least three times (sedimented by gravity at room temperature) to remove most of the OP50 bacteria. The final worm pellet was frozen at  −80 °C in 3 ml NP buffer (10 mM HEPES-KOH pH 7.6, 1 mM EGTA, 10 mM KCl, 1.5 mM MgCl
+2
+, 0.25 mM sucrose, 1 mM PMSF) containing Protease Inhibitor Cocktail (Roche). A 1 ml worm pellet obtained from 30–40 OP50-seeded 100 mm NGM plates was used for fractionation. To isolate the nuclei, worms were disrupted using a cooled metal Wheaton tissue grinder and the suspension was filtered using first a 100
+μ
+m mesh and then a 40
+μ
+m mesh. The filtered suspension was clarified at 300 g for 2 min at 4 °C, and the supernatant from this step, containing the nuclei, was centrifuged at 2500
+g
+for 10 min at 4 °C. Now this supernatant contained the cytosolic fraction and the germline nuclei in the pellet.
+Crosslinking procedure
+Germline nuclei were resuspended in crosslinking buffer (50mM HEPES-KOH pH 7.6) and crosslinked using disuccinimidyl glutarate (DSG, Cat-no.: 20593 Thermo Scientific) at a concentration of 3 mM for 45 min on ice. The crosslink reaction was quenched by adding 100 mM Tris (pH 7.4) and incubating it for 5 min at room temperature.
+In-solution digest
+The isolated and crosslinked nuclei were incubated in guanidine hydrochloride with a final concentration of 8 M and 1% ProteaseMax (Cat-no.: V2071, Promega). The solution was sonicated for 30 s at an amplitude of 80% with a 0.5-s cycle, followed by chilling on ice; this process was repeated three times. Proteins were reduced using 10 mM DTT, following a 30-min incubation period at 50 °C and alkylated using 50 mM IAA for 30 min at room temperature in the dark. The sample was diluted to 2 M guanidine hydrochloride using 50 mM HEPES, pH 7.3. Subsequently, 1 mM MgCl2 and 25 U/L Benzonase were added to digest DNA and RNA, and the mixture was incubated for 1 hour at 37 °C. Afterwards, LysC was added to a final concentration of 3 ng/
+μ
+L, and the mixture was incubated for another hour at 37 °C. Trypsin was added at a ratio of 1:100 (enzyme to protein) for final digestion and the sample was incubated overnight at 37 °C. Finally, the sample was acidified using 10% TFA to reach a final concentration of 0.5% and hence remove the ProteaseMax from the sample by precipitation.
+Digested peptides were desalted using C18 columns (Sep-Pak C18 1 cc Vac Cartridges, waters). The column material was activated by flushing the column once with methanol, following equilibration using 0.1% trifluoroacetic acid (TFA) until all traces of MeOH were washed away. The sample, adjusted to a pH of 3, was then loaded onto the column. Following sample loading, the column was washed three times with 0.1% TFA and subsequently eluted using 80% acetonitrile (ACN) in 0.1% TFA. The ACN content in the eluate was removed using a SpeedVac, and the sample was lyophilised.
+Size exclusion fractionation
+Purified samples were reconstituted in 0.1% TFA to a final concentration of 3
+μ
+g/
+μ
+L. 60
+μ
+g of peptides were injected per sample and condition on a Dionex UltiMate 3000 HPLC system (Thermo Fisher Scientific) consisting of autosampler, SD-pumps, and UV detectors. Fractions had to be collected manually. Peptides were separated on a TSKgel SuperSW2000 column (4.6 mm ID x 30 cm L, P/N: 0018674, Tosoh Bioscience) at a flow rate of 300
+μ
+L min-1 using the SEC mobile phase (30% ACN in 0.1% TFA) and an isocratic gradient. The separation was monitored by UV absorption at 214 nm. half-a-minute fractions (150
+μ
+l) were collected into 0.6
+μ
+L low-bind reaction tubes over a separation window of 6 min. For analysis by liquid chromatography (LC)-MS/MS, fractions of interest (retention times 6-12 min) were removed and evaporated to dryness.
+Mass spectrometry analysis
+LC-MS/MS analysis was performed using an Orbitrap Exploris 480 with Field asymmetric ion mobility spectrometry (FAIMS) interface (Thermo Fisher Scientific, Waltham, Massachusetts, United States) coupled with a Vanquish Neo HPLC system (Thermo Fisher Scientific, Waltham, Massachusetts, United States). A trap column PepMap C18 (5 mm × 300
+μ
+m ID, 5
+μ
+m particles, 100 Å pore size) (Thermo Fisher Scientific, Waltham, Massachusetts, United States) and an analytical column PepMap C18 (500 mm × 75
+μ
+m ID, 2
+μ
+m, 100 Å) (Thermo Fisher Scientific, Waltham, Massachusetts, United States) were employed for separation. The column temperature was set to 50 °C. Sample loading was performed using 0.1% trifluoroacetic acid in water with a flow rate of 25
+μ
+L/min for 3 min. Mobile phases used for separation were as follows: (A) 0.1% formic acid (FA) in water; (B) 80% acetonitrile, 0.1% FA in water. Peptides were eluted using a flow rate of 230 nL/min, with the following gradient: from 2% to 37% phase B in 80 min, 37% to 47% phase B in 7 min, from 47% to 95% phase B in 3 min, followed by a washing step at 95% for 5 min, and re-equilibration of the column. FAIMS separation was performed with the following settings: inner and outer electrode temperatures were 100 °C, FAIMS carrier gas flow was 4.2 L/min, compensation voltages (CVs) of  −50,  −60, and  −70 V were used in a stepwise mode during the analysis. The mass spectrometer was operated in a data-dependent mode with cycle time 2 s, using the following full scan parameters:
+m/z
+range 350–1600, nominal resolution of 120,000, with an automated gain control (AGC) target set to standard, and 90 ms maximum injection time. For higher-energy collision-induced dissociation (HCD) MS/MS scans, a stepped normalised collision energy (NCE) of 25%; 27%; 33% and MS2 resolution of 30,000 was used. Precursor ions were isolated in a 2 Th window with no offset and accumulated for a maximum of 70 ms or until the AGC target of 200% was reached. Precursors of charge states from 2+ to 6+ were scheduled for fragmentation. Previously targeted precursors were dynamically excluded from fragmentation for 15 s. The sample load was 500 ng. Detailed parameters can be found in each raw file under the instrument method section.
+Construction of the filtered
+C. elegans
+protein database
+In order to study the influence of protein database size on the non-cleavable search in MS Annika we used two different databases for crosslink identification: (1) the full
+C. elegans
+proteome and (2) a filtered proteome only containing the most abundant proteins found in a preliminary linear search. The filtered proteome was constructed as follows: mass spectrometry RAW files were loaded in Proteome Discoverer 3.1 (version 3.1.0.638) and mass spectra were deisotoped and charge deconvoluted with the IMP MS2 Spectrum Processor node. Mass spectra were then searched with MS Amanda 3.0
+67
+,
+75
+,
+76
+(version 3.1.21.532) using the full
+C. elegans
+reference proteome (
+n
+= 26 695, UniProt Proteome ID UP000001940, retrieved 15. March 2024). The digestion enzyme was set to trypsin with a maximum of 3 missed cleavages allowed. The minimum peptide length was set to 5 and the maximum peptide length to 30 amino acids. Precursor mass tolerance was set to 5 ppm and fragment mass tolerance to 10 ppm. Carbamidomethylation of cysteine was considered as a fixed modification and oxidation of methionine, phosphorylation of serine, threonine and tyrosine, deamidation of asparagine and glutamine, carbamylation of methionine, acetylation of the protein n-terminus, as well as modification of lysine by the monolink forms of DSG were specified as possible variable modifications. Results were validated with Percolator
+81
+(version 3.05.0). The filtered protein database was then constructed by selecting proteins that had more than two high-confidence (1% FDR) target or decoy PSMs associated in at least one of the three biological replicates. The final filtered protein database was exported to fasta format and consisted of 3266 proteins. Construction of the database was done with an in-house developed Python script using biopython
+82
+.
+Crosslink identification and validation of
+C. elegans
+Mass spectrometry RAW files were loaded in Proteome Discoverer 3.1 (version 3.1.0.638) and searched with our standard crosslink identification workflow for large studies: mass spectra were deisotoped with the IMP MS2 Spectrum Processor node and then searched for linear and monolinked peptides with MS Amanda 3.0
+67
+,
+75
+,
+76
+(version 3.1.21.532) using either the full
+C. elegans
+reference proteome (
+n
+= 26 695, UniProt Proteome ID UP000001940, retrieved 15. March 2024) or a filtered version as described in the section Construction of the Filtered C. elegans Protein Database. Trypsin was specified as the digesting enzyme and the maximum number of allowed missed cleavages was set to 3. The minimum peptide length was again set to 5 and the maximum peptide length to 30 amino acids. For identification the precursor mass tolerance was set to 5 ppm and the fragment mass tolerance for matching was set to 10 ppm. Carbamidomethylation of cysteine was defined as a fixed modification and oxidation of methionine, phosphorylation of serine, threonine and tyrosine, deamidation of asparagine and glutamine, carbamylation of methionine, acetylation of the protein n-terminus, as well as modification of lysine by the monolink forms of DSG were considered as variable modifications. After linear and monolinked peptide identification, results were validated with a standard target-decoy approach and any mass spectrum with a high-confidence PSM (1% FDR) was filtered out and not considered for crosslink search. Crosslinks were identified with MS Annika 3.0 (version 3.0.1) using the non-cleavable search approach with the same protein database as in MS Amanda. The digestion enzyme was again set to trypsin with a maximum of 3 missed cleavages. For crosslinked peptides the minimum considered peptide length was again 5 amino acids and the maximum 30 amino acids. Again a precursor mass tolerance of 5 ppm and fragment mass tolerance of 10 ppm were used. The crosslinker parameter was set to DSG with allowed reactions to lysine and the protein n-terminus. Carbamidomethylation of cysteine was set as a fixed modification and oxidation of methionine as a variable modification. The top 2 alpha peptides were considered for CSM creation. Finally, after search, MS Annika CSMs were exported to xiFDR
+24
+format using a newly developed MS Annika to xiFDR exporter script and validated with xiFDR (version 2.2.1) using 1% crosslink FDR with boosting enabled. The PPI network was created using inter crosslinks that satisfied 1% PPI FDR with “between” boosting enabled and visualisation was done in xiView
+41
+. Supplementary Data
+2
+gives a summary of all search and validation parameters.
+AlphaFold2 Multimer screening
+AlphaFold2 Multimer
+42
+–
+45
+was used to predict interactions between nol-58 and 29 proteins putative nol-58 interactors based on known interactions extracted from the literature. We employed a custom script to run pairwise predictions on a local CPU and GPU cluster, using MMseqs (git@92deb92) for local Multiple Sequence Alignment (MSA) creation and colabfold (git@7227d4c) for structure prediction with 5 models per prediction and omitting structure relaxation. Predictions with an average iPTM score of  > 0.6 were considered putative hits and diagnostic plots (PAE plot, pLDDT plot and sequence coverage) as well as the generated structures were manually inspected. After selecting the top 5 hits, the prediction of the complex was performed by running pairwise comparisons of nol-58, NEDG-01330, fib-1 comprised in one fasta as chain A, chain B and chain C respectively against M28.5 and nol-56 in a second fasta. The crosslink restrains from the crosslinking experiment were plotted onto the Rank 1 structure (ipTM 0.725). Diagnostic plots for this complex prediction like PAE plot, pLDDT plot and sequence coverage are shown in Supplementary Fig. 16.
+AlphaLink2 structure refinement
+The AlphaLink2 structure refinement was performed as described in Stahl et al.
+47
+with default settings and following the instructions for container implementation on a cluster system on GitHub (
+https://github.com/lhatsk/AlphaLink
+and
+https://github.com/Rappsilber-Laboratory/AlphaLink2
+). In short, extracted from Stahl et al., OpenFold was enhanced by adding a crosslink embedding layer to map contact maps or distograms into the 128-dimensional z-space of AlphaFold2/OpenFold, integrated into the pair representation (z), along with a group embedding layer for ambiguous crosslinks. MSAs were randomly subsampled each epoch to achieve N
+e
+f
+f
+between 1 and 25, reflecting non-redundant sequences below 80% identity. Using AlphaFold2 2.0 weights, the network was refined on 13,000 proteins from the trRosetta training set with simulated crosslinking data, using OpenFold v0.1.0 and model_5_ptm. UniRef90 v2020_01, MGnify v2018_12, Uniclust30 v2018_08, BFD, PDB (May 2020), and PDB70 (May 2020) were used to mimic CASP14 settings. For CAMEO, 45 targets released after AlphaFold2 were considered, excluding those with TM scores above 0.8. Network weights were downloaded from Zenodo (
+https://zenodo.org/records/8007238
+). The “AlphaLink-Multimer_SDA_v3.pt” parameter file was used for all predictions.
+Workflow for the analysis of the benchmark dataset by Beveridge and co-workers
+Data was retrieved from ProteomeXchange
+57
+via the PRIDE partner repository
+83
+with identifier PXD014337. Detailed information about the data can be found in the respective publication by Beveridge and co-workers
+48
+. In short, Beveridge and co-workers created a synthetic peptide library consisting of 95 peptides from
+Streptococcus pyogenes
+Cas9 that were divided into 12 groups and crosslinked within their groups using the crosslinker DSS
+21
+. Importantly, the premise is that any identified crosslink that is composed of two peptides of different groups or non-synthesised peptides is a false positive, allowing the computation of an experimentally validated FDR and comparison to the FDR estimation of the identifying crosslinking search engine. Samples were measured in technical triplicates on a Q Exactive HF-X (Thermo Fisher Scientific). For MeroX
+51
+,
+52
+and xiSearch
+53
+RAW files were exported to MGF format using Proteome Discoverer 3.1 (version 3.1.0.638), and for Kojak
+29
+,
+30
+and Xolik
+28
+to mzML format using ThermoRawFileParser
+84
+(version 1.4.5) since they do not support RAW file input, for all other search engines the RAW files were used directly. Mass spectrometry data was searched with Kojak (version 2.1.0), MaxLynx
+6
+(part of MaxQuant
+50
+, version 2.6.2.0), MeroX (version 2.0.1.4), MS Annika (version 3.0.1) in Proteome Discover 3.1 (version 3.1.0.638), pLink (version 2.3.11)
+31
+, xiSearch (version 1.7.6.7) using xiFDR (version 2.2.1)
+24
+for validation, XlinkX (version as distributed with the Proteome Discoverer third-party nodes installer)
+54
+in Proteome Discoverer 3.1 (version 3.1.0.638), and Xolik (version 0.3). For all search engines we used settings as given in the publication by Beveridge and co-workers: the considered protein database consisted of the sequence of
+S. pyogenes
+Cas9 and 10 contaminant proteins (
+n
+= 11), the digestion enzyme was set to trypsin with a maximum of 3 missed cleavages allowed and peptides with a length of at least 5 but not more than 60 amino acids were permissible for search. The precursor mass tolerance was set to 5 ppm and the fragment mass tolerance to 20 ppm. Xolik only supports fragment mass tolerance in Dalton, however since there is no direct equivalent to 20 ppm we tried both 0.02 Da and 0.05 Da, using the better result for comparison (0.02 Da). Carbamidomethylation of cysteine was applied as a fixed modification and oxidation of methionine was specified as a possible variable modification. The crosslinker parameter was set to DSS with reactions to lysine and the protein n-terminus allowed. Unfortunately Xolik does not support more than one crosslink residue, consequently we were forced to only considered lysine for Xolik searches. Results were validated for 1% estimated FDR and subsequently analysed with IMP-X-FDR (version 1.1.0)
+49
+to calculate experimentally validated FDRs. For Kojak results were validated with Percolator
+81
+(version 3.06.0) as recommended in the Kojak documentation, for MaxLynx the crosslink search was set up in MaxQuant as described in their publication
+6
+, for MS Annika the standard non-cleavable workflow was employed, and for XlinkX the non-cleavable HCD/CID MS2 Proteome Discoverer workflow was used for crosslink search. Supplementary Data
+3
+gives a summary of all search and validation parameters. Workflows for MS Annika and XlinkX are shown in Supplementary Fig. 17 and 18, respectively.
+Workflow for the analysis of the benchmark dataset by Matzinger and co-workers
+Data was retrieved from ProteomeXchange
+57
+via the PRIDE partner repository
+83
+with identifier PXD029252. Detailed descriptions of the data are given in the respective publication by Matzinger and co-workers
+49
+. Summarising, Matzinger and co-workers engineered a synthetic peptide library that features a total of 141 peptides from 38 different proteins of the
+Escherichia coli
+ribosomal complex. Analogous to the synthetic peptide library by Beveridge and co-workers
+48
+the peptides were split into groups of 6 - 10 peptides each and crosslinked groupwise, facilitating the calculation of an experimentally validated FDR after identification since it is known which peptides can be crosslinked. Specifically, the assumption is again that any crosslink between peptides of different groups or non-synthesised peptides is a false positive. The analysed samples were crosslinked with ADH and measured in three technical replicates on a Q Exactive HF-X (Thermo Fisher Scientific). Mass spectrometry data was processed using the same tools and in the same way as described in “Workflow for the analysis of the benchmark dataset by Beveridge and co-workers”, with the following deviations: the protein database used for search was composed of 171 sequences from the E. coli ribosomal complex, again using trypsin as the digestion enzyme with a maximum of 3 missed cleavages. The minimum peptide length was set to 6 and the maximum peptide length to 60 amino acids. Precursor mass tolerance and fragment mass tolerance were set to 5 ppm and 10 ppm respectively. For Xolik we again used 0.02 Da fragment mass tolerance because ppm tolerance is not supported. Carbamidomethylation of cysteine was considered as a fixed modification and oxidation of methionine as a variable modification. The crosslinker parameter was specified as ADH with allowed reactions to aspartic acid and glutamic acid. Again we were forced to only consider a single possible crosslink residue for Xolik because of limitations of the search engine and we settled for aspartic acid based on a preliminary MS Annika search that found more crosslinks with aspartic acid than with glutamic acid. Validation was set to 1% estimated FDR and the validated results were post-processed with the tool IMP-X-FDR (version 1.1.0)
+49
+to calculate experimentally validated FDRs. Search engine specific parameters were again set up according to developer recommendations, if available: for Kojak
+29
+,
+30
+again Percolator
+81
+was used for validation, MaxLynx
+6
+and MaxQuant
+50
+were configured as described in the MaxLynx publication
+6
+, in MS Annika the standard non-cleavable workflow was employed with the addition of the IMP MS2 Spectrum Processor node as the sample was more complex, and for XlinkX the Proteome Discoverer workflow for non-cleavable HCD/CID MS2 was applied. Supplementary Data
+4
+presents a summary of all search and validation parameters. Furthermore, Supplementary Fig. 18 and 19 explain the used Proteome Discoverer workflows for MS Annika and XlinkX.
+Runtime analysis of different crosslink search engines
+Runtimes of Kojak (version 2.1.0)
+29
+,
+30
+, MS Annika (version 3.0.1) in Proteome Discover 3.1 (version 3.1.0.638), pLink (version 2.3.11)
+31
+and Xolik (version 0.3)
+28
+were analysed by searching replicate one of the benchmark dataset by Beveridge and co-workers
+48
+(see the section Workflow for the Analysis of the Benchmark Dataset by Beveridge and Co-workers) against protein databases of different size. The smallest protein database consisted of the original 11 proteins provided by Beveridge and co-workers, while the medium sized database consisted of 10 001 proteins, namely Cas9 and 10,000 proteins of the human SwissProt proteome. The largest database was composed of Cas9 and the full human SwissProt proteome (
+n
+= 20,433, UniProt Proteome ID UP000005640, retrieved 22. June 2024). Searches were run on a desktop PC with high-end hardware (16-core AMD Ryzen R9 7950X 4.5GHz CPU with 64 GB of memory and Nvidia RTX 4090 GPU, exact hardware specification given in Supplementary Table 5). Each search was repeated five times consecutively and fan speed was fixed at 100% to minimise variability due to idle usage or thermal throttling. Runtimes for MS Annika and pLink include validation as this is done automatically. Runtimes for Kojak and Xolik do not include validation because these tools do not automatically validate results. MS Annika was run with default parameters, for MS Annika “fast” searches the parameter “Top N Filter” was reduced from 10 to 2.
+Implementation of a xiFDR exporter and analysis of the dataset by Lenz and co-workers
+MS Annika result tables were updated to include all necessary information required for validation with xiFDR
+24
+. Moreover, an exporter script was written in Python that allows the export of MS Annika CSMs to the specific CSV format required by xiFDR which is described in the xiFDR documentation on GitHub (
+https://github.com/Rappsilber-Laboratory/xiFDR
+). In order to validate the applicability of MS Annika with xiFDR, data from a study by Lenz and co-workers
+56
+that allows calculation of an experimentally validated inter crosslink FDR was retrieved from ProteomeXchange
+57
+via the JPOSTrepo partner repository
+58
+with accession codes PXD019120 and JPST000845. An in-depth explanation of the study is given in the respective publication
+56
+. In brief, Lenz and co-workers separated E. coli cell lysate using size exclusion chromatography which resulted in 44 fractions with molecular weight ranging from  ~ 3 MDa to 150 kDa. Part of each fraction was used to create elution profiles of each protein across all 44 fractions using label-free quantitative proteomics. The remainder of each fraction was crosslinked with BS3
+22
+and finally all fractions were pooled and analysed using LC-MS. The presumption for calculating experimentally validated inter crosslink FDRs is that only proteins which eluted in the same size exclusion fraction may be crosslinked, and contrary any crosslink consisting of peptides from two proteins that are not from the same fraction is a false positive. For our analysis the retrieved MGF files were loaded in Proteome Discoverer 3.1 (version 3.1.0.638) and mass spectrometry data (around 2.1 million mass spectra) was first searched with MS Amanda (version 3.1.21.532)
+67
+,
+75
+,
+76
+to identify linear and monolinked peptides. Wherever possible we applied the settings recommended by Lenz and co-workers: the full E. coli proteome (
+n
+= 4350, retrieved from the dataset repository) was used for search, the digestion enzyme was set to trypsin with a maximum of 2 missed cleavages allowed. The minimum peptide length was specified as 6 and the maximum allowed peptide length was 60 amino acids. Precursor mass tolerance and fragment mass tolerance were set to 3 ppm and 5 ppm respectively. Carbamidomethylation of cysteine was considered as a fixed modification and oxidation of methionine as well as reaction of lysine with the monolink forms of BS3 were defined as variable modifications. Results of the MS Amanda search were validated for 1% estimated FDR using a standard target-decoy approach and mass spectra with an associated high-confidence (1% FDR) PSM were filtered out and not considered for crosslink search. The remaining mass spectra were searched with MS Annika using the same settings, except the monolink forms of BS3 were not considered as variable modifications. Additionally, up to two missing precursor isotope peaks were allowed for identification and the crosslinker parameter was set as BS3 with possible reactions to lysine or the protein n-terminus. The top 2 alpha peptides were considered for CSM creation. Results were either validated with the built-in validation algorithm in MS Annika, or with xiFDR (version 2.2.1) using the exporter script described above. In both cases crosslinks were validated for 1% estimated FDR and boosting was enabled in xiFDR. The plausibility of inter crosslinks was assessed with an in-house developed script applying the rules outlined by Lenz and co-workers. Supplementary Data
+5
+summarises all parameters used during search and validation.
+Reporting summary
+Further information on research design is available in the
+Nature Portfolio Reporting Summary
+linked to this article.
+Supplementary information
+Transparent Peer Review file
+Supplementary Information
+Description of Additional Supplementary Files
+Supplementary Data 1
+Supplementary Data 2
+Supplementary Data 3
+Supplementary Data 4
+Supplementary Data 5
+Supplementary Data 6
+Reporting Summary

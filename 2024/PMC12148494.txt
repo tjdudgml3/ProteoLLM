@@ -1,0 +1,424 @@
+INTRODUCTION
+The cell, the fundamental unit of life, is a wondrously intricate entity with properties and behaviors that challenge the limits of physical and computational modeling. Every cell is a dynamic and adaptive system in which complex behavior emerges from a myriad of molecular interactions. Some aspects are remarkably robust to perturbations, such as the elimination of genes or their replacement with homologs from different species. Other aspects are sensitive to even seemingly minor disruptions, such as a point mutation or an external factor that tips cells into dysfunction and disease.
+To understand a cell’s function, scientists have attempted to construct virtual cell models to simulate, predict, and steer cell behavior.
+1
+–
+6
+Building on this vision, we use the term virtual cell to define a computational model that simulates the biological functions and interactions of a cell. Existing cell models are often rule-based and combine assumptions about the underlying biological mechanisms with parameters fit from observational data. They generally rely on explicitly defined mathematical or computational approaches, such as differential equations,
+7
+–
+9
+stochastic simulations,
+10
+,
+11
+or agent-based models.
+12
+,
+13
+They vary in complexity and cover different defined aspects of cell biology, such as transcription and translation,
+14
+cytoskeletal driven cell behavior,
+15
+,
+16
+biochemical networks,
+17
+or metabolic flux.
+18
+,
+19
+The first whole-cell model was developed in 2012, representing all 482 genes and molecular functions known for an organism: the bacteria
+Mycobacterium genitalium
+.
+8
+Since this pioneering work, genome-wide models have been developed to represent other bacterial organisms, including
+Escherichia coli
+.
+8
+,
+20
+–
+22
+Despite their widespread use in modeling biological systems, approaches to date fall short of capturing many aspects of the operations of both bacterial and more complex systems, such as human cells. Challenges include: (1) Multi-scale modeling: cells operate on multiple scales across both time and space, from atomic to molecular to cellular and histological, with functional properties emerging through nonlinear transformation from one scale to another. (2) Diverse processes with massive numbers of interacting components: cellular function encompasses numerous interacting processes, such as gene regulation, metabolic pathways, and signal transduction. Each process involves a multitude of biomolecular species, in diverse and dynamic configurations and states. (3) Nonlinear dynamics: most cellular processes are highly nonlinear, such that small changes in inputs can lead to complex changes in outputs. Thus, despite progress in modeling specific cellular processes, these factors collectively pose a substantial roadblock to the construction of a virtual cell.
+Two exciting revolutions in science and technology—in AI and in omics—now enable the construction of cell models learned directly from data. These parallel revolutions provide an unprecedented opportunity for an ambitious vision of an AI virtual cell (AIVC), a multi-scale, multi-modal, large-neural-network-based model that can represent and simulate the behavior of molecules, cells and tissues across diverse states (
+Figure 1
+).
+Experimentally, the exponential increase in the throughput of measurement technologies has led to the collection of large and growing reference datasets within and across different cell and tissue systems,
+23
+–
+25
+with data doubling every 6 months for the past several years,
+26
+along with the ability to couple these measurements with systematic perturbations.
+27
+–
+29
+Computationally, concurrent advances in AI have enhanced our ability to learn patterns and processes directly from data without needing explicit rules or human annotation.
+30
+,
+31
+Such modeling paradigms have been used successfully in the biomolecular realm, for example, to predict three-dimensional (3D) molecular structures from sequences
+32
+–
+34
+and interactions between different molecular components.
+35
+–
+38
+Recent modeling methodologies in AI provide representation and inference tools that satisfy the trifecta of being predictive, generative, and queryable, which are key utilities for advancing biological research and understanding. By building on these properties, we argue that we now have the methods to develop a fully data-driven neural network-based representation of an AIVC that can accelerate research in biomedicine by enabling fast-paced
+in silico
+studies, as well as powerful bridges between computational methods and confirmatory wet-lab experimentation (
+Figure 1
+).
+The creation of an AIVC will enable a new era of high-fidelity simulation in biology, in which cancer biologists model how specific mutations transition cells from healthy to malignant; developmental biologists forecast how developmental lineages evolve in response to perturbations in specific progenitor cells; and microbiologists predict the effects of viral infection on not just the infected cell but also its host organism. AIVCs will empower experimentalists and theorists alike, by transforming the means by which hypotheses are generated and prioritized and allowing biologists to span a dramatically expanded scope, better fitting the enormous scales of biology. Although the cellular models may not always directly identify mechanistic relationships, they can be viewed as tools for effectively narrowing the search space for mechanistic hypotheses, thereby accelerating the discovery of underlying factors behind cellular function.
+This perspective article is based on extensive community discussions, including a workshop hosted by the Chan Zuckerberg Initiative, and aims to ignite the formation of a collaborative research agenda for a large-scale, long-term initiative with a roadmap for developing, implementing, and deploying AIVCs. We describe a vision catalyzed by emerging advances in AI in cell biology and their application to constructing virtual representations of cells. We lay out priorities and opportunities across data generation, AI models, benchmarking, interpretation, and ensuring biological veracity and safety (
+Box 1
+). By encouraging interdisciplinary collaborations in open science—spanning academia, philanthropy, and the biopharma and AI industries—we posit that a comprehensive understanding of cellular mechanisms is within reach. AIVCs have the potential to revolutionize the scientific process, lead to the understanding of novel biological principles, and augment human intelligence to underpin future breakthroughs in programmable biology, drug discovery, and personalized medicine (
+Box 2
+).
+AIVCs
+Our view of an AIVC is a learned simulator of cells and cellular systems under varying conditions and changing contexts, such as differentiation states, perturbations, disease states, stochastic fluctuations, and environmental conditions (
+Figure 1
+). In this context, a virtual cell should integrate broad knowledge across cell biology. VCs must work across biological scales, over time, and across data modalities and should help reveal the programming language of cellular systems and provide an interface to use it for engineering purposes.
+In particular, an AIVC needs to have capabilities that allows researchers to (1) create a universal representation (UR) of biological states across species, modalities, datasets, and contexts, including cell types, developmental stages, and external conditions; (2) predict cellular function, behavior, and dynamics, as well as uncover the underlying mechanisms; and (3) perform
+in silico
+experiments to generate and test new scientific hypotheses and guide data collection to efficiently expand the virtual cell’s abilities.
+Next, we elaborate on these key capabilities and discuss approaches for how to achieve them.
+URs
+An AIVC would map biological data to UR spaces (
+Figure 1A
+), facilitating insights into shared states and serving as a comprehensive reference. These URs should integrate across three physical scales—molecular, cellular, and multicellular—and accommodate contributions from any relevant modality and context (
+Figure 1A
+). This integration will allow researchers to complement new data with existing information within the AIVC, leveraging its extensive biological knowledge to bridge gaps between different data. Such a comparison with prior data would provide a comprehensive context for every analysis.
+Importantly, the multilevel representation should generalize to new states that are not present within the data used to train the AIVC. Such an emergent capability would unlock discoveries about biological states that have not been directly observed or might not even occur in nature. For instance, the AIVC’s exposure to similar instances during training, such as inflammatory states in macrophages, might enable it to predict previously unknown inflammatory states in microglia. Additionally, the AIVC should be able to predict novel states resulting from interventions (or, equivalently, interventions needed to achieve a novel specified state) offering a range of downstream applications in cell engineering and synthetic biology.
+Predicting cell behavior and understanding mechanisms
+A defining function of an AIVC will be its ability to model cellular responses and dynamics. By training on a wide range of snapshots, time-resolved, non-interventional, and interventional datasets collected across contexts and scales, the AIVC can develop an understanding of the molecular, cellular, and tissue dynamics that occur under natural or engineered signals. These signals include external and internal stresses or other factors such as chemical (e.g., small molecules) or genetic (engineered or natural) perturbations and their combinations. An AIVC should be able to predict responses to perturbations that have not been previously tested in the lab, while also accounting for the specific features of the cellular context within which the perturbation is being tested.
+The AIVC should also have the capability to simulate the temporal evolution of alterations in cell states in response to both intrinsic and extrinsic factors, along with the resulting multicellular spatial arrangements. By modeling the transient nature of the overall cell state and the continuous flux in cellular conditions, the AIVC could uncover previously unstudied trajectories in diverse dynamic processes, such as development, maintenance of homeostasis, pathogenesis, and disease progression. Another critical challenge is understanding the molecular mechanisms underpinning observed phenotypes and trajectories. The AIVC could propose potential causal factors behind phenotypes by simulating the effects of different interventions. Through its multi-scale design, the AIVC should be able to extrapolate the basis of cellular function across scales and link intracellular processes to phenotypes at the cell and tissue level. Thus, the AIVC opens new avenues for investigating mechanisms linked to diverse phenotypes and behaviors.
+Although uncovering a phenotype’s causal factors may not always be feasible through computation alone, the AIVC has the potential to reduce the space of possible hypotheses. Through simulating the effects of different interventions, the AIVC could propose potential causal factors behind phenotypes with corresponding degrees of uncertainty, allowing scientists to validate claims experimentally.
+In silico
+experimentation and guiding data generation
+For real-world utility, a defining function of an AIVC will be its ability to guide data generation and experiment design. An AIVC should be queryable with computational twins of today’s laboratory experiments, here called virtual instruments (VIs). Virtual experiments could, for example, simulate experiments in a cell type that is challenging to cultivate
+in vitro
+or simulate expensive readouts from low-cost measurements, such as single-cell transcriptomes from label-free imaging.
+39
+Virtual experiments could also be used to screen a vast number of possible perturbagens at a scale that would be impossible in the lab. Such capabilities are invaluable when considering the exponentially larger search space of combinatorial perturbations involving more than one perturbagen.
+40
+–
+44
+AIVCs will usher in a new pradigm of how computational systems are probed during the design of new biological experiments. In this framework, an AIVC would not only design experiments to validate specific scientific hypotheses but also to enhance its own capabilities. Equipped with the ability to assign confidence values to its predictions, an AIVC could enable interactive querying to guide experimentalists to the most efficient path for generating additional data for fine-tuned improvement in low-confidence areas. Extended to an active and iterative lab-in-the-loop process, we envision efficient and focused expansion of the AIVC’s performance. Ultimately, the AIVC might even be able to identify key gaps in its own understanding of biology and propose the most efficient paths to bridge them.
+45
+–
+47
+BUILDING THE AIVC
+We envision an AIVC as a comprehensive AI framework composed of several interconnected foundation models that represent dynamic biological systems at increasingly complex levels of organization—from molecules to cells, tissues, and beyond. Our approach has two main components: (1) a universal multi-modal multi-scale biological state representation and (2) a set of VIs, which are neural networks that manipulate or decode these representations. Although there may be other approaches to building an AIVC, we believe this approach would provide a scaffold that can be scaled in a collaborative and open way.
+We use the term UR to refer to an embedding produced by a multi-modal AIVC foundation model. An embedding is a learned numerical representation of data in a continuous vector space. The AIVC transforms high-dimensional multi-scale multi-modal biological data into embeddings that retain meaningful relationships and patterns.
+The AIVC can capture cell biology at three distinct physical scales by representing (1) molecules and their structures found within individual cells, (2) individual cells, as spatial collections of those interacting molecules and structures, and (3) how individual cells interact with one another and the non-cellular environment in a tissue. Each of these scales is represented by a distinct UR, building on abstractions generated by the previous layer, thus linking the different scales.
+In the context of UR, VIs are neural networks that take URs as input and produce a desired output. We describe two types of VIs: decoder VIs (or decoders) that take a UR as an input and produce human-understandable output, for example, a cell type label or a synthetic microscope image, and manipulator VIs (or manipulators), which take a UR as an input and produce another UR as an output, for example, that of an altered cell state after perturbation. Because these instruments will operate over the same representations, they can be shared and reused across different use cases, experiments, and datasets. Thus, we envision that any scientist will be able to build a VI on top of a UR and share it with the community. The building of VIs that closely resemble real instruments, such as a microscope, has the potential to seed the development of instrument-specific lab-in-the-loop systems.
+Building UR across physical scales
+The AIVC would be a multi-scale foundation model that learns distinct representations of biological entities at each physical scale (
+Figure 2C
+). These representations can be aggregated together and transformed to produce representations at the next higher physical scale. This recurring architectural motif can be applied from the level of individual molecules to the scale of entire tissues and organs granting the model consistency across biological scales (
+Figure 2A
+). Each representation applies universally to a specific class of biological entities. This abstraction allows the virtual cell to seamlessly evolve and incorporate new data—whether from new modalities or from out-of-distribution sources— within this general framework.
+In the following sections, we discuss design principles and data that could be used to construct each physical scale of the AIVC bottom-up. Although many existing machine learning architectures could be applied directly to the task of learning functional representations of cellular components (
+Box 3
+), we additionally suggest the incorporation of biological inductive biases into the design of these representations, and further modeling innovations should drive the refinement and success of these models.
+Molecular scale
+The first layer of the virtual cell represents individual molecular species (
+Figures 2A
+and
+2C
+). Although there are many different classes of molecules present in a cell, a starting point for the AIVC will be to model the three types of molecules of the central dogma: DNA, RNA, and proteins. These can all be represented as sequences of characters—nucleotides or amino acids.
+48
+–
+53
+Such sequence data are particularly well suited for AI methods originally developed for natural language processing, such as large language models (LLMs) (
+Box 3
+). Given the high-throughput measurement capabilities for genomic sequences, there are substantial and growing amounts of training data available. This abundance of data, combined with simple objective functions (such as predicting masked letters in a sequence), provides the key ingredients for effectively training models to generate an initial molecular UR. Furthermore, a biological language model could be trained on all three modalities simultaneously, thus maximizing interoperability and training corpus size. Despite its inherent compatibility with transformers, specific considerations around masking and attention mechanisms must be addressed when applying these models to biological sequence data as opposed to natural language. Although language modeling approaches have been extensively studied for these core molecules and have proven successful for some of their chemical modifications
+54
+and various other molecules, such as glycans, lipids, and metabolites,
+55
+,
+56
+they may struggle with other molecular constituents of the cell. Such modeling difficulties might be exacerbated for data that are difficult to fit into a sequence or very small molecules. Given that the primary building blocks of these entities are atoms, a neural network trained to model molecules at the atomic level
+32
+,
+57
+could be a more general choice for this layer. However, models with atomic resolution introduce a substantial computational burden and might be constrained by the limited availability of training data. Although atomic-based modeling is highly accurate for many static structures, it cannot yet represent the full dynamic range of chemistry that occurs at this scale. Therefore, a broader, evolutionarily informed representation such as that of sequences may be preferred.
+Cellular scale
+The next level of abstraction models individual cell states (
+Figures 2A
+and
+2C
+). As cellular function is underpinned by the molecular interactions and signaling networks formed in a cell, a cellular UR can be built using representations of molecular and other (e.g., imaging) features, describing the organization and abundance of molecular components. The key step here would be to integrate learned representations of molecules with their quantities and appropriately abstracted locations and timestamps to create a unified representation of the cell.
+58
+–
+60
+Data for the cellular UR consist of measurements mapped to a single-cell level, such as measurements of the transcriptome (single-cell RNA sequencing [scRNA-seq]), chromatin accessibility (scATAC-seq), chromatin modification, transcription factor binding, and proteome.
+61
+Imaging technologies measure cell morphology at subcellular resolution, often together with molecular information.
+29
+,
+62
+,
+63
+For example, fluorescence confocal microscopy can help resolve the subcellular location of the human proteome.
+64
+Live-cell imaging
+65
+enables the study of proteins in living cells using time-lapse microscopy. Cryoelectron microscopy determines biomolecular structures at near-atomic resolution.
+66
+,
+67
+Super-resolution microscopy offers deeper insights into molecular processes through single-molecule imaging in living systems.
+68
+,
+69
+Complementing imaging approaches, mass spectrometry, and proximity-dependent labeling can unveil protein-protein associations and provide deeper insights into cell structure and signaling network rewiring.
+70
+,
+71
+From a model architecture perspective, vision transformers
+72
+or models leveraging convolutional neural networks (CNNs)
+73
+,
+74
+are widely applicable to biological images to model across multiple imaging channels capturing different biological features,
+75
+,
+76
+while being robust to distribution shift and batch variability.
+77
+Autoencoders and transformers have been successfully applied for learning representations for sequence-based data.
+59
+,
+78
+,
+79
+Using AI algorithms to integrate different data modalities collected with sequencing and imaging technologies creates a multi-view model of the cell that can be both dynamic and predictive.
+80
+,
+81
+As the AIVC model grows in complexity, it is crucial to also model cellular organelles and membraneless compartments
+82
+as units that play specific roles within the cell. Robustly capturing the functions of these units is vital to ensure accurate predictions, mechanistic interpretability, and model generalizability.
+Given their prevalence, the cellular UR will initially rely on transcriptomics measurements, whereas imaging modalities will be key for continued modeling of cellular spatial organization and dynamics.
+Multicellular scale
+At the third layer of abstraction, the AIVC models the organization of cells into a multicellular UR (
+Figures 2A
+and
+2C
+). This layer allows for the exploration of how cell-cell interactions, largely governed by spatial proximity, combine into tissues, organs, and, ultimately, whole organisms. Multicellular interactions can be analyzed after tissue dissociation (such as in scRNA-seq)
+83
+or
+in situ
+in a 2D section or 3D volume, where the tissue structure is preserved. Building the AIVC will require integration across available modalities that provide spatial insights, i.e., both spatial molecular profiling, as well as non-molecular tissue imaging data.
+There are multiple methods to profile the spatial location of RNA
+84
+and proteins
+85
+in cells, along with various imaging methods for select molecular species (e.g., immunohistochemistry) or with stains for tissue structure alone (e.g., hematoxylin and eosin [H&E]). Spatial molecular biology is currently a very active area of research and method development. Although publicly available data are still limited, we foresee a rapid development in this domain providing multi-omic 2D and 3D datasets. A more generalized data generation effort together with open frameworks for spatial data
+86
+could greatly accelerate modeling at the multicellular scale.
+The relative organization of cells within a 2D tissue section and 3D tissue volume can be represented using a graph or point cloud. The multicellular UR can be derived from such data using graph-learning techniques, such as graph neural networks (GNNs) and equivariant neural networks (ENNs). For image-based data, convolutional neural networks or vision transformers can be applied (
+Box 3
+).
+Predicting cell behavior and understanding mechanisms
+VIs are the “tools” that operate on UR embeddings and perform various functions and tasks. By altering URs of molecules, cells, and tissues, manipulators can abstract complex dynamic processes (
+Figure 2B
+) more simply as transitions between (distributions of) their representations (
+Figure 2D
+). Similarly, decoders can take an embedding of biological entities and predict one or more concrete properties, for example, physical structure, cell type/state, fitness, expression, or drug response.
+The design of a wide array of manipulators provides us with an unprecedented set of tools for modeling cell behavior and dynamics: generative AI approaches, such as diffusion models
+87
+or autoregressive transformers,
+88
+i.e., model architectures that capture heterogeneity and parameterize continuous time dynamics, can predict a future state or evolution of a cell or molecular state (
+Box 3
+).
+57
+,
+89
+Using integrated data from time-lapse imaging,
+65
+gene expression profiles,
+83
+and other modalities, manipulators can allow inferring the phenotypic progression from stem cell to differentiated cell, while capturing the influence of both genetic factors and environmental conditions—through learned interpolations and extrapolations between multi-scale URs of different cell states. Similarly, they allow predicting the effect of treatments on patients, given a virtual representation of a patient’s molecular profile.
+Furthermore, variations in cellular URs can be linked to corresponding changes in molecular states or their spatial localization, influenced by downstream factors, such as genetic variants or functional changes in proteins, which are represented in a lower scale of the AIVC. Leveraging the ability of manipulators to model temporally resolved molecular and cellular events, decoders of the AIVC could potentially identify cellular components, molecular pathways, and their interactions that contribute to each prediction and process. As such, the multi-scale design of the AIVC may unveil mechanistic hypotheses of such processes.
+Despite the remarkable advancements in protein modeling, the field continues to struggle in modeling dynamic molecular processes using foundation models. There will likely be areas of cell modeling, including dynamics, which pose similar challenges. For instance, the modeling of intricate networks of transient and weak molecular interactions, which play a crucial role in rapid fine-tuning of cellular signaling and formation of cell biological features such as condensates, may pose similar challenges. Consequently, we foresee a need for advanced data collection and modeling methodologies capable of capturing the dynamics of cellular processes, akin to those encountered in protein modeling. At the same time, although some functionalities of the AIVC heavily depend on such solutions, others (e.g., certain predictive functionalities) may be successful even without them. That is one of the appealing properties of multi-modal AI models with emergent properties and why developing the AIVC now is so compelling.
+In silico
+experimentation and guiding data generation
+Manipulator VIs operating in the UR space could further enable the exploration of a broad range of hypotheses through
+in silico
+experiments that virtually perturb a cell model. This might be achieved by predicting changes in the URs following a perturbation prompt (
+Figure 2D
+).
+40
+,
+42
+–
+44
+The design of manipulators that predict transitions in the UR upon an
+in silico
+input can build on conditional generative models: deep learning architectures such as conditional deep generative models
+31
+allow generating the desired UR based on the property or context of interest (
+Box 3
+). Here, high-throughput perturbation screens—based on RNA-seq,
+28
+,
+83
+,
+90
+optical pooled screens (OPS),
+29
+,
+39
+,
+91
+or other technologies—offer a rich resource through which the AIVC can be trained to predict these effects. By conditioning on specific perturbations—such as environmental changes, genetic mutations, or chemical treatments—the generative model might produce a new UR reflecting the predicted cellular response. This conditioning could be achieved through learned or pre-computed embeddings of the affected molecular targets. Chemical compounds, small molecules, and metabolites could be embedded based on their chemical properties. Additionally, LLMs trained on comprehensive scientific literature and biological databases, such as Gene Ontology or drug banks, could further provide a rich contextual background used for conditioning the generative model, e.g., through considering wide range of interactions and side effects.
+VIs can be designed so that predictions are accompanied by estimates of model uncertainty.
+92
+Under a Bayesian formulation of its predictive function, the predictions made for cell perturbation outcomes could include an uncertainty score, either implicitly via inference, deep kernels,
+93
+,
+94
+or through explicit estimation of the full posterior over model parameters.
+95
+,
+96
+Some practical approaches utilize model ensembles
+97
+or conformal predictions.
+98
+,
+99
+By assigning specific confidence levels to its predictions, the AIVC can call methods for computing the expected value of additional data or approximations referred to in machine learning as active learning to guide experimental data collection
+45
+for expanding its UR. Alternatively, methods for computing the expected value of information could be used to guide data generation with the goal of optimizing a desired biological property.
+92
+Lastly, through its ability to conduct
+in silico
+experiments and suggest additional informative experiments, the AIVC could become an integrative part of lab-in-the-loop schemes. This allows not only for a seamless experimental validation of its predictions but also a sequence of experiments, predictions, and generations of hypotheses that gradually improve our systematic understanding of molecular circuits that drive biological functions.
+DATA NEEDS AND REQUIREMENTS
+A key consideration for the AIVC is which datasets and modalities must be collected to enable its effective construction. Unlike traditional experimental design, where data are generated to test specific scientific hypotheses, data collection for training the AIVC should be focused on ensuring the broad applicability and generalizability expected of the AIVC. To meet these ambitions, data would ideally span different domains and modalities, capture the heterogeneity and diversity of biological variability, and enable models to distinguish between technical (measurement) noise, stochastic biological variation, and physiological differences.
+Data generation will require simultaneous exploration of temporal and physical scales, while allowing for system perturbations. Here, classical imaging technologies,
+65
+,
+100
+,
+101
+including live-cell, and newer structural imaging technologies, such as cryoelectron tomography and soft X-ray tomography,
+66
+,
+102
+,
+103
+as well as novel spatial omics technologies,
+104
+,
+105
+offer opportunities to model biomolecules and functions across scales. Furthermore, biological processes span a vast range of timescales, from the fastest reactions happening in picoseconds to a cell division progressing over hours to a day, tumor development occurring over years, and neurodegeneration over decades. The recent construction of universal cell atlases
+101
+,
+106
+may serve as a powerful resource for modeling cellular behavior over longer timescales, such as tissue formation. New approaches will be needed to build comparable datasets that capture the behavior of cells on shorter timescales, e.g., through methods such as live-cell imaging. Besides molecular measurements, an important aspect of data collection will lie in the measurement of biophysical and biochemical cellular properties to provide boundaries of physical and chemical realism to the AIVC.
+Another important driver for the development of AIVCs will be multi-modal datasets. For example, datasets that bridge molecular and spatial scales, such as single-cell transcriptomics data combined with histology to understand how cells interact and what molecular signatures underpin the formation of specialized spatial niches.
+107
+Further technological development is needed to collect multi-modal data that better capture the relationship between molecular signatures, cell behavior, cellular regulation, and organization.
+Although a core interest of virtual cell modeling will focus on human datasets for the purpose of understanding disease and aiding the development of novel therapeutics, human datasets are limited in our ability to perform controlled experimentation and perturbations
+in vivo
+.
+Here, the field of 3D tissue biology, including culture systems, such as organoids, is emerging as a tool to study the complexities of tissue architecture and function
+108
+in a 3D environment, while allowing perturbations of the system. Another critical avenue to surpass this limitation will be to perform diverse, organism-wide profiles of species spanning evolutionary history, across perturbations and under various conditions.
+109
+–
+111
+Ideally, large datasets could be collected across all three physical scales, allowing the AIVC to extend beyond disease research into other areas such as industrial biotechnology, agricultural biotechnology, infectious diseases, and climate change. However, based on data collection trends for the cellular and multicellular scales, modeling animal cells remains the most realistic.
+Finally, a key aspect of biological data generation will be the exploration of combinatorial spaces: biological spaces are commonly high dimensional, and enumerating their variants is intractable in general, e.g., when considering all possible variants of a genome. Even for combinations of a small number of entities, exemplified in the case of enumerating pairs or sets of perturbations,
+47
+,
+90
+experimental design becomes exceedingly challenging. Because combinatorial possibilities quickly expand well beyond what is practical experimentally, or even computationally, new methods for their exploration must be developed.
+How much data are needed to build the AIVC?
+The scale of raw biological data is undeniable, but so is the sheer nominal size of even one human cell system, making first principle estimates challenging. For instance, the Short Read Archive of biological sequence data holds over 14 petabytes of information,
+112
+which is more than 1,000 times larger than the dataset used to train ChatGPT.
+113
+Large parts of these data may be redundant or have diminishing returns if used for training, and the scaling laws for models’ performances must be investigated thoroughly.
+In addition to data size, data diversity and quality are critical to ensure model performance.
+114
+Data from humans and model organisms, such as mice and
+Escherichia coli
+, are unequally represented in sequence and literature databases, which when used for training, encode strong species biases.
+114
+Other biases, for example, in terms of sex, specific diseases, or human ancestral populations could also reduce the impact of AIVC models.
+115
+Although efforts on the data side are required, the AI models driving the AIVC must be designed to withstand and adapt to these challenges, i.e., exhibit robustness in their ability to integrate datasets of various origins and quality. This is crucial given both the rapid pace of advances in lab technologies (which preclude standardization on a single platform) and the broad diversity of modalities and cell systems that must be encompassed by the AIVC. As virtual cell efforts mature, the dialog between the scientists who develop models, those who generate experimental data, and funding organizations must be further intensified.
+MODEL EVALUATION
+A more important question for the development of AIVCs may not be “how do we build them?” but rather “how do we build trust in their competence and fidelity?” To this end, a comprehensive and adaptable benchmarking framework will be needed. Although various frameworks already exist for tackling specific biological questions (for example, protein structure prediction models
+89
+were developed in the context of the CASP evaluation framework), the AIVC will need to demonstrate generalizability across numerous biological contexts and downstream tasks. It must account for dynamic distributions that evolve due to environmental changes, infections, genetic variants, and other such factors causing distribution shifts.
+116
+Even beyond generalizability, emergent capabilities, such as those associated with LLMs, could enable AIVC models to extrapolate to truly out-of-distribution data. In a biological context it may be difficult to decide how this boundary is defined during evaluation. New molecules, new cell states, and even new species could be considered within the training distribution. A new molecule could have homologs, including remote homologs, within the dataset. A new cell type or state could execute gene programs and regulatory networks found in existing cell types. A new strain could be closely related to existing species in the training data or live in similar environmental niches. Extrapolation to new data could then be limited to consider only the design of biological entities that do not naturally occur. This type of evaluation is already considered within the molecular design space because language-model-created proteins, such as esmGFP
+52
+or OpenCrispr1,
+53
+highlight how different they are from any of their naturally occurring counterparts. If extrapolation is a goal when designing these models, it is possible that additional inductive biases, fine tuning, or preference optimization using biomechanical, physics-based, or mechanistic modeling
+117
+would prove necessary.
+The evaluation of AIVCs should prioritize both generalizability, as well as discovering new biology. Generalizability measures how well the model performs in unseen contexts, such as novel cell types and genetic backgrounds. It can be evaluated through a cross-modal reconstruction task, such as predicting gene expression given the morphology of a previously unseen cell or the next image in a sequence of microscopy images of cell state. Assessing generalizability builds confidence in the AIVC’s ability to capture core biological processes and understand how they vary across different contexts. Establishing such cross-modal benchmarks to link scales and modalities in cell biology is of imminent priority to the research community because these tasks are both biologically useful and well defined.
+Ultimately, AIVC models should be judged on their ability to unlock new ways of understanding biology. Such an evaluation will ensure that model development is aligned with biological relevance. The most useful initial accomplishments will likely be to generate valuable testable hypotheses. For this purpose, validation datasets that are related to phenotypes that are experimentally verifiable may be suitable, such as growth rate of cells, molecular profiles, disrupted protein-protein interactions, or transcription factor binding.
+As the capabilities of AIVCs improve, we must consider whether statistical measures of performance are adequate, or if interpretability and biological causality would be core requirements.
+INTERPRETABILITY AND INTERACTION
+One of the hallmarks of scientific discovery in biology has been the creation of mechanistic models of a phenomenon under observation. When creating virtual cells, we may have to forgo our ability to build fully mechanistic models in favor of learning interactions that will generalize from data and predict beyond the observations. However, it is still desirable to strive toward increased interpretability.
+Every AIVC prediction could be substantiated with the corresponding multi-scale interactions that determine resulting states, e.g., understanding how a cellular subsystem or protein complex is disrupted in a diseased tissue can aid development of therapeutic interventions.
+118
+,
+119
+The modular structure of the AIVC will enable researchers to pinpoint specific genes, proteins, or molecular processes involved in each predicted behavior. Patterns in the wiring of large models can also be leveraged to uncover combinatorial biological interactions, such as those between proteins, which can be projected to interpretable spaces without restricting the generality of the original model. Although many capabilities of the AIVC rely on predictive tasks, generating mechanistic hypotheses could provide experimental routes to understand and explore the AIVC’s predictions further and will be vital for the adoption and use of AIVCs.
+Ultimately, it will be of key interest to build an interactive layer for the AIVC that enables researchers of varying expertise to grasp and utilize its predictions effectively. AI agents, built using LLMs, could serve as virtual research assistants, providing an intuitive interface for non-experts.
+46
+,
+120
+Leveraging their extensive knowledge of scientific literature, these language models can offer deeper insights into the predictions made by the AIVC.
+AN OPEN COLLABORATIVE APPROACH
+Creating an AIVC requires tremendous investment, diverse backgrounds, and many iterations and can only be advanced by a concerted open science effort. As a scientific community, we must strive to ensure that both the development and usage of virtual cells are accessible and responsive to the entire scientific community. These efforts would greatly benefit from open data resources and data standards, a collaborative platform for cell modeling, and, especially, open benchmark datasets and common validation strategies to ensure their biological fidelity and real-world utility. Such a collaborative program could greatly accelerate progress across individual efforts and unify scientific research at a global scale, connecting myriad smaller-scale efforts.
+To achieve this, multiple key parameters need to be considered. First, we must ensure that AIVCs represent and benefit all of humanity, with open data that captures human ancestral, sex, and geographic diversity.
+121
+Ensuring that such datasets reflect human diversity, while safeguarding individuals’ privacy is a principal challenge. Second, as the size of AIVC models increases, the cost of training, fine tuning, or using them as is will also grow. Investments in diverse data collection, infrastructure, and a platform for hosting virtual cell models will be critical to ensure representation, accessibility, and benefit to the broader scientific community. The platform should foster open and collaborative development of AIVCs, enabling active collaboration between biologists, clinicians, statisticians, and computer scientists. This platform should facilitate swift iterations between the lab and the modeling environment and offer opportunities to quickly test and benchmark new models. Third, synergistic collaboration among stakeholders is needed across the biomedical ecosystem, including philanthropy, academia, biopharma, and the AI industry. Pre-competitive collaborations can greatly accelerate our collective progress toward creating AIVCs. Besides the synchronization with data generators and other modeling efforts, collaboration with regulatory authorities and bioethics experts are crucial for benchmarking and establishing new norms that will expedite the deployment of AIVCs, while complying with legal requirements and setting standards for ethical issues for responsible use of virtual cells.
+This article is intended to serve as a primer for the formation of a collaborative research agenda and roadmap for a large-scale, long-term initiative for developing and implementing AI-powered VCs. If successful, such interactive AIVC models, capable of simulating cellular biology, have the potential to fundamentally change how cell biology research is done. We foresee a future where AIVC platforms function as open, interconnected hubs for collaborative development and broad deployment of cell models to researchers but also as education hubs delivering training to researchers, as well as providing engagement activities for educators, patients, and the public.
+OUTLOOK AND REASONS FOR OPTIMISM
+The genetics and genomics communities have created large reference datasets, such as the human genome project,
+23
+HapMap,
+122
+the Cancer Genome Atlas (TCGA),
+123
+ENCODE,
+124
+the Genotype-Tissue Expression (GTEx) project,
+125
+the Human Protein Atlas (HPA),
+64
+,
+126
+the Human Cell Atlas (HCA),
+24
+and a growing number of deeply phenotyped, population-scale biobank efforts.
+127
+Thanks to these projects, massive reference data are now available to train machine learning models. Although these efforts will continue to grow, they also catalyze a new, parallel effort: creating a virtual simulation of cell biology, a new process for scientific inquiry.
+The result, the AIVC has the potential to revolutionize the scientific process, leading to future breakthroughs in biomedical research, personalized medicine, drug discovery, cell engineering, and programmable biology. Acting as a virtual laboratory, the AIVC could facilitate a seamless interface between data derived from
+in silico
+experimentation and results from physical laboratories. As such, we expect the AIVC to contribute to a more unified view of biological processes, fostering alignment among scientists on how emergent properties in biology arise.
+By bridging the worlds of computer systems, modern generative AI and AI agents, and biology, the AIVC could ultimately enable scientists to understand cells as information processing systems and build virtual depictions of life. As the AIVC expands the understanding of cellular and molecular systems, it will also increasingly allow us to program them and design novel synthetic ones. AI models have already been used to design new CRISPR enzymes,
+53
+functional proteins,
+128
+and even entire prokaryotic genomes.
+51
+The rapid progress in the precision of cell and genome engineering tools will accelerate this shift and different instantiations of the AIVC will compete in their ability to engineer new, functional biology capabilities as much as in their ability to represent and simulate biology.
+Finally, we staunchly advocate the role for open science approaches, where the scientific community readily shares data, models, and benchmarks, where findings and insights are contextualized, and where a climate of perpetual improvement is fostered. We welcome and encourage all stakeholders across sectors and domains to engage in this endeavor. With a massive scientific undertaking and shared goals, open sharing of insights, and the power of safe, ethical, and reliable AI, we believe that we are stepping into a new era of scientific exploration and understanding. The confluence of AI and biology, as encapsulated by AIVCs, signals a paradigm shift in biology and shines as a beacon of optimism for unraveling multiple mysteries of the cell.

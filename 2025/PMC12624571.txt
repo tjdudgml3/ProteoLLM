@@ -1,0 +1,1095 @@
+INTRODUCTION
+All pathogens face the continuous challenge to survive and transmit while avoiding clearance by host immunity or drug treatment. While many pathogens stay ahead in this arms race through rapid genetic diversification,
+Mycobacterium tuberculosis
+(Mtb) is highly genomically conserved. Mtb does not engage in horizontal gene transfer and has a lower mutation rate than many other pathogens.
+1
+,
+2
+Even strains that diverged thousands of years ago only differ by a few thousand bases. Despite the organism’s relative genetic monomorphism, experimental and epidemiologic studies suggest that Mtb strains differ in disease manifestations, rates of relapse, and transmissibility.
+3
+,
+4
+We recently analyzed clinical Mtb strain genomes to identify sites of diversifying selection arising within the course of single human infections, which we postulated would include functionally significant variants driving drug or host immune escape.
+5
+In addition to canonical drug resistance genes, we found that many targets of within-host selection are transcription factors, some of which have known roles in virulence, including
+phoPR
+,
+devR
+, and
+whiB6
+. Genes from three two-component signal transduction systems (
+phoR
+,
+kdpE
+, and
+narS
+) were also recently identified as sites of temporally episodic diversifying selection, suggesting regulatory selection may aid in adaptation to changing host dynamics.
+6
+Across species, there is evidence regulators play a role in evolution: prokaryotic regulators are less conserved than their regulons, and in eukaryotes, regulatory variation is already a well-appreciated mechanism of diversification.
+7
+,
+8
+We hypothesized that regulatory variants alter the expression of key bacterial pathways and contribute to Mtb adaptation and phenotypic variation.
+Though there are tens of thousands of publicly available Mtb isolate whole-genome sequences (WGSs), the largest transcriptomic studies only include tens of strains.
+9
+–
+12
+We reasoned that broader analysis of Mtb transcriptomes might identify adaptive evolution of gene expression and allow us to predict its causal variants and trace their evolutionary trajectory through global WGS datasets. To do this, we built new tools for high-throughput bacterial RNA sequencing (RNA-seq), including innovations for standardized growth and lysis and a library workflow for non-polyadenylated RNA, which we term pooled Taq-depleted (PTaq) RNA-seq, that reduces the cost of library preparation to ~$5 per sample. We used this platform to analyze 274 Mtb clinical isolates from two clinical cohorts spanning phenotypically drug-sensitive strains from the 3 most prevalent Mtb lineages (
+Figure 1A
+).
+13
+,
+14
+We found high expression diversity in genes essential for survival
+in vivo
+and known antigens, in contrast to the high rate of sequence conservation across Mtb T cell antigens themselves.
+15
+Most surprisingly, we identified recurrent evolution of decreased expression in the
+PE35-PPE68-esxBA
+operon, which encodes critical virulence effectors secreted by the ESX-1 secretion system.
+EsxBA
+and ESX-1 more generally are essential for Mtb virulence, and loss of ESX-1 is the primary attenuating deletion in the vaccine strain BCG.
+16
+Using genome-wide association study (GWAS) approaches, we found decreases in
+PE35-PPE68-esxBA
+expression are linked to prevalent genetic variants in the
+whiB6
+transcriptional regulator. Leveraging global genome sequencing data, we showed that
+whiB6
+variants are associated with transmission success, especially in drug-resistant strains. We propose that reduction of virulence gene expression could reflect a virulence-transmission trade-off where the pathogen achieves greater aggregate transmission by minimizing host disease and thus the likelihood of rapid death or detection and health system intervention.
+17
+Critically, as many virulence genes are vaccine antigens or used in immunodiagnostics, expression variation between strains also raises a possible mechanism of immune evasion.
+RESULTS
+Transcription factors are targets of diversifying selection
+We began by defining genes under selective pressure across global Mtb isolates, leveraging publicly available WGS data from 55,259 Mtb clinical strains.
+5
+Variant calling, quality control, merger, and analysis are computationally impractical with this number of genomes. Thus, we built a set of computational tools to parallelize download, calling, storage, and comparison of isolate genomes using existing tools (e.g.,
+fastp
+,
+bwa
+,
+tbprofiler
+,
+mutect2
+,
+breseq
+, and
+pastml
+), enabling rapid analysis and quality control of millions of variant calls across tens of thousands of isolates from the short read archive.
+18
+–
+24
+We used our pipeline and
+fasttree2
+to build 14 lineage-specific subtrees and combined them into a “super tree” to conduct parsimony ancestral reconstruction on all 55,259 strains.
+25
+,
+26
+Because calling variants on this number of strains requires a high-performance computing cluster, the outputs are available as community resources (see
+resource availability
+).
+We used the variant calls and ancestral reconstruction to quantify selective pressure across the genome by calculating the ratio of non-synonymous to synonymous population-wide polymorphisms (pN/pS ratio) for every gene (
+Figure S1A
+;
+Table S1
+).
+27
+In agreement with prior studies, the distribution of pN/pS ratios was biased toward purifying selection (mean = 0.69).
+6
+We next searched for enrichment of genes under diversifying selection (pN/pS ratio greater than 2) in at least one major lineage across broad functional categories as defined by
+mycobrowser
+(
+Figure 1B
+).
+28
+,
+29
+Information pathways, regulatory proteins, and transcription factors were identified as targets of diversifying selection, suggesting a possible evolutionary pressure to modify gene expression.
+Scaling Mtb transcriptomics to hundreds of phenotypically diverse clinical isolates
+We then sought to directly measure the extent of transcriptional variation between Mtb isolates. There are few large-scale analyses of transcriptional diversity across bacterial strains due to the complexity and expense of capturing many strains at a uniform growth state, extracting RNA, and performing rRNA depletion in the absence of poly-adenylation.
+30
+Mtb adds further challenges because of its slow growth, growth rate variation between clinical strains, and the difficulty of cell lysis.
+To address these challenges, we developed new tools for inexpensive, parallelized transcriptional profiling of hundreds of Mtb strains (
+Figure 1A
+, right). We first developed an Mtb culturing and RNA processing pipeline that enabled analysis of hundreds of strains. We sought to measure gene expression in standard culture medium at the mid-exponential phase of growth (optical density 600 [OD
+600
+] ~ 0.4;
+Figure S1B
+). This was technically challenging because clinical Mtb strains have highly variable lag phases and doubling times. We used a camera to image turbidity and estimate OD
+600
+from a validated standard curve. At the desired OD
+600
+, we added paraformaldehyde to the media to halt transcriptome dynamics and sterilize cultures. Crosslinks were reversed before RNA extraction.
+We next developed PTaq RNA-seq, a scalable RNA-seq technique for non-poly-adenylated RNA. Briefly, sample-specific inline barcodes were integrated during reverse transcription, the first step of library generation, to enable pooling of 48 samples after cDNA synthesis (
+Figure 1A
+, right). A core innovation of our protocol was the use of Taq polymerase’s endonuclease activity to deplete rRNA reads using a DNA guide complementary to the rRNA, thus mimicking the endonuclease’s natural DNA junction substrate (
+Figure S1C
+).
+31
+Like CRISPR depletion, cleavage prevents cDNA amplification in the final library, but without cleavage site sequence requirements or RNA guide synthesis.
+32
+Cleavage of a target oligo was >99% efficient for matching guides on single-stranded targets (
+Figure S1D
+). A library of guides targeting abundant non-coding RNAs enriched coding reads in our libraries (
+Figure 1C
+). The complete library generation protocol generated replicable clustering of the same RNA across a range of inputs (
+Figure 1D
+), and Pearson correlations of gene expression between replicate samples with different input RNA quantities were high (
+Figure 1E
+). Pure technical replicates (same RNA, same quantity, and different barcodes) had the highest average replicability (mean Pearson r = 0.91;
+Figure S1E
+).
+Mtb’s transcriptome reflects both ancient divergence and modern variation
+We used our transcriptional profiling platform to assess gene expression of 274 Mtb strains in biologic duplicate during
+in vitro
+growth in 7H9 medium. These strains were phenotypically antibiotic-susceptible isolates from patients in Vietnam and Peru.
+13
+,
+14
+Prior studies have established transcriptional diversity between distant isolates.
+9
+–
+12
+However, inclusion of closely related strains provides power to identify recent transcriptional evolution and link it to genetic variants. As in our validation experiment, transcriptomes of diverse isolates were strongly correlated: the top 10% most phylogenetically divergent strain pairings had a mean Pearson r of 0.89 (
+Figure S2A
+). To screen for genes that exhibited strain-to-strain variability while avoiding technically “noisy” genes, we measured the ratio of the biologic variation between isolates to the technical variation between replicates (
+Figure 2A
+;
+Table S2
+). Most genes were distributed around 1, suggesting strain-to-strain and technical variation were of similar magnitude, but there was a long tail of genes with much greater biologic than technical variation. Here, we focused on genes at the top 5% of biologic to technical variation and excluded genes that did not have a high magnitude of biologic variation (bottom 50%). Applying these stringent thresholds, we identified 151 genes with high expression diversity between strains.
+To understand the genetic basis of this transcriptional diversity, we plotted the expression of the 151 high-diversity genes against the strains’ phylogenetic tree (
+Figure 2B
+). Qualitatively, we observed breaks in gene expression patterns at every phylogenetic scale, including lineage boundaries, clades of closely related strains, and individual strains. High-diversity gene expression robustly separated the three major Mtb lineages by principal-component analysis (PCA;
+Figure 2C
+, right). Prinicipal-component 1 (PC1) separated the most phylogenetically distant strains (lineage 1 vs. lineages 2 and 4) and accounted for a large fraction of the variance (45%). Lineage 2 strains had a large range of values in PC2 (
+Figure 2C
+, left), differentiating a recently expanded, highly transmissible Peruvian clade (Peru HT) from ancestral lineage 2 strains (
+Figure 2B
+, top).
+14
+Deeper components provided additional discriminative power for clades diverging within the major lineages (
+Figures S2B
+and
+S2C
+). Thus, we found transcriptional variation at ancient lineage boundaries but also diversification of gene expression in more recently diverged clades.
+To address this quantitatively, we compared the phylogenetic and phenotypic trees for all isolates and separately for each lineage and plotted 2D histograms of the distances of every strain pair. Across all strains, the phylogenetic and phenotypic distances closely matched (R
+2
+= 0.89, Mantel test
+p
+value < 1E−6;
+Figure 2D
+). For individual lineages, the correlations remained statistically significant (Mantel test
+p
+value < 1E−6), but with lower R
+2
+values of 0.41, 0.17, and 0.55 for lineages 1, 2, and 4, respectively. There were many pairwise comparisons with a much greater phenotypic distance than phylogenetic distance, especially in lineage 2. These data indicate that small genetic changes can lead to large transcriptional differences.
+Gene expression diversity is enriched in host-interactive genes and antigens
+Genes with diverse expression belonged to all the broad
+mycobrowser
+functional categories (
+Figure 3A
+, top). These included known virulence genes, including
+devRS
+, involved in hypoxia regulation and persistence and known to vary transcriptionally
+33
+;
+icl1
+, involved in carbon metabolism and persistence
+34
+; and the
+pks3-pks4-papA3-mmpL10
+operon, involved in biosynthesis of immunomodulatory (poly-/di-) acyl trehalose (PAT/DAT;
+Figure S3A
+).
+35
+Genes in information pathways—including core replication, transcription, and translation genes—were under-represented in the high-variation gene set. Conversely, high-variation genes were enriched for regulators and PE/PPE genes. PE/PPE genes are a group of proteins that saw a rapid expansion in Mtb,
+36
+and though many of these proteins are uncharacterized, some are involved in nutrient uptake, and many are secreted and immunogenic. We used published TnSeq gene essentiality datasets to determine whether genes involved in homeostatic vs. Mtb-host interaction vary in expression diversity. Expression of diverse genes was under-represented in genes required for growth
+in vitro
+, while it was over-represented in genes required for survival and growth in a mouse model (
+Figure 3A
+, bottom).
+37
+,
+38
+We also considered the expression variation of Mtb antigens. Antigens from the Immune Epitope Database and vaccine-candidate antigens showed even stronger enrichment for expression of diverse genes.
+39
+–
+46
+In Mtb, T cell epitopes are generally conserved at a sequence level, perhaps because many play key roles during infection,
+6
+suggesting that transcriptional variation may provide a mechanism to modulate immunogenicity or virulence without disrupting protein function.
+Linking expression diversity to genetic loci with GWAS
+We next linked high-diversity gene expression to genetic variation using a GWAS approach. We assessed associations at a whole gene level, classifying strains as having a predicted functional variant in a gene or the reference state.
+47
+In Mtb, GWAS is complicated by complete genetic linkage. To focus on modern selection rather than associations driven by highly linked lineage-defining variants, we considered only variants that occur in less than 25% of strains and required gene loci to have at least 5 independent mutational events. We then used
+pyseer
+to associate gene expression with genetic variants.
+48
+We found 53 associations between gene expression and genetic variants (Benjamini-Hochberg false discovery rate [FDR] α = 0.01;
+Figure 3B
+;
+Table S3
+). These associations include potential
+cis
+-regulatory relationships between adjacent genes that could be driven either by polar effects or autoregulatory loops, relationships between distant genes without known roles in gene regulation that could be driven by multi-site regulatory integration, and relationships between genes and known or predicted regulators. Three of these loci also had strong diversifying selection in one or more lineages:
+rnj
+,
+Rv0042c
+(
+slfR
+), and
+whiB6
+.
+The Mtb ortholog of RNase J,
+rnj
+, was associated with increased abundance of the sRNAs
+mcr11
+and
+mts2823
+and the operonic proteins
+Rv2697c
+and
+Rv2696c
+(
+Figure S3B
+). We previously identified RNase J as a target of recurrent loss-of-function mutations leading to multi-drug tolerance.
+49
+This study also identified
+mcr11
+,
+mts2833
+, and
+Rv2697c-Rv2696c
+as differentially abundant in
+rnj
+mutants, building confidence in the results of our GWAS.
+Rv0042c
+encodes
+slfR
+, a site of selection, and a novel regulator of SL-1 synthesis
+Our GWAS also identified novel regulatory relationships. Specifically, variants in
+Rv0042c
+were associated with differential expression of
+pks2-papA1-mmpL8
+(
+Figure 4A
+), which encodes proteins involved in the synthesis and transport of sulfolipid-1 (SL-1;
+Figure 4B
+).
+50
+,
+51
+SL-1 is a virulence-associated cell wall lipid recently implicated in cough induction through activation of nociceptive neurons.
+52
+,
+53
+Because 3 of 6 of the variants in
+Rv0042c
+encode pre-stops or frameshifts, which were associated with increased
+pks2-papA1-mmpL8
+expression, we hypothesized that
+Rv0042c
+, hereafter referred to as
+slfR
+, encodes a repressor of SL-1 biosynthesis genes.
+To test this predicted interaction, we purified SlfR and conducted
+in vitro
+DNA purification and sequencing (IDAP-seq) to identify SlfR-bound regions of the Mtb genome.
+54
+The upstream intergenic region of the
+pks2
+operon was the 4
+th
+highest binding peak, supporting direct transcriptional regulation (
+Figure 4C
+;
+Table S4
+). Comparison of the top binding regions with
+meme
+identified an ~13-nt palindromic SlfR-binding motif (
+Figure S4
+).
+We further assessed this regulatory relationship by performing quantitative proteomics on three mutant-wild-type strain pairs that differed by a predicted deleterious
+slfR
+variant. The 4 greatest changes in protein abundance were Pks2, PapA1, MmpL8, and Rv0830, all of which were more abundant in the
+slfR
+variant strains (
+Figure 4D
+;
+Table S5
+).
+Rv0830
+encodes an uncharacterized methyltransferase and was also identified as a direct target of SlfR by IDAP-seq (
+Figure 4C
+). Comparison of transcript and protein abundance across the three selected strain pairs showed concordance across all 4 genes (
+Figure 4E
+). Together, these data show that in clinical strains, there is expression diversity in SL-1 synthesis and transport genes through the repeated acquisition of variants in
+slfR
+.
+Widespread
+whiB6
+variants associate with decreased secretion of ESX-1 virulence effectors
+Finally, and most strikingly, the GWAS identified an association between decreased expression of
+PE35
+and
+PPE68
+, the first genes in the operon
+PE35-PPE68-esxBA
+, and recurrent predicted functional variants in the known ESX-1 transcriptional regulator
+whiB6
+.
+55
+While
+esxBA
+was not captured in our stringent test for expression outliers, associations between decreased expression of
+esxBA
+and
+whiB6
+variants were confirmed by
+pyseer
+and inspection of the phylogenetic tree (
+Figure 5A
+;
+Table S6
+). Across our 274 strains, there were 13 independent
+whiB6
+variants with concomitant decreases in
+PE35-PPE68-esxBA
+operon expression (
+Figure 5B
+), and 6 of these were inherited by one or more strains. We also identified 5 independent variants upstream of
+whiB6
+that coincided with a peak in mutational events in our global phylogenetic analysis (
+Figure S5A
+), and a variant at this locus was previously described as altering
+whiB6
+function in a single strain.
+55
+Recurrent evolution toward decreased expression of the
+PE35-PPE68-esxBA
+operon was unexpected: the genes
+esxB
+and
+esxA
+encode the key virulence effectors EsxB/Cfp10 and EsxA/Esat6, which are secreted as a heterodimer by the ESX-1 secretion system (
+Figure 5C
+).
+56
+The importance of ESX-1 to Mtb virulence is well described. Loss of ESX-1 is the primary attenuating deletion in the vaccine strain, BCG.
+16
+The ESX-1 genes together and individually are required for wild-type growth of Mtb in animal models and macrophages, permeabilization and lysis of maturing phagosomes, and resulting induction of inflammatory cytokines, including type I interferons (IFNs) and interleukin (IL)-1β.
+57
+–
+59
+EsxA and EsxB are also dominant T cell antigens, used as diagnostic targets in clinical IFNγ release assays, and are part of several of the vaccine constructs in late-stage development.
+39
+,
+40
+PPE68 has been shown to facilitate secretion of multiple ESX-1 substrates, including EsxA.
+60
+To determine whether decreased
+PE35-PPE68-esxBA
+expression was sufficient to alter protein abundance, we selected 3 pairs of closely related strains differing by predicted deleterious
+whiB6
+variants and measured EsxB abundance in cell pellets and supernatants by western blot. EsxB abundance in cell pellet was lower relative to control proteins in the pairwise comparisons of
+whiB6
+variant vs. neighbor strains (
+Figures 5D
+and
+S5B
+). Abundance of secreted EsxB was also lower in
+whiB6
+variant strains. Secretion of Mpt64, a Sec-substrate, was also modestly lower in the variant strains. Nonetheless, the ratio of EsxB to Mpt64 was significantly lower in both the pellets and supernatants of the
+whiB6
+variant strains (
+Figure 5E
+), consistent with the model that
+whiB6
+variants result in decreased expression, abundance, and secretion of EsxB.
+ESX-1 regulatory variants arise frequently and are widely inherited in global isolates
+To determine if
+whiB6
+variants were widespread globally, we returned to our phylogenetic analysis of 55,259 isolates. Across lineages 2 and 4, we observed >600 independent predicted functional
+whiB6
+mutational events accounting for 7.0% and 2.5% of strains, respectively, and many of these variants subsequently expanded into multiple strains through clonal inheritance (
+Figure 5F
+). Strikingly, in lineage 1, 67.1% of strains have a
+whiB6
+variant driven primarily by 4 widely inherited alleles (
+Figure 5G
+), and two of these lineage 1 ancestral alleles were present in our strain pool (
+Figure 5A
+). Across global isolates, the combination of recurrence of
+whiB6
+mutational events in lineages 2 and 4 and the prevalence of strains more ancient
+whiB6
+variants in lineage 1 is linked to widespread low ESX-1 virulence effector expression. These data challenge a naive assumption that high virulence factor expression is uniformly beneficial to Mtb.
+Mtb lineage 1 accounts for at least a quarter of TB (tuberculosis) cases worldwide but is less well studied than the other major lineages.
+61
+In lineage 1, we noticed a bimodal expression pattern of genes in the
+espACD
+operon, a trans-encoded part of the ESX-1 system, where the magnitude of expression switched at two ancestral nodes on the tree (
+Figure 6A
+). The
+espACD
+operon is required for ESX-1 secretory activity and Mtb virulence in mice and macrophages (
+Figure 6B
+), and EspA and EspC are also Mtb antigens, and EspC is used in at least one vaccine candidate.
+62
+–
+64
+Inspection of variation in the
+espACD
+promoter revealed two large, independent deletions matching the patterns of increased operon expression.
+65
+Mapping all
+espA
+upstream mutational events revealed that the deletion regions also harbor frequent short variants in two sites (
+Figure 6C
+), and these sites had a higher burden of genetic variation than >99% of intergenic windows across the genome (
+Figure 6D
+). One strain in our RNA-seq library had a site variant and showed higher
+espACD
+expression than outgroup strains (
+Figure 6E
+). Ancestral reconstruction of the upstream region of
+espACD
+revealed that most global lineage 1 isolates had either a deletion or variant (
+Figure 6F
+). By contrast, only ~1% of lineages 2 and 4 strains had an
+espACD
+upstream variant, and these had limited clonal inheritance (
+Figure S6
+). Taken together, these data reveal that while ESX-1 components are under regulatory selection across Mtb strains, the pattern of inheritance and regulatory mechanisms under selection are distinct in each lineage, suggesting the impact of previously unrecognized genetic interactions.
+Frequent, modern
+whiB6
+variants associate with transmission of antibiotic resistance
+One of the strongest current evolutionary pressures Mtb faces is antibiotics. New cases of pulmonary tuberculosis are typically treated for 6 months with combinations of the first-line drugs rifampicin, isoniazid, pyrazinamide, and ethambutol.
+66
+Variants that confer marginal or conditional survival advantages in drugs facilitate survival and acquisition of high-level drug resistance, contributing to a pattern of recurrent emergence.
+67
+Therefore, we sought to assess the timing of
+whiB6
+and
+slfR
+coding and
+espA
+promoter variants relative to the introduction of antibiotic pressure. To measure the relative modernity of the genetic variants, we compared the distance to the root of the variants to the null distribution of randomly chosen branches weighted by length (
+Figure 7A
+;
+Table S7
+).
+68
+To account for lineage differences in phylogenetic structure, we separated our analyses by lineage.
+69
+In lineages 2 and 4,
+whiB6
+variants were relatively modern, and in lineage 4,
+slfR
+variants were relatively modern. However, in lineage 1, both the
+whiB6
+coding and
+espA
+upstream variants were relatively ancient, suggesting that a modern pressure alone does not account for the emergence of these variants.
+To more directly test the relationship of our variants with drug pressure, we quantified population genetic links between our variants and drug resistance genotypes. Mirroring the temporal analysis, we found strong associations between
+whiB6
+variants in lineages 2 and 4 and known drug resistance mutations (
+Figure 7B
+;
+Table S7
+). Critically, because our transcriptomic cohort only included phenotypically drug-sensitive isolates,
+whiB6
+variants alone do not cause high-level drug resistance
+in vitro
+. These data suggest that in lineages 2 and 4,
+whiB6
+variants may either contribute to the acquisition of drug resistance or increase the transmission of drug-resistant strains.
+Transmissibility is critical for strain success. Therefore, we assessed the relationship between our variants and transmission. We measured the mean terminal branch length, a metric of transmission, of clades or strains where variants evolved and compared it with random permutations (
+Figure 7C
+, top;
+Table S7
+).
+13
+,
+70
+,
+71
+Matching our drug resistance associations,
+whiB6
+variant clades had significantly shorter terminal branch lengths in lineages 2 and 4, pointing toward increased transmission. To determine if this effect is specific to drug-resistant strains, we tested the association separately on trees with only or without genotypic drug resistance (
+Figure 7C
+, bottom). In this analysis, the
+whiB6
+variant clades maintained significantly shorter terminal branch lengths in drug-resistant lineage 2 (empirical
+p
+value < 1E−5) and trended toward shorter lengths in drug-resistant lineage 4 and in drug-sensitive lineages 2 and 4 strains (empirical
+p
+values 0.068, 0.10, and 0.14). Taken together, our data link
+whiB6
+variants to increased transmission of drug-resistant strains but suggest that
+whiB6
+,
+slfR
+, and
+espA
+promoter variants may also be driven by pressures other than drug.
+DISCUSSION
+Expression diversity reveals paradoxical selection on ESX-1 secreted protein expression
+In this study, we identify the regulator,
+whiB6
+, as a common target of diversifying selection and link it to expression diversity in ESX-1 virulence factors. Variants in
+whiB6
+recur frequently across diverse global clinical isolates, arguing that these variants confer a selective advantage (global pN/pS 2.9;
+Table S1
+). Unexpectedly,
+whiB6
+variants
+downregulate
+essential ESX-1-secreted virulence factors in the
+PE35-PPE68-esxBA
+operon (
+Figure 5
+). The importance of the ESX-1 locus for Mtb virulence is clear in macrophages, mice, and people, where loss of ESX-1 is the primary mechanism of attenuation in the vaccine strain, BCG. EsxA and EsxB have well-defined roles in the permeabilization of the macrophage phagosome, induction of inflammatory cytokines, and as T cell antigens.
+16
+,
+57
+–
+59
+,
+72
+,
+73
+Thus, our data suggest that Mtb could be evolving to modify or even reduce virulence.
+Therefore, we sought to identify features that might shed light on the selective pressures driving this unexpected reduction in virulence gene expression. Humanity’s ability to diagnose and treat tuberculosis creates a massive selective pressure on the Mtb genome. A temporal analysis of the emergence of
+whiB6
+variants indicated that in the Mtb lineages where selection of
+whiB6
+is strongest,
+whiB6
+variants emerged relatively recently, and they associate with high-level drug resistance (
+Figures 7A
+and
+7B
+). These data suggest that
+whiB6
+variants may either increase the population-level fitness of drug-resistant strains or provide a stepping-stone to the development of high-level drug resistance.
+67
+We propose a few non-exclusive models. Multiple studies have now found variants altering Mtb drug susceptibility beyond high-level resistance.
+5
+,
+47
+,
+68
+,
+74
+Thus,
+whiB6
+variants could directly contribute to some form of conditional drug resistance or tolerance in human disease. Alternatively, variants could reflect the health system context of treatment. For example, if
+whiB6
+variants favor less severe or asymptomatic disease, variant strains may evade treatment by avoiding TB surveillance, enabling more aggregate transmission over time, effectively making a virulence-transmission trade-off (
+Figure 7C
+). The power of health systems interventions to drive pathogen evolution has already been shown in
+Plasmodium falciparum
+evolution to escape rapid diagnostic-based test and treat strategies.
+75
+The importance of resolving the contributions of these models is underscored by a recent study that identified a
+whiB6
+variant in a multidrug-resistant strain widespread in Europe and Russia.
+76
+Drug pressure does not appear to be the only driver of ESX-1-related transcriptional variation. A majority of lineage 1 strains harbor relatively ancient variants associated with decreased
+PE35-PPE68-esxBA
+expression (
+Figure 5G
+). Interestingly, in lineage 1, we also found selection for increased expression of the
+espACD
+operon (
+Figure 6F
+), which encodes additional ESX-1-associated secreted proteins, perhaps suggesting pressure to retain specific ESX-1 functions while diminishing
+esxBA
+expression. Though historically understudied, lineage 1 accounts for at least a quarter of TB cases worldwide.
+4
+,
+61
+Recently, lineage 1 was associated with longer infective periods, combined with lower virulence, suggested to play a role in asymptomatic TB, consistent with the virulence-transmission trade-off model proposed above.
+4
+,
+77
+Future work will be required to determine how lineage 1’s prevalent
+whiB6
+and
+espACD
+promoter variation contributes to these phenotypes.
+Expression of
+espACD
+is controlled by the convergent action of numerous, environmentally responsive regulators, including
+phoPR
+,
+espR
+, and
+mprAB
+.
+78
+–
+80
+Our study adds to growing evidence that the genetic basis of
+espACD
+regulation is under selection at multiple loci. The lineage 1 promoter deletions we identify closely mirror region deletion 8 (RD8), a deletion inherited by Mtb animal lineages, thought to decouple
+espACD
+expression from
+phoPR
+control in the context of fixed
+phoPR
+variants.
+81
+Though we are not aware of any fixed
+phoPR
+variants in lineage 1 that would mirror the animal lineages, the
+phoPR
+locus itself is a target of diversifying selection across clinical isolates (
+Table S1
+).
+5
+Finally, common variants upstream of
+espR
+, an
+espACD
+regulator that binds within our deletion regions, were recently shown to alter
+espACD
+expression.
+65
+These data suggest ongoing diversification of
+espACD
+function, and that this may be adaptive for specific host environments.
+Expression diversity as a mechanism to modulate host interaction
+Expression variation in ESX-1 is part of a wider trend of variation across Mtb-host-interactive processes. The recurrent emergence of expression variation in
+in vivo
+essential genes and known antigens suggests strong diversifying selection on these functions (
+Figure 3A
+). We propose that expression diversity is a mechanism for Mtb to coordinately tune processes at the host-pathogen interface without widespread changes in protein coding sequences, which might jeopardize key activities.
+6
+In
+slfR
+variants, we identified a selective pressure toward increasing expression of SL-1 synthesis genes, and in lineage 4, where
+slfR
+selective pressure was strongest (pN/pS = 1.95), these variants were primarily modern but without a clear link to drug pressure (
+Table S1
+;
+Figure 7
+). Early work identified SL abundance as highly variable between isolates and positively correlated with lung bacterial burden.
+52
+With SL-1’s recently elucidated role as an activator of nociceptive neurons to induce cough, our data support a model in which
+slfR
+variants modulate host interaction.
+53
+We also identified high expression diversity in 2,3-diacyltrehaloses (DATs) and penta-acyltrehaloses (PATs) synthesis genes (
+pks3-pks4-papA3-mmpL10
+;
+Figure S3A
+), highlighting regulation of immunomodulatory lipid synthesis genes as a potentially rich source of isolate phenotypic variation.
+82
+These data have critical implications for TB interventions, including vaccine design. Though the genetic essentiality of Mtb genes to pathogenesis has been considered, regulatory diversity—in particular, tolerance of decreased expression of essential virulence genes—has not been explored. These concerns are not theoretical: the safety of the MTBVAC vaccine, now in clinical trials, is supposedly achieved through deletion of the
+phoPR
+regulator, resulting in reduced ESX-1 effector expression.
+83
+The ESX-1 effectors we identified as expression diverse are also key antigens involved in TB diagnostics and targets for vaccine design, and 6/14 (43%) of novel vaccine antigens were among our expression-diverse set. Inherited and
+de novo
+variation in antigen abundance across different strains could cause variation in the efficacy of vaccines and the specificity of TB tests relying on immune response to whole Mtb (PPD skin test) or specifically EsxB/EsxA (IGRA blood test)—indeed, a few strains with escape phenotypes have been described but interpreted as the exception rather than the rule.
+84
+,
+85
+Toward characterizing a diverse and evolving transcriptome
+Previous studies of transcriptional diversity in Mtb strains have focused on relatively small numbers of phylogenetically divergent isolates, making it unclear if transcriptional evolution occurs on short as well as long timescales.
+9
+–
+12
+To facilitate this study and others at this scale, we developed an RNA-seq method, PTaq RNA-seq, and a pipeline to grow and harvest Mtb RNA at scale. Through early barcoding and pooled rRNA depletion using Taq’s endoribonuclease activity, our approach reduces cost and simplifies handling in bacterial RNA-seq workflows.
+Our data show transcriptional divergence across both long and short evolutionary time scales in Mtb (
+Figures 2B
+and
+2C
+). An extreme example of a burst of expression variation is in the recently evolved (circa 1950), Peru HT that is visually separable by expression heatmap and PCA (
+Figure 2B
+, far left).
+14
+Our data also generated a shortlist of 151 high transcriptional diversity across isolates (
+Table S2
+)—though we identify potential genetic mechanisms for some of this variation, future studies will be required to determine the mechanisms and consequences of this variation. Since convergent phenotypic change likely has a convergent genetic driver, we propose leveraging the tens of thousands of publicly available Mtb genomes for candidate causal variation, and in service of this, we release the variant calls, quality control, trees, and ancestral reconstruction that were critical to identifying ESX-1 and
+slfR
+variation in this study (see
+resource availability
+).
+Taken together, our data demonstrate that Mtb is not a genetically or phenotypically monomorphic organism. Modern advances in high-throughput phenotyping, genomics, and transcriptomics give us the opportunity to analyze strains at scale, and future study of the TB global pandemic must encompass both existing and evolving diversity and be aware of the limitations of laboratory strains.
+Limitations of the study
+Transcriptional analyses were conducted on drug-sensitive isolates from communities in Vietnam and Peru and are not representative of Mtb’s full genetic diversity. This work harvested transcriptomes from cells grown to a single estimated OD in a single
+in vitro
+media condition. Mtb isolates display different growth kinetics, and, thus, the same OD may yield different cellular states in different isolates. A different growth protocol, cohort, or addition of host-like stressors may identify new transcriptional diversity. Since different Mtb lineages have been shown to have distinct phylogenetic features, we separated most analyses by bacterial lineage.
+69
+Many of the results of this work are founded on associations between genetic and expression variation. The associations cannot fully prove causality. However, we leverage the recurrent nature of these variants across the tree to show both the strength of the association and the evolutionary pressure on these sites.
+RESOURCE AVAILABILITY
+Lead contact
+Requests for information and resources should be directed to and will be fulfilled by the lead contact, Sarah M. Fortune (
+sfortune@hsph.harvard.edu
+).
+Materials availability
+Mtb clinical isolates used in this study were collected for prior studies, which can be referenced for strain availability. Primers and DNA constructs used in this study are described in full in the
+STAR Methods
+.
+Data and code availability
+Datasets and code generated in this study are publicly available (see the
+key resources table
+for accession numbers or repositories). Accession numbers of publicly available WGS data are in
+Table S8
+. Notebooks used to produce figures and conduct analyses using this data and code are available at
+github.com/peterculviner/HT-Mtb-RNA-Seq-Paper-Notebooks
+.
+STAR★METHODS
+EXPERIMENTAL MODEL AND STUDY PARTICIPANT DETAILS
+Mtb clinical isolates for transcriptomics
+Clinical isolates from Vietnam were collected by prior studies in Ho Chi Minh City between 2008 and 2011 from patients presenting pulmonary TB.
+13
+,
+94
+Isolates used for this study were a subset of these which were validated to be phenotypically drug sensitive and could be resuscitated from frozen culture in 7H9 media (see below). These isolates spanned Mtb lineages 1, 2 and 4. Clinical isolates from Peru were collected by prior studies near Lima between 2009 and 2012 from patients presenting pulmonary TB.
+14
+Isolates used for this study were a subset of these which were validated to be phenotypically drug sensitive and part of Mtb lineage 2; we focused on lineage 2 isolates to explore the phenotypic diversity of the Peru HT clade through comparison to Peruvian and Vietnamese isolate outgroups (
+Figure 2B
+). Isolates were not chosen to represent the population structure of global Mtb isolates, so it is unlikely to be an exhaustive representation of Mtb transcriptomic diversity; instead, we used a maximalist approach of collecting transcriptomic data from as many isolates as was technically feasible sampled from the above cohorts available to us—this enabled us to capture repeated transcriptional variation even on closely-related strains separated by recent evolution. A maximum likelihood phylogenetic tree (see below) is available for all strains (see
+resource availability
+).
+For transcriptomics, Mtb isolates were grown in a 1 mL volume in 24-well plates, covered with breathe-easy film, at 37°C × 100 RPM, in 7H9 media supplemented with 0.2% glycerol, 0.05% Tween-80, and 10% OADC. Each Mtb strain had different growth and lag phase kinetics. To capture all strains at a similar OD
+600
+(~0.4), we separated growth into three phases: recovery, outgrowth, and harvest. OD
+600
+values were estimated by well opacity measured by photography and comparison to photographs of a known OD
+600
+standard curve. For recovery, 50 uL of thawed culture was inoculated into 950 uL of fresh media and grown for 72 hours. For outgrowth, OD
+600
+was measured, and strains were back diluted to 0.03 in fresh media or allowed to continue growth if OD
+600
+was less than 0.05; strains were allowed to grow for an additional 72 hours. For harvest, strains were back diluted to 0.03 to 0.1 depending on strain growth during outgrowth and allowed to grow for a final 48 hours. To halt transcriptome dynamics and sterilize cultures, 145 uL of 16% PFA was added to each 1 mL culture and allowed to incubate for 1 hour at room temperature before removal from the biosafety level 3 facility. Two replicates were prepared for each strain; to help avoid batch effects, replicates of the strain were not grown on the same plate or started on the same day.
+Isolates for Western blotting and proteomics
+Selected Mtb isolates and close phylogenetic outgroup strains were also grown for Western blots and proteomics. These strains were selected for the presence of
+whiB6
+and
+slfR
+variants. Strains were resuscitated in 7H9 media from frozen cultures (described above), but transferred into detergent-free media or washed in PBS as described in method details to prevent detergent contamination in downstream steps.
+SlfR protein expression
+SlfR was expressed with an N-terminal 6xHIS tag from a pET-28 vector in BL21-CodonPlus (DE3)-RP cells. The strain was cultured overnight in LB with 50 μg/mL kanamycin with shaking at 37°C. The overnight culture was diluted in two 50 mL cultures of LB with kanamycin, grown up to OD600 = 0.5, and protein production was induced with 500 μM IPTG for 4 hours shaking at 37°C. Cells were pelleted at 5000 g for 15 minutes and frozen at −80°C.
+METHOD DETAILS
+RNA purification
+In 1.5 mL tubes: fixed cells were centrifuged for 10,000 RPM for 5 minutes, washed into PFA quencher (25 mM Tris HCl pH 7.5, 50 mM NaCl, 250 mM glycine, 0.1% Tween-20), pelleted again, and resuspended in 20 uL T2E (10 mM Tris pH 8, 2 mM EDTA). Crosslinks were reversed by incubating for 30 minutes at 70°C in strip tubes. Cells were lysed by adding 600 uL Trizol, transferring to a bead beating tube and bead beating 2 times at 6,000 RPM for 30 seconds. To separate Trizol, 120 uL of chloroform was added to each tube and vortexed. Tubes were centrifuged for 10 minutes at 10,000 RPM and the aqueous upper layer (250 uL) was extracted to a deep well 96-well plate. To precipitate RNA onto beads, 5 uL of undiluted Sera-Mag Speed Beads and 260 uL of isopropanol-GuHCl (1 M guanidium-HCl, 0.05% Tween-20, in 100% isopropanol) was added and mixed with a multichannel. After a 5-minute incubation, plate was placed on a magnetic rack and allowed to clarify. With a multichannel, beads were pelleted and washed 4 times with 500 uL 90% ethanol, returning to magnetic rack after each wash. After the last wash, beads were allowed to dry for 5 minutes and resuspended in 15 uL T.1E (10 mM Tris 8, 0.1 mM EDTA). After incubation, RNA solution was placed in fresh 96-well plates for storage at −80°C.
+Pooled Taq-depleted (PTaq) RNA-Seq libraries
+In 96 well plates, de-crosslinked RNA was back diluted in T.1E (10 mM Tris 8, 0.1 mM EDTA) to add 6 or 15 ng (isolate libraries) or 10, 50, or 100 ng (validation libraries) across 5 uL. RNA was mixed with premixed 2 uL 5x Maxima H-buffer and 0.25 uL 100 uM inline barcoded reverse transcription primer and incubated for 5 minutes at 95°C to fragment RNA and anneal primer. Then, a master mix of 0.5 uL 10 mM dNTPs, 1.75 uL water, 0.25 uL RNase inhibitor, and 0.25 uL Maxima H-reverse transcriptase was added for a final volume of 10 uL per reaction. On a thermocycler, reactions were incubated for 10 minutes at 25°C, 30 minutes at 50°C, and 5 minutes at 85°C. Half of each reaction was mixed (other half saved at −20°C) in groups of up to 48 samples with unique inline barcodes. To degrade free primers, for every 20 uL of mixed sample, 1 uL of exonuclease I was added, and reactions were incubated for 20 minutes at 37°C and 20 minutes at 80°C.
+To clean up, reactions were brought to a minimum volume of 100 uL with water and mixed 1:1 with cleanup beads (11g PEG 8000, 10 mL 5 M NaCl, 100 uL 0.5 M EDTA, 50 uL 10% IGEPAL, 250 uL sodium azide, 1 mL Sera-Mag Speed Beads). Cleanups were incubated 5 minutes at room temperature followed by 5 minutes on a magnetic rack to clarify. Supernatant was discarded and beads were washed twice with a minimum of 400 uL (or the cleanup reaction volume if higher) of 80% ethanol. After the last wash, tubes were spun for a moment to collect ethanol at the bottom of the tube and excess was removed on the magnetic rack. Beads were allowed to dry for 1 minute. Beads were resuspended in 10 uL of T.1E and incubated for 5 minutes off the rack before returning to the rack and saving the 10 uL supernatant.
+To degrade excess RNA, 1.5 uL of RNase H buffer, 3 uL of water, and 0.5 uL of RNase H was added to each reaction and reactions were incubated for 30 minutes at 37°C; reactions can be frozen or placed on ice when done. While RNase H reaction was proceeding, the adapter and splint oligos were pre-annealed by mixing adapter at 10 uM and splint at 20 uM final concentrations in T.1E and incubating at 95°C for 30 seconds and gradually lowering temperature to room temperature on a thermocycler; pre-annealed adapter can be saved at −20°C. To the RNase H reaction, we added 5 uL 10x T4 ligase buffer, 20 uL 50% PEG 8000, 1 uL pre-annealed adapter/splint, 8 uL water, and 1 uL T4 ligase (high concentration). Ligations were incubated for 1 hour at 25°C. Reactions were cleaned up by adding 50 uL water and 80 uL cleanup beads (ratio change due to presence of PEG in the reaction buffer) and following above cleanup protocol but resuspending in 20 uL of T.1E.
+rRNA depletions were conducted by mixing 10 uL cDNA library from the prior step, 3 uL 10x Taq polymerase buffer, 2 uL Taq polymerase, water, and depletion primers. Depletion primers and water quantity was calculated to achieve a 0.1 uM final concentration of an individual primer. Reactions were incubated at 95°C for 30 seconds, 65°C for 2 hours, and held at 10°C. To clean up, reactions were brought to a 100 uL volume and cleaned up as above, resuspending in 20 uL of T.1E.
+For each pool, a trial qPCR reaction was prepared to determine the correct number of final amplification cycles: 2 uL of cDNA library was mixed with 5 uL 2x iTaq master mix, 0.2 uL of each 100 uM Illumina adapter primer, and 2.6 uL of water. The qPCR machine was set to 5 minutes at 95°C, followed by 25 cycles of 30 seconds at 95°C and 45 seconds at 60°C. For each pool, the number of cycles where amplification was one quarter of the way through the sigmoidal amplification curve was recorded as the cycle number for the final PCR (16–19 cycles for our libraries).
+Final PCRs were prepared as 50 uL reactions with 25 uL 2x KAPA HiFi master mix, 1 uL of each 100 uM Illumina adapter primer, 15 uL cDNA library and 8 uL of water; i7 indexes were varied to enable pooling of all sets of inline barcodes after PCR. The final PCR was run on a thermocycler set to 45 seconds at 98°C; followed by X cycles of 15 seconds at 98°C, 30 seconds at 60°C, 30 seconds at 72°C; followed by a final incubation of 1 minute at 72°C. “X” denotes the final cycle number determined by the trial qPCR.
+A two-sided magnetic bead size selection/cleanup was conducted using a 20% PEG-NaCl solution (20% w/v PEG 8000, 2.5 M NaCl). PCRs were brought to a volume of 200 uL with water. For the first (upper) size selection, 4 uL of Sera-Mag Speed Beads were resuspended in 100 uL 20% PEG-NaCl and mixed with reaction and incubated 5 minutes at room temperature. Bead-reaction mixture was placed on a magnetic rack and allowed to clarify; the supernatant was transferred to a fresh tube and beads were discarded. For the second (lower) size selection, 4 uL Sera-Mag Speed Beads were resuspended in 40 uL 20% PEG-NaCl and mixed with the supernatant of the upper size selection and incubated 5 minutes at room temperature. The mixture was placed on a magnetic rack and allowed to clarify before removing and discarding supernatant. The beads were washed twice with 400 uL 80% ethanol while on the magnetic rack. After the last wash, tubes were spun for a moment to collect ethanol at the bottom of the tube and excess was removed on the magnetic rack. Beads were allowed to dry for 1 minute. Beads were resuspended in 10 uL of T.1E and incubated for 5 minutes off the rack before returning to the rack and saving the 10 uL library containing supernatant.
+Library concentrations were quantified by qubit for pooling. Method validation sequencing was conducted on a MiSeq instrument. Quality control sequencing for isolate pools was conducted on a MiSeq instrument and library ratios were determined by sequencing to re-pool reverse transcription reactions at an ideal ratio. Final clinical isolate sequence pools were submitted for sequencing on a NovaSeq instrument to the Harvard Bauer Core Facility.
+Design of Taq depletion primers
+Primers targeting the rRNA (23S, 16S, 5S), tmRNA (
+ssr
+) and the RNA component of RNase P (
+rnpB
+) were designed by identifying reverse complement primers 20–30 bases long (optimum 25) with a T
+m
+of 60–72°C (optimum 65°C) using
+primer3
+. Promiscuity to the remainder of the genome was checked by local
+blastn
+. To form the hairpin that guides Taq endonuclease cleavage (
+Figure S1C
+), oligo sequences were BINDINGREGION-
+CATGCG
+CTTG
+CGCATG
+-N, the underlined components indicate the predicted hairpin, N was the final base of the binding region ensuring a single base overhang.
+95
+qPCR validation of Taq depletion
+Feasibility of Taq depletion was tested in 30 uL reactions with or without 1 uL Taq or thermostable FEN1 with appropriate buffer, 2 uL 25 nM target primer (singled stranded or double stranded), with or without 2 uL 250 nM guide, alternative guide, or mismatch guide. Reactions were incubated at 95°C for 30 seconds followed by 65°C for 1 hour. To degrade enzymes, 1 uL of thermolabile proteinase K was added and incubated 37°C for 15 minutes and inactivated at 60°C for 15 minutes. Triplicate reactions were back diluted 1:100 and 2.5 uL was added to 10 uL triplicate qPCR reactions using iTaq master mix and 300 nM primers. Relative quantity compared to no guide control was calculated by comparison to C
+t
+of standard curve of target oligo dilutions.
+SlfR protein purification and IDAP-Seq
+SlfR protein purification and IDAP-Seq was adjusted from previously described.
+47
+slfR
+with an N-terminal 6xHIS tag was amplified from
+slfR
+from H37Rv genomic DNA inserted into pET-28 using the NcoI and HindIII sites and Gibson assembly. The resulting plasmid was isolated from NEB 5-alpha Competent E. coli and transformed into BL21-CodonPlus (DE3)-RP Competent Cells. After growth and pelleting (see
+SlfR protein expression
+), pellets were resuspended in 10 mL binding buffer (500 mM Tris-HCl pH 8.0, 100 mM NaCl, 50 mM KCl, 3% glycerol) with protease inhibitor and lysozyme and lysed via sonication 4 × 30 seconds 30% amplitude, alternating with cooling on ice. Lysate was spun at 20,000 g at 4°C for 15 minutes and clarified protein lysate was removed and combined with 1 mL Ni-NTA Agarose and 10 mM imidazole and incubated in the column at 4°C for 1 hour, gently shaking. Supernatant was drained from the gravity flow column and agarose was washed twice with binding buffer with 20 mM imidazole. Protein was eluted with binding buffer with 100 mM imidazole (elution 1) followed by binding buffer with 200 mM imidazole (elution 2). Protein from elution 2 was dialyzed using a Slide-A-Lyzer G3 Dialysis Cassette (10K MWCO, 3 mL) in 200 mL dialysis buffer (50 mM Tris-HCl pH 8.0, 50 mM NaCl, 0.25 mg/mL BSA, 5% glycerol) for 1 hour at room temperature and then in a fresh 200 mL dialysis buffer overnight at 4°C. Resulting protein was measured by Qubit Protein Assay, aliquoted, flash frozen in liquid nitrogen, and stored at −80°C.
+We prepared two replicates of each of 0 nM or 300 nM SlfR in dialysis buffer with 1 μg of sheared Mtb genomic DNA (mean 300 bp size) in a 125 uL reaction volume. Binding reactions were incubated 30 minutes at room temperature. For each reaction, 100 uL Talon resin was pre-equilibrated in dialysis buffer by centrifuging for 2 minutes at 700 g to remove supernatant and mixing with 500 uL dialysis buffer. Equilibration with dialysis buffer was repeated and supernatant was discarded. Next, reactions were mixed with a pre-equilibrated Talon resin and incubated 30 minutes at room temperature with rotation. Bound DnaA-resin mixtures were then loaded onto Poly-Prep chromatography columns and washed 3 times with 1 mL of dialysis buffer. Bound genomic DNA was eluted by capping the columns and adding 500 μL of pre-warmed (65°C) elution buffer (50 mM Tris pH 8, 10 mM EDTA, 1% SDS) and incubating columns on a heat block at 65°C for 15 minutes with the tops coated with parafilm to prevent evaporation. After incubation, elution buffer flow through was collected with two additional 200 uL washes of elution buffer. Eluted gDNA was brought to a 1 mL volume with additional elution buffer. Reactions were mixed with 10 uL of Sera-Mag Speed Beads and 1 mL of 20% PEG-NaCl (20% w/v PEG 8000, 2.5 M NaCl) and incubated for 5 minutes at room temperature. Beads were washed twice with 2 mL of 80% ethanol. After the last wash, tubes were spun for a moment to collect ethanol at the bottom of the tube and excess was removed on the magnetic rack. Beads were allowed to dry for 1 minute. Beads were resuspended in 20 uL of T.1E and incubated for 5 minutes off the rack before returning to the rack and saving the 20 uL supernatant. Libraries were prepared using the NEBNext Ultra II DNA Library Prep Kit for Illumina following manufacturer guidelines for <5 ng of input DNA. Libraries were sequenced with paired ends on a MiSeq instrument.
+Proteomics of slfR variant strains
+The following strain pairs (differing by independent
+slfR
+variants in lineage 2; variant strains marked with *) were grown: g2g_030* and vci_269, vci_246* and vci_089, vci_569* and vci_035. Strains were grown in a 10 mL volume in 30 mL inkwells at 37°C × 100 RPM, in 7H9 media supplemented as above. Cultures were grown for 3 days to mid-log (0.35–0.67) then 1–2 mL were back diluted into triplicate 50 mL cultures and grown for 4 additional days to mid-log (0.32–0.72). To remove detergents that can affect mass spectrometry results, cultures were centrifuged at 4,000 RPM for 7 minutes in a swinging bucket centrifuge to pellet cells and washed twice with 20 mL of 1x PBS before resuspending in 1 mL PBS. Cells were pelleted a final time on a benchtop centrifuge (10,000 RPM for 5 minutes) before freezing pellets at −80°C. Pellets were resuspended in 1 mL lysis buffer provided by the Whitehead Institute Proteomics facility (5% SDS, 100 mM TEAB, 40 mM CAA, 10 mM TCEP) and transferred to a bead beating tube. Cells were bead beaten 3 times for 30 seconds at maximum speed, resting on ice between steps. Bead beating tubes were spun 10 minutes at max speed on a benchtop centrifuge to remove debris and supernatant was placed in a fresh tube. Supernatant was filter sterilized twice through 0.22 μm syringe filters and submitted to Whitehead Institute Proteomics facility.
+Western blotting of whiB6 variant strains
+The following strain pairs (differing by independent
+whiB6
+variants in lineage 2, variant strains marked with *) were grown: vci_149* and vci_177, vci_176* and vci_403, vci_439* and vci_181. Strains were grown in a 10 mL volume in 30 mL inkwells at 37°C × 100 RPM, in 7H9 media supplemented as above. Strains were grown for 3 days to mid log (OD 0.49–0.61), then 1–2 mL were back diluted into duplicate 50 mL cultures in the same media and grown for 4 additional days to allow all cultures to get above OD 0.5. To prevent detergent effects on secretion, samples were then transferred to detergent-free Sauton’s media (for 1 L: 0.5 g KH
+2
+PO
+4
+, 0.5 g MgSO
+4
+⋅7H
+2
+O, 2 g citric acid, 0.05 g ferric ammonium citrate, 60 mL glycerol, 4 g asparagine; pH adjusted to 7.2 with NaOH) by pelleting cultures at 4,000 RPM for 7 minutes and washing twice with 20 mL Sauton’s media and normalizing all cultures to 0.5 OD in 50 mL of Sauton’s based on pre-spin OD. Cultures were grown for 24 hours then by pelleting at 4,000 RPM for 15 minutes. 45 mL of supernatant was filter sterilized twice through a 0.22 μm syringe filter. Pellets were resuspended in 1 mL protein extraction buffer (50 mM Tris HCl pH 7.5, 5 mM EDTA, 1x Roche cOmplete protease inhibitor) and bead beaten and sterilized as above pellets for proteomics.
+The concentration of protein extracted from pellet was measured using Qubit Protein Assay. Higher protein concentration samples were diluted in water down to the lowest protein concentration then all samples were diluted 1:10 in water. Equal volumes of supernatant samples were taken. Samples were then incubated for 10 minutes at 95°C in 6X Laemmli SDS-Sample Buffer. SeeBlue
+™
+Plus2 Pre-stained Protein Standard and 18μL of treated samples were then loaded onto NuPAGE
+™
+4 to 12%, Bis-Tris gels and run in NuPAGE MES SDS Running Buffer for 30–45 minutes at 170 V. Protein was transferred onto nitrocellulose membranes using 10X Transfer Buffer diluted in methanol and water (1:1:8), on a Trans-Blot Turbo Transfer System (BioRad) for 30 minutes at 25 V and 1 A. Membranes were rinsed with 1x PBS and blocked for two hours at room temperature using Blocking Buffer for Fluorescent Western Blotting. Primary antibody (antibodies to CFP-10, GroEL2, and Mpt64) were diluted in 1:1000 (CFP-10, GroEL2) or 1:5000 (Mpt64) in blocking buffer supplemented with 0.1% Tween-20. Membranes were incubated in primary antibody overnight at 4°C then washed with PBS with 0.05% Tween-20. LI-COR Secondary antibodies were diluted 1:20000 in blocking buffer with 0.1% Tween-20 and 0.0025% SDS. Membranes were incubated in relevant secondary antibody for 1 hour at room temperature, washed with PBS with 0.05% Tween-20, and left in PBS before imaging. Images were acquired with LI-COR Odyssey CLx Imager.
+QUANTIFICATION AND STATISTICAL ANALYSIS
+Where applicable, statistical tests are described or summarized in figure legends.
+Clinical isolate WGS variant calling
+To identify samples to run through our pipeline we used
+entrez
+to identify the set of unique biosamples from 603 bioprojects with Mtb WGS sequencing data. We used
+sra-tools
+to download and convert data from the short read archive (SRA) to the FASTQ format; biosamples with multiple runs were concatenated and variant calling was run on the Harvard FAS Research Computing (FASRC) cluster.
+Our variant calling pipeline did the following steps for each biosample. First, it downloaded the dataset from the short read archive using
+sra-tools
+and randomly down sampled large FASTQs to a target depth of 100x. Next, it used
+fastp
+to infer and remove adapters and duplicate reads. Next,
+bwa mem
+was used to map reads to the H37Rv (
+NC_000962.3
+) genome. Then,
+tbprofiler
+was used to call Mtb lineage-defining SNPs. Finally, fixed variants were called with
+breseq
+and mixed variants were called with
+mutect2
+. While the pipeline progressed, samples were removed (early stop) if any of the following was identified: the sample had an average depth less than 25, coverage of less than 80% of the Mtb genome, or
+tbprofiler
+did not call the strain as a member of Mtb lineages 1–9.
+Next, we concatenated quality control metrics from all successful pipeline runs (n=62639) and removed low quality or possible “mixed infection” samples based on the following filter metrics: (1) greater than 3 standard deviations from the mean number of low quality sites called by
+breseq
+, (2) greater than 3 standard deviations from the mean error rate called by
+samtools
+, (3) less than 98% genome coverage, (4)
+mutect2
+called a high proportion of “mixed” single nucleotide variants (less than 75% of single nucleotide variants called by
+mutect2
+had an allele frequency greater than 90%), or (5) had greater than 2 mixed lineage defining variants according to
+tbprofiler
+. After filtration, 89.9% (n=56310) of input biosamples remained.
+Clinical isolate phylogenetic tree building
+For computational feasibility, the global isolate tree was constructed with a divide-and-conquer approach using
+fasttree2
+. Strains called by
+tbprofiler
+as in the sub-lineages 1.1, 1.2, 2.1, 2.2, 3, or 4.1–9 were grouped and used to build 14 separate sub-lineage trees (n=55,259 strains could be unambiguously assigned to these groups); a scaffold set including a selection of strains from each sub-lineage was also collected (n=514). A
+Mycobacterium canettii
+outgroup was included in each set for rooting. Each of the sub-lineage sets and the scaffold set were run though our genome-wide SNP alignment pipeline to generate a fasta file for tree building. Briefly,
+breseq
+variant calls (or a missing data character) were written for all genomic sites with a SNP in at least one sample excluding (1) sites with missing data for more than 50% of samples or (2) sites that fell into regions with poor variant recall (often repetitive regions).
+96
+All 15 trees were then constructed using
+fasttree2
+(compiled with -DUSE_DOUBLE) using the
+rawdist
+flag suggested for SNP alignments. To make tree branch lengths comparable, branch lengths were converted from substitutions per site (SNP sites) to substitutions per genome (all Mtb genome sites). Finally, the subtrees were converted into a global tree of lineages 1–4 by pruning and replacing a given subtree’s down sampled clade on the scaffold tree with the complete lineage subtree.
+The transcriptomic cohort was small enough (n=274), that maximum-likelihood tree building was possible on all strains. The genome-wide SNP alignment pipeline was used as above to generate a fasta alignment for all strains and
+Mycobacterium canettii
+except for a more stringent missing data threshold of 10%. A generalized time-reversible (GTR) consensus tree was generated with
+iqtree
+, 1000 ultrafast bootstraps, and invariant genomic site counts.
+86
+Clinical isolate ancestral reconstruction
+We ran parsimony ancestral reconstruction separately on global isolates and the transcriptomic cohort using a custom pipeline. For each cohort, all isolate
+breseq
+variant calls and missing data sites were merged into a single variant call file (VCF) with a single variant per row using
+bcftools
+. For each variant, annotations and effects were called with
+snpeff
+and
+sift4g
+.
+87
+,
+88
+Variant calls were converted into a custom format, variant call bytestream (VCB), enabling random access by either variant position or sample. Using VCB files and our phylogenetic trees, we conducted parsimony ancestral reconstruction separately for all variant rows with
+pastml
+and wrote a new VCB file describing the ancestral state at every node. Finally, nodes with unambiguous evolutionary events (Ref → Alt or Alt → Ref) and reversions were called using the ancestral VCB and phylogenetic tree and custom code to generate a final event VCB.
+pN/pS ratio calculation
+Transition-transversion rate was estimated at 1.95 using unambiguous parsimony evolutionary events on the global phylogenetic tree. pN/pS ratios for each gene were calculated using the ratio of events for each coding region and calculated separately for the whole tree or each separate lineage: (observed nonsynonymous / possible nonsynonymous) / (observed synonymous / possible synonymous). Possible counts were calculated with
+biopython
+using the NG86 method.
+97
+Codons that overlapped with sites with (1) a missing data rate above 5% or (2) poor variant recall regions (typically repetitive regions or PE/PPE proteins) were excluded from the analysis
+96
+—the included fraction of a CDS is recorded in
+Table S1
+.
+Gene category enrichments in
+Figure 1B
+were calculated on the set of CDS with (1) an included fraction of 1.0 and (2) at least 5 observed nonsynonymous and synonymous events in all 4 major lineages (n=2803). Two-sided enrichment was calculated against each
+mycobrowser
+category and previously identified transcription factors using the Fisher exact test for each category. Previously identified transcription factors were defined as the union set of predicted transcription factors from prior studies of the Mtb regulatory network.
+28
+PTaq RNA-Seq library data processing
+Inline demultiplexing, mapping to the H37Rv (
+NC_000962.3
+) genome, and quality control was conducted with a pipeline built on
+cutadapt
+and
+bowtie2
+.
+89
+,
+90
+Fragments were deduplicated with
+picard
+. To avoid misapplication of counts to repetitive regions of the Mtb genome (particularly PE/PPE proteins), reads were filtered to remove ambiguously mapping reads to only include those with a MAPQ value greater than 10. Library depth normalization was conducted by calculating size factors relative to a pseudo-reference sample as in
+deseq2
+.
+98
+For validation libraries (
+Figures 1D
+and
+1E
+), the top 50% of genes by mean expression across samples were considered well-expressed. For isolate libraries (
+Figures 2
+,
+3
+,
+4
+,
+5
+, and
+6
+), a log
+2
+normalized mean expression threshold of 3 was considered well-expressed to minimize standard deviation between replicates while keeping >50% of coding regions (
+Figure S2D
+).
+Analyses of strain gene expression diversity
+To identify high expression diversity genes in
+Figure 2A
+and
+Table S2
+, we (1) identified genes in the top 5% of biologic (standard deviation of strain means) to technical variation (mean standard deviation of strain replicates) within well-expressed genes and (2) identified genes in the top 50% of biologic variation (standard deviation of strain means) within well-expressed genes. We conducted this analysis for all strains and for each of lineages 1, 2, and 4 separately. A gene was considered high expression diversity if it met both thresholds across all strains or in at least 1 lineage. The results of the “all strains” analysis is shown in
+Figure 2A
+. For
+Figure 2B
+, the log
+2
+normalized gene expression level relative to the mean for that gene is shown in phylogenetic order on the x-axis and by Ward clustering of high variation gene expression data (dendrogram not shown) on the y-axis. To generate
+Figure 2D
+, Ward clustering of high variation gene expression data was conducted on all strains or separately on each of lineages 1, 2, and 4. All pairwise distances were calculated from the Ward dendrogram (phenotypic distance) and the phylogenetic tree (phylogenetic distance) and normalized to the maximum distance. The Mantel test (
+scikit-bio
+) and R
+2
+was used to describe the relationship between the two distance matrices.
+Gene category enrichments in
+Figure 3A
+were calculated on the set of well-expressed genes searching for enrichment of expression diverse genes. Two-sided enrichment was calculated with the Fisher exact test against each
+mycobrowser
+category, genes previously identified as
+in vitro
+essential,
+37
+genes previously identified as
+in vivo
+essential across 30 collaborative cross mouse strains,
+38
+genes identified as containing an epitope across at least 2 references on the Immune Epitope Database,
+39
+and genes used as vaccine antigens identified by a literature search.
+40
+–
+46
+GWAS of gene expression and coding variants
+GWAS in Mtb is complicated by clonal inheritance and a lack of horizontal gene transfer. This complicates GWAS by (1) introducing strong population biases due to complete linkage and (2) biasing acquisition of beneficial alleles towards
+de novo
+mutation. Particularly for selection towards loss of function at a locus, the requirement for
+de novo
+variation can mean many variants across a population can achieve the same phenotype but be present at a relatively low population frequency. To control for this low population frequency, we used burden testing to consider all predicted functional variants in each coding region as one variant class. Here, we define predicted functional variants as those predicted by
+sift4g
+to be deleterious (sift score < 0.05) or annotated as causing a frameshift, creating an early stop codon, or disrupting the start codon. To focus on modern selection and avoid associations driven by lineage-defining variants, we considered only variants that occur in less than 25% of strains and required loci to have at least 5 independent mutational events. We further removed potential low quality variant calls by removing variants with missing data in >5% of strains, or had reversions (which should be very rare). Only variants called as Alt relative to H37Rv were considered. GWAS was conducted with the
+pyseer
+package using a linear mixed model and providing a strain similarity matrix built from the phylogenetic tree to control for population effects. The association was run iteratively against each of the 161 high expression diversity genes as a phenotype to generate 49,427 gene expression to variant loci associations. The reported FDR was calculated by Benjamini-Hochberg multiple hypothesis correction across all associations (
+Figure 3B
+;
+Table S3
+), the effect size was reported by
+pyseer
+.
+IDAP-Seq library data processing
+To map the binding of SlfR to the Mtb genome, the fragment density was calculated at every position by mapping paired end reads with
+bowtie2
+and depth normalized by dividing densities by a size factor (sample counts / geometric mean of all sample counts). Chromosomal regions bound by SlfR were identified by dividing the mean fragment density of SlfR + samples by the mean of SlfR – samples. Peak positions were called using
+find_peaks
+in
+scipy
+with a minimum distance of 500 bases between peaks and the top 50 peaks and nearby genes are shown in
+Table S4
+. Motif calling was conducted using
+meme
+on the 200 bases surrounding each peak position with a signal ratio greater than 5 allowing zero or one occurrence per sequence and enforcing palindromes.
+Proteomics data processing
+The Whitehead Institute Proteomics facility for DIA label-free full proteome analysis normalized across samples.
+99
+We took the mean of replicate sample protein abundances, masking any proteins not found in all samples, and then used a z-test without assuming equal variance to compare the difference between
+slfR
+variant and ancestral isolate abundances. The reported FDR was calculated by Benjamini-Hochberg multiple hypothesis correction across z-tests of individual protein abundance changes.
+Western blot data processing
+Blot quantifications were done in EmpiriaStudio using automatic lane finder and background adjustments and manually adjusted band finding. Display adjustments for figure visualizations were also done in EmpiriaStudio. To measure statistical significance (
+Figure 5E
+), the ratio of EsxB and Mpt64 signal was calculated for each strain pair (n=3) across both replicates, totaling n=6. Statistical test described in figure legend.
+Quantification of cumulative variant burdens
+As with above GWAS predicted functional variants,
+whiB6
+predicted functional variants were defined as those predicted by
+sift4g
+to be deleterious (sift score < 0.05) or annotated as causing a frameshift, creating an early stop codon, or disrupting the start codon. To generate cumulative variant strain plots, we used our parsimony ancestral reconstructions to identify ancestral nodes where
+whiB6
+variants occurred, ordered them by the number of strains inheriting the variant and calculated the cumulative number of
+whiB6
+variant strains across each individual lineage.
+For cumulative distribution of
+espA
+upstream variants, only deletions exactly matching del A and B are shown. Upstream variant sites were defined as the positions of sites A and B (4057190 and 4057367) ±5 bases. Cumulative distributions were plotted as described above.
+Variant population genetic associations
+To identify strains with high-level drug resistance (DR), we used the
+tbprofiler
+database of genotypic DR. We classified strains with one or more DR variants “Associated with Resistance” or “Associated with Resistance – Interim” in the WHO catalogue v2 as DR to the corresponding drug. To identify associations between predicted functional coding variants in
+whiB6
+or
+slfR
+(defined as above) or variants upstream of
+espACD
+(both deletions and site variants as defined above), we applied a recoded version of the
+phyoverlap
+algorithm designed to run on larger trees.
+68
+Briefly, for each independent mutational event of a target mutation (e.g. predicted functional
+whiB6
+variants) identified by parsimony, we calculated the fraction of strains inheriting that variant that had genotypic DR as defined above, calculating an overlap fraction. Next, we took the mean of overlap fractions for the target variants to calculate an observed overlap statistic. We compared the overlap statistic to control values by randomly redistributing the observed number of target mutational events across the tree (where the probability of selecting a branch was proportional to its length on the phylogenetic tree) and recalculating the overlap statistic. To generate a null distribution, we repeated this up to 10,000 times; the empirical p-value was the number of permutations greater than the observed overlap statistic divided by the number of permutations run. This analysis was performed separately on each lineage’s subtree.
+We used a similar algorithm to identify associations between variants and transmission or modernity. In this case, the mean terminal branch length (transmission) or branch midpoint’s distance from root (modernity) was pre-calculated for every node on the phylogenetic tree. Terminal branch lengths were calculated by counting differences in ancestral reconstruction SNP calls at the parental node to the terminal node (requiring variants had a lower than 5% missing data rate and were not in a poor variant recall region). Distances from the root were calculated by patristic distance from the phylogenetic tree; they were converted to SNP distance by multiplication by the genome size. Then, for each independent mutational event of the target mutation identified by parsimony, the node’s value was pulled from precalculated values; the mean of all values was taken to calculate an observed statistic. Null distributions were calculated by permutations as above. As transmission and modernity are two-sided—i.e., we were interested in variants associated with terminal branch lengths shorter or longer than the null distribution or variants more ancient or modern than the null distribution—we reported empirical p-values based on the smaller of permutations greater than or less than the observed statistic.
+Effect sizes were calculated by subtracting the mean of the permutation statistic distribution from the observed statistic to maintain units for interpretability. Null distribution statistics (mean, standard deviation) are presented in
+Table S7
+.
+Associations for DS or DR strains were calculated using the same algorithm, but on trees with or without any resistance mutations as defined above. To generate these trees, we started with the full tree and pruned all strains with or without resistance using
+dendropy
+. Ancestral reconstruction was then re-run on the DS and DR trees.
+Supplementary Material
+table S1
+table S2
+table S4
+table S5
+table S6
+table S7
+table S3
+table S9
+table S8
+1
+SUPPLEMENTAL INFORMATION
+Supplemental information can be found online at
+https://doi.org/10.1016/j.cell.2025.09.005
+.

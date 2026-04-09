@@ -1,0 +1,884 @@
+Introduction
+Metabolomics is an expanding field of
+functional genomics research
+1
+involving
+the targeted and untargeted analysis
+of metabolites for biomarker discovery as required for new insights
+into disease mechanisms.
+2
+,
+3
+However, given the chemical
+diversity of the human metabolome that includes lifelong environmental
+exposures
+4
+and host-microbiome interactions,
+5
+orthogonal separation techniques are often coupled
+to high resolution mass spectrometry (MS) to improve the resolution
+of metabolites and their isomers/isobars.
+6
+Separations based on chromatography, electrophoresis, and/or ion
+mobility also allow for more confident metabolite annotation
+7
+and complement tandem mass spectrometry (MS/MS)
+for compound identification based on their characteristic migration/retention
+times and collision cross-section areas.
+8
+Also, optimized separation methods enable better quantification
+of metabolites in complex biological samples when using electrospray
+ionization (ESI)
+9
+due to matrix-induced
+ion suppression or enhancement effects.
+10
+Reversed-phase-liquid chromatography (LC)-MS is the most widely
+used separation platform in metabolomics given its excellent selectivity
+and broad applicability to resolve semipolar to nonpolar compounds
+with established guidelines for best practices.
+11
+Other chromatographic separation mechanisms are better
+suited for the resolution of hydrophilic/ionic metabolites, including
+ion pair reversed-phase LC-MS,
+12
+ion-exchange
+LC-MS,
+13
+or hydrophilic interaction chromatography-MS.
+14
+Nevertheless, method standardization is challenging
+given a plethora of LC-MS protocols that differ in column dimensions,
+stationary phases, elution conditions, and column manufacturing processes
+that impact solute retention.
+15
+Also, sample
+throughput is often constrained in LC-MS using gradient elution programs
+in metabolomics when analyzing one sample per analytical run.
+16
+Capillary electrophoresis (CE)-MS is a
+high efficiency microseparation
+technique that is optimal for characterizing the ionic metabolome
+from volume or mass-limited biospecimens,
+17
+such as infant sweat samples.
+18
+Moreover,
+sample throughput can be increased by over an order of magnitude when
+using multisegment injection (MSI)-CE-MS via a serial sample injection
+format, where electrophoretic separations take place using an isocratic
+background electrolyte (BGE) prior to steady-state ionization with
+a coaxial sheath liquid interface.
+19
+,
+20
+For instance,
+a sample throughput of 1.0 min/sample was reported by Igarashi et
+al.
+21
+when using MSI-CE-MS for the targeted
+analysis of salivary polyamines, which can also be applied to improve
+peptide identification rates in bottom-up proteomics.
+22
+Multiplexed electrophoretic separations by MSI-CE-MS also
+enable stringent quality control (QC), effective batch correction,
+and versatile data workflows as needed for reliable metabolite annotation
+and biomarker discovery in large-scale metabolomic studies.
+23
+Despite recent progress in method standardization
+of CE-MS protocols,
+24
+ongoing concerns
+related to poor method robustness and migration time variability have
+hampered its wider adaptation.
+25
+Indeed,
+nonlinear changes in the electroosmotic flow (EOF) when using bare
+fused-silica capillaries contribute to large variations in absolute
+migration times (MTs) than retention times (RTs) in pressure-driven
+LC-MS methods due to several factors, including matrix ion adsorption
+onto the capillary surface, suction effects from the nebulizer in
+the sprayer, and/or temperature fluctuations in nonthermostatic regions
+of the capillary.
+26
+,
+27
+Overall, large MT fluctuations
+greatly complicate peak alignment, molecular feature annotation and
+metabolite identification in CE-MS since data preprocessing is one
+of the most time-consuming and error prone step in metabolomics that
+is also difficult to scale.
+28
+,
+29
+These challenges have
+sparked the development of customized tools to better align long-term
+drifts in MTs between runs, such as MasterHands, a proprietary software
+for data preprocessing of CE-MS metabolomic experiments that relies
+on a dynamic time warping algorithm.
+30
+However,
+limitations of this strategy include lack of empirical validation,
+long processing times due to algorithm complexity, and inaccurate
+results due to underlying model assumptions.
+31
+Other software tools for transforming CE-MS metabolomic data sets
+into “mobilograms” have been proposed by Gonzalez-Ruiz
+et al.
+32
+,
+33
+and later adapted by Salzer et al.
+34
+to improve peak annotation and metabolite identification.
+35
+Although effective mobility-scale transformations
+in CE may improve molecular feature annotation, it also distorts original
+time-domain peak shapes that can impact metabolite quantification
+without appropriate corrections.
+33
+Moreover,
+current software tools in metabolomics
+36
+are not fit for purpose in MSI-CE-MS as it requires both accurate
+peak annotation and sample position assignment, which is difficult
+to achieve when there are large drifts in MT, a high frequency of
+missing/undetected peaks and closely migrating isobaric interferences.
+37
+Herein, we introduce a computationally
+simpler approach to predict
+the MTs of serum metabolites directly based on their migration time
+indices (MTI) that avoids the need for effective mobility or time
+warping transformations. This concept was inspired by Kováts
+retention indices
+38
+used in gas chromatography
+(GC) separations to normalize the RT of a compound between the RTs
+of a homologous series of eluting
+n
+-alkanes that
+also enables higher confidence metabolite identification in conjunction
+with mass spectral libraries.
+39
+We demonstrate
+that MTIs can be used for reliable annotation of serum metabolites
+in MSI-CE-MS with a high degree of accuracy, even with long-term variations
+in MT over multiple batches of runs. A MTI algorithm was integrated
+directly into the PeakMeister software, which allows for rapid data
+preprocessing of a list of authenticated (known or unknown) serum
+metabolites by MSI-CE-MS after raw data files are converted to a mzML
+format. We performed an extensive validation study to demonstrate
+acceptable intermediate precision and good mutual agreement when using
+PeakMeister as compared to manual data preprocessing by an experienced
+analyst using vendor software. These outcomes were evaluated in a
+large-scale metabolomic analysis of more than 5,000 serum samples
+from the Brazilian National Survey on Child Nutrition (ENANI-2019)
+study.
+40
+Methods and Materials
+All details on reagents, serum
+sample pretreatment, MSI-CE-MS operating
+conditions, metabolite quantification, standardized data workflow
+for serum metabolomic analyses, MTI equation for correcting large
+MT variations, and PeakMeister software development are described
+in the
+Supporting Information
+. PeakMeister
+is written in the R statistical environment and is accessible on GitHub,
+along with a getting started guide and other supporting documentation
+(https://github.com/PBM-Group/PeakMeister).
+Results and Discussion
+A Robust Multiplexed Peak Picking Algorithm in Metabolomics
+for MSI-CE-MS
+High throughput metabolite profiling by MSI-CE-MS
+takes advantage of a serial sample injection format of 13 samples
+introduced within each analytical run (
+Figure S1
+). However, several factors can contribute to nonlinear changes
+in the EOF leading to variations in absolute MTs for ions in CE. As
+a result, the use of a single marker, such as an internal standard
+to calculate RMTs, or a neutral marker to determine effective electrophoretic
+mobility, are inadequate to attain long-term MT precision (CV <
+2–3%). In this work, we selected two flanking internal standards
+that migrate before and after each serum metabolite to calculate a
+MTI, which is determined by PeakMeister using MTs supplied by a user
+defined table (
+eq 1 in Supporting Information
+).
+Figure
+1
+outlines
+the overall data workflow used in PeakMeister to process multiplexed
+MSI-CE-MS data sets from open source mzML files, where an input excel
+file containing a list of authenticated serum metabolites (known and
+unknown cations) and internal standards for calculating MTIs (
+eq 1 in Supporting Information
+). Serum metabolites
+were then extracted from the mass corrected mzML file to generate
+EIEs, which were then smoothed to improve peak picking fidelity. To
+accurately locate the position of serum metabolite peaks, the MT for
+a series of 11 internal standards (40 μmol/L) were first determined
+experimentally. This simple algorithm is supported by a few user-defined
+parameters, such as the number of sample injections, full-width-at-half-maximum
+(FWHM) for peaks, and the time interval between peaks, whereas deviations
+beyond set thresholds likely indicate misannotated peaks. Using the
+MTs of these internal standards and the predefined MTIs, PeakMeister
+then computes the expected MTs of serum metabolites (
+eq 2 in Supporting Information
+), integrates signals at these
+positions, and then labels their position number (from 1 to 13) as
+independent samples introduced on-capillary. This robust peak annotation
+process based on MTIs is critical in MSI-CE-MS to identify the correct
+sample position corresponding to a specific participant from the ENANI-2019
+study, as well as QC, calibrant or blank specimen based on their programmed
+serial injection order. Moreover, missing peaks below method detection
+limits are annotated as “<LOD”, whereas closely migrating
+isobaric interferences are labeled as “Interfered” to
+alert for peak overlap. The final results for PeakMeister are then
+exported in two csv files containing all annotated/integrated peaks,
+and serum metabolite MTI or RMT. These results are also summarized
+as a series of integrated EIE plots that can be reviewed by an analyst
+to ensure acceptable performance.
+Figure 1
+PeakMeister is an automated
+data preprocessing tool for peak picking
+and sample position assignment in metabolomics when using a serial
+sample injection format in MSI-CE-MS. A targeted molecular feature
+list and adjustable parameters are user defined and conveniently stored
+in a xlsx file as an input. PeakMeister first performs a mass calibration
+to correct for mass drift and then extracts and smooths the user supplied
+panel of internal standards and serum metabolites to generate EIEs
+for peak detection. An algorithm is then applied to the internal standard
+EIEs to identify the most abundant peaks. This information is then
+used in conjunction with MTIs for MT prediction of each serum metabolite
+peak. The predicted MTs are then used to identify sample peaks in
+the corresponding EIEs, including the correct injection order of samples.
+After identifying and integrating all peaks, PeakMeister generates
+EIE plots and csv files with an output of integrated peak areas and
+MTs for all annotated serum metabolites.
+Migration Time Prediction Accuracy of MTIs
+Validation
+of PeakMeister was performed on a panel of serum metabolites, which
+were previously credentialized in an untargeted manner
+41
+in a pooled serum (QC) sample from the ENANI-2019
+study when using a dilution trend filter in MSI-CE-MS with temporal
+signal pattern recognition.
+42
+Briefly,
+serum metabolites, including unknown cations, were deemed authentic
+and reliable provided they were measured with adequate precision in
+QC samples (CV < 30%) without appreciable blank signal (<5%)
+while also exhibiting a linear decrease in ion response upon serial
+dilution as described by Shanmuganathan et al.
+23
+Also, serum metabolites were subject to additional scrutiny
+for selection as they needed to have adequate technical precision
+from repeat QCs (CV < 40%,
+n
+= 420) with high
+detection frequency (>70%)
+20
+,
+37
+following analysis
+of all serum samples from the ENANI-2019 study. Overall, 47 serum
+metabolites (including 7 unknown cations) and 11 internal standards
+satisfied this multitiered selection criteria, which were then independently
+processed by PeakMeister and compared to manually processed data using
+vendor software.
+Figure S2
+highlights the
+standardized metabolomics data workflow in MSI-CE-MS, which started
+each day with a duplicate six-point calibration run and a proficiency
+test run of NIST SRM-1950 human plasma with blank samples, prior to
+12 serum and a QC sample analyzed in a randomized sequence in each
+analytical run.
+Figure
+2
+A illustrates a plot depicting the mean MTs and accurate mass
+(
+m
+/
+z
+) for 47 serum metabolites consistently
+measured by MSI-CE-MS together with 11 internal standards that served
+as reference peaks for MTI determination by PeakMeister. Long-term
+MT variations for three representative serum metabolites are shown
+in
+Figure
+2
+B, namely
+creatinine, isoleucine (Ile), and hypoxanthine (HyX). Daily preventative
+maintenance, including ion source cleaning and mass tuning, were implemented
+during the analysis of diluted serum filtrates samples when using
+MSI-CE-MS, with new BGE/sheath liquid solutions prepared each week
+and 25 different fused-silica capillaries (dashed lines) used across
+3 batches (solid lines). New preconditioned bare fused-silica capillaries
+were used whenever current instability was observed that could not
+be salvaged by further rinsing or capillary inlet alignment. Overall,
+greater variation in MTs become evident following the first two batches
+(<2–5 min) that subsequently increased up to 20 min for
+slow migrating metabolites relative to the first analytical run toward
+the end of the third batch of runs. In total, serum metabolome analysis
+by MSI-CE-MS required 40 days of data acquisition across 3 batches
+of runs using a single instrument platform that was also used for
+other projects, which comprised a total of 5,433 serum filtrates and
+QC samples analyzed over an eight-month period.
+Figure 2
+(A) Plot of 47 serum metabolites (green circles) and 11 internal
+standards (yellow circles) measured consistently by MSI-CE-MS from
+the ENANI-2019 study. (B) MT variability in MSI-CE-MS is extensive
+after analysis of 5,433 serum samples (including 420 QCs) with MT
+shifts exceeding 20 min for certain serum metabolites. This leads
+to high mean absolute error (MAE) when comparing absolute MT changes
+over time (run 1 used as reference). (C) However, MT can be accurately
+predicted with PeakMeister when using a co-migrating stable-isotope
+internal standard, such as creatinine that had a MAE reduced from
+95 s to only 0.30 s. Alternatively, use of MTIs in PeakMeister for
+serum metabolites having two flanking internal standards when stable-isotope
+internal standards were lacking, such as isoleucine, also resulted
+in a major reduction in MAE from 106 s to only 1.5 s. However, late
+migrating metabolites with only one internal standard, such as serum
+hypoxanthine, had a more modest decrease in MAE from 146 to 15.3 s.
+Overall, MSI-CE-MS is prone to greater long-term MT drift when using
+different capillaries (dotted gray lines) while acquiring data across
+3 batches (solid black lines) over an 8 month period. (D) Overall,
+PeakMeister provided a 36-fold improvement in MT prediction accuracy
+when using MTIs or RMTs than MTs in MSI-CE-MS with a median MAE of
+only 2.9 s for all 47 serum metabolites.
+As expected, the optimal method for correcting
+MT drift was the
+use of a comigrating stable-isotope internal standard (available for
+8 of 47 metabolites) or a nearly comigrating internal standard (3
+of 47 metabolites), to enable effective peak alignment as shown in
+Figure
+2
+B,
+2
+C
+for serum creatinine. Here, the mean absolute
+error (MAE) decreased over 220-fold from 67 s to only 0.30 s resulting
+in no significant within or between batch effects with an IQR of 0.0
+s despite long-term drifts in MTs exceeding 8 min. However, stable-isotope
+internal standards are not feasible in untargeted metabolomics involving
+novel/unknown compounds, nor practical or cost-effective to perform
+when analyzing large panels of metabolites or lipids. In our work,
+the stable- isotope internal standards were primarily used for fast
+migrating serum metabolites (e.g., trimethylamine-
+N
+-oxide, TMAO) that were more prone to ion suppression effects close
+to the salt front (e.g., sodium) when analyzing serum or plasma filtrates.
+Otherwise, for 34 serum metabolites, such as Ile, MT predictions from
+their corresponding MTI were achieved using two of the closest flanking
+internal standards (of the 11) in MSI-CE-MS. Similar batch effects
+and nonlinear changes in MTs were apparent for serum Ile (
+Figure
+2
+B) that exceeded
+17 min with a MAE of 106 s, but this large variation was effectively
+reduced 71-fold to only 1.5 s when using a MTI algorithm with carnitine-d3
+and F-Phe as two optimal pairs of internal standards (
+Figure
+2
+C). The multiplexed separation
+format in MSI-CE-MS adds another layer of complexity to data preprocessing
+since Ile and leucine (Leu) as structural isomers, migrate closely
+to each other resulting in 26 peaks to be resolved and correctly annotated
+within each analytical run. While open-access and commercial software
+tools are available for peak alignment in LC-MS, most methods can
+only tolerate much lower RT drifts in reversed-phase LC-MS contributed
+by small leaks, minor degradation of column performance, and sample
+matrix interferences.
+43
+Typically, these
+temporal shifts are on the order of seconds depending on the RT of
+metabolite, stationary phase, and gradient elution conditions, often
+less than 15 s as reported by Brunis et al.
+44
+in their analysis of 503 plasma samples using reversed-phase LC-MS.
+However, CE specific software tools such as ROMANCE,
+35
+,
+45
+which converts the MT dimension to an effective electrophoretic
+mobility scale, have not been extensively validated in large-scale
+metabolomic studies while requiring extra processing times for data
+transformation. Overall, there were only two instances where MTI were
+not computed for slow migrating serum metabolites, namely HyX and
+an unknown cation (unknown 4;
+m
+/
+z
+:RMT; 276.1191:1.088) as they both migrated after the last internal
+standard (Cl-Tyr). Overall, the RMT correction reduced MT shifts and
+batch effects, but the outcome was less effective as compared to MTIs.
+For instance, although serum HyX underwent a large MT drift between
+batches exceeding 20 min (
+Figure
+2
+B), the RMT adjustment in PeakMeister was able to lower
+the MAE 9.4-fold to 15.3 s with an IQR of 20.1 s (
+Figure
+2
+C). For these reasons, an additional
+late migrating internal standard is recommended to further improve
+the peak picking performance of PeakMeister in MSI-CE-MS for HyX.
+Nevertheless, overall MT prediction accuracy for all 47 serum metabolites
+(e.g., 34 using MTIs, 8 using stable-isotope internal standards, 3
+using closely comigrating internal standards, and 2 using RMTs) improved
+36-fold with a median MAE of only 2.9 s compared to 105 s for MTs
+without correction (
+Figure
+2
+D).
+Peak Picking Fidelity and Data Integration Outcomes
+All serum metabolomic data collected from the ENANI-2019 study was
+processed manually by an experienced analyst, as well as automatically
+by PeakMeister to allow for a direct comparison of peak picking and
+data integration performance for 47 serum metabolite and 11 internal
+standard peaks (
+n
+= 224,983) by MSI-CE-MS. As expected,
+the peak annotation for internal standards using PeakMeister, which
+had excellent ion responses (S/
+N
+> 20) without
+missing
+peaks or isobaric interferences, was found to be extremely accurate,
+where the agreement with manual processed data was near perfect except
+for 4 misannotated peaks, corresponding to an overall failure rate
+of only 0.007% out of 55,000 total peaks analyzed (
+Figure S3A
+). In these rare cases, spurious noise occurred
+near the peaks of interest resulted in incorrect peak picking by PeakMeister.
+In contrast, as serum metabolites were measured in a national nutritional
+survey of young children from Brazil having large between-subject
+variability, they frequently were not the most intense peaks within
+an EIE, with spurious signals or isobaric peaks of greater intensity
+being a potential cause for peak picking error. Consequently, reliable
+peak picking for serum metabolites using MTIs was needed to reduce
+annotation errors for electrophoretic peaks notably when using serial
+sample injections in MSI-CE-MS.
+The excellent annotation of
+predicted MTs from MTIs using PeakMeister, as highlighted in
+Figure
+2
+, translated into
+exceptional peak picking accuracy with a median error rate of only
+0.05% (out of 169,983 total peaks analyzed), where 14 serum metabolites
+exhibited perfect peak picking agreement (error rate of 0%) relative
+to manual processing by an experienced analyst. As expected, 4 of
+the 8 serum metabolites with stable-isotope internal standards were
+included in this list, where the remaining 4 metabolites had only
+1–2 incorrectly assigned peaks in total. Otherwise, serum metabolites
+with modestly higher error rates (1.0–2.0%) were typically
+detected as low intensity peaks having a higher background noise,
+where PeakMeister selected a spurious noise peak rather than the true
+peak of interest. For instance, serum cysteinylglycine-cysteine oxidized
+disulfide (CysGly-CySS) is a low abundance metabolite in circulation
+when using MSI-CE-MS (
+Figure S4
+). Unsurprisingly,
+the only two compounds with much higher error rates than CysGly-Cys-SS
+were the two slow migrating metabolites that relied on less robust
+RMT adjustments with only a single internal standard (Cl-Tyr), namely
+serum HyX (8.7%) and unknown 4 (7.4%). In these cases, peak picking
+accuracy by PeakMeister was hindered by poor MT predictions due to
+large within and between batch effects. Of the 1,405 incorrectly annotated
+peaks (1,401 serum metabolites and 4 internal standards) over half
+(
+n
+= 795) were caused by just these two late migrating
+serum metabolites, corresponding to an error rate of about 2 peaks
+per data file. Overall, only 1 of the 421 sample mzML files analyzed
+by PeakMeister from the ENANI-2019 study showed an excessive high
+error rate (73 incorrectly annotated peaks) which was subsequently
+excluded from our final analysis (
+Figure S5
+). This error was attributed to very low signals measured for ornithine-15N
+in this data file, which caused poor peak detection of this internal
+standard and serum metabolites that rely on it for MTI determination.
+Our work highlights the importance of selecting an appropriate series
+of internal standards having electrophoretic mobilities spanning the
+entire MT range for serum metabolites with clearly defined signals
+given their direct impacts on peak annotation fidelity in MSI-CE-MS.
+The outstanding peak picking capability for serum metabolites using
+PeakMeister (median accuracy >99.9%) also translated into excellent
+peak integration agreement with manual data processing, which is critical
+to ensure reliable quantification of serum metabolites based on their
+relative peak areas (RPAs). All serum metabolites were normalized
+to a single internal standard (Cl-Tyr) for their quantification except
+for eight metabolites with matching stable-isotope internal standards.
+Overall, the mean bias between PeakMeister and manual data processing
+for 47 serum metabolites was only −2.1% with only two compounds,
+unknown 7 (
+m
+/
+z
+:MTI; 471.7380:0.803)
+and unknown 2 (
+m
+/
+z
+:MTI: 129.0660:0.064)
+exceeding the 95% confidence limits as shown in the Bland-Altman %
+difference plot (
+Figure S3B
+). As expected,
+a strong correlation (median
+r
+= 0.98) was achieved
+when comparing the two data preprocessing methods for all 47 serum
+metabolites with the only major outlier being unknown 7 (
+Figure S6
+). The weaker correlation (
+r
+= 0.68) for this unknown cation was due to its low abundance near
+the method detection limit, which was most evident in batch 3 (
+Figure S7
+). As a result, careful data review
+and further parameter optimization in PeakMeister may be warranted
+for certain low abundance metabolites.
+PeakMeister Accuracy for Metabolite Quantification and Intermediate
+Precision
+Overall, 16 plasma metabolites in reference samples
+from NIST SRM-1950 were measured in common with MSI-CE-MS, which were
+analyzed once every day (
+n
+= 40) for proficiency
+testing and external validation. Similarly, calibrant solutions for
+these 16 metabolites were also analyzed as the first MSI-CE-MS run
+each day using our standardized data workflow (
+Figure S2
+), which were processed to generate a duplicate 6-point
+calibration curve. Data for the calibration curves acquired for 16
+metabolite standards throughout the ENANI-2019 study are summarized
+in
+Table S1
+. The automated integration
+of this data by PeakMeister proved very reliable with excellent linearity
+(
+R
+2
+> 0.98) and acceptable long-term
+precision
+(median CVs < 18%,
+n
+= 480) for all 16 metabolites
+across 3 different batches over 40 days of operation. The external
+calibration curves were then used to quantify 16 plasma metabolites
+from NIST SRM-1950 with average concentrations calculated after each
+day of runs. In general, acceptable mutual agreement was achieved
+in this study with a mean bias of −1.3% between mean plasma
+concentrations measured by MSI-CE-MS with automated PeakMeister data
+preprocessing as compared to reference values reported by NIST as
+shown in a Bland-Altman % difference plot (
+Figure S3C
+). Although method bias ranged from −28% to +25%
+for alanine and cystine respectively (
+Table S1
+), similar outcomes were also found with manual processed data and
+NIST reported values (
+Figure S3D
+). Thus,
+bias in plasma metabolite quantification was not attributed to either
+data preprocessing method, but likely due to differences in analytical
+procedures. Fo example, NIST used LC-MS/MS or GC-MS protocols following
+organic solvent deproteinization and
+/
+or chemical
+derivatization for metabolite quantification, whereas our method involved
+a direct analysis of diluted plasma filtrates after a simple ultrafiltration
+step. Also, a single internal standard (Cl-Tyr) was used for data
+normalization for most plasma metabolites with only two compounds
+having stable-isotope internal standards, histidine and creatinine,
+which had a mean bias of similar magnitude ranging from −12.3%
+and +11.3% respectively (
+Table S1
+).
+The intermediate precision for automated data preprocessing by PeakMeister
+was determined by computing the mean CV from repeat analysis of pooled
+QC samples (
+n
+= 420) included in every analytical
+run by MSI-CE-MS while analyzing serum samples (
+n
+= 5,000) from the ENANI-2019 study. Also, control charts were generated
+from an internal standard (F-Phe) after completion of data preprocessing
+and used to identify potential outlier data exceeding ±3 standard
+deviations from the mean, a process that was simple to automate and
+implement. Using this algorithm, the number of missing data points
+were typically less for PeakMeister compared to manual integration,
+with the largest differences occurring for low abundance serum metabolites,
+such as CysGly-CySS, unknown 7, and unknown 5 (
+m
+/
+z
+:MTI; 334.6885:0.432) (
+Figure S8
+). Better agreement between data preprocessing techniques may be
+realized by setting a higher S/N threshold on PeakMeister to prevent
+integration of spurious signals. Nevertheless, the intermediate precision
+of MSI-CE-MS serum metabolome analyses following a QC-based batch
+correction
+23
+was quite consistent for PeakMeister
+compared to manual integration with both having a median CV of 16%
+(
+n
+= 420) as shown in the principal component analysis
+(PCA) 2D scores plots that were substantially lower than the biological
+variation of serum metabolites (
+Figure
+3
+A,B). A closer evaluation (
+Figure
+3
+C) highlights the good agreement when quantifying
+most serum metabolites from the ENANI-2019 study when using PeakMeister,
+except for CysGly-CySS, unknown 7, and symmetric-dimethylarginine
+(SDMA). This outcome is unsurprising given that these three serum
+metabolites had the lowest correlation coefficients when comparing
+PeakMeister to manually integrated data (
+Figure S6
+). Serum CysGly-CySS and unknown 7 also had poor agreement
+in terms of the total number of missing QC values (
+Figure S8
+). Lastly, intermediate precision was also assessed
+via control charts of an internal standard (F-Phe) added to all serum
+and QC samples (
+n
+= 5,420), where both data preprocessing
+techniques showed consistent outcomes with a mean CV of 9.2% (
+Figure S9A
+) and 8.5% (
+Figure S9B
+) for PeakMeister and manual integration, respectively.
+Both control charts showed a modest between-batch effect, however
+this long-term signal drift was attenuated after the QC batch correction
+algorithm
+44
+with a mean CV of 7.8% (
+Figure
+3
+D) and 7.5% (
+Figure
+3
+E) for PeakMeister
+and manual integration data preprocessing methods, respectively.
+Figure 3
+Principal
+component analysis (PCA) comparing intermediate precision
+of a large-scale serum metabolome analysis by MSI-CE-MS with data
+preprocessing using (A) PeakMeister and (B) manual data integration
+following a QC-based batch correction. Both data processing methods
+had an analogous intermediate precision when integrating 47 serum
+metabolites from pooled QC samples with a median CV of 16% (
+n
+= 420) over 3 batches of analyses with similar biological
+variation (61% and 52%) in individual serum samples from the ENANI-2019
+study (
+n
+= 5,000). (C) Overall precision was consistent
+between the two data preprocessing techniques except for three serum
+metabolites, including CysGly-CySS, unknown 7, and SDMA, which were
+low abundance metabolites that had more variable peak integration
+outcomes by PeakMeister. Control charts of F-Phe (40 μmol/L)
+added to all serum samples (
+n
+= 5,420) demonstrated
+excellent long-term precision for (D) PeakMeister with a mean CV of
+7.8% that was comparable to (E) manual integration with a mean CV
+of 7.5% after batch correction.
+Automated Data Preprocessing Performance and Serum Metabolite
+Reference Intervals
+We have rigorously validated PeakMeister
+in a large-scale metabolomics study comprising 5,000 serum samples,
+420 pooled QC samples, 468 NIST SRM-1950 plasma samples, and 480 calibrants
+(80 calibration curves) analyzed by MSI-CE-MS under positive ion mode
+detection. Despite these real-world operating conditions common to
+large-scale prospective studies, PeakMeister generated results in
+good agreement with manual integration which was performed by an experienced
+analyst using vendor software. For instance, serum serine (Ser) had
+an ideal outcome as reflected in a representative EIE which consisted
+of well resolved and detectable peaks originating from 13 different
+serum samples (
+Figure S10A
+). Conversely,
+serum metabolite isomers, such as Ile (
+Figure S10B
+) and Leu (
+Figure S10C
+) were
+partially resolved by MSI-CE-MS, making their EIEs more complex to
+process by PeakMeister. However, they were still consistently annotated
+given the accuracy and precision at which their MTs were predicted
+when using a peak picking algorithm based on MTIs. However, certain
+serum metabolites were more prone to matrix derived isobaric interferences
+in MSI-CE-MS with full-scan data acquisition, which is dependent on
+the mass resolution and scanning mode of the mass analyzer. To overcome
+this obstacle, users can input known interferences for certain metabolites
+and PeakMeister will automatically check for comigration of these
+molecular features and record these instances as a likely interference.
+For instance, although serum trimethylamine-
+N
+-oxide
+(TMAO;
+m
+/
+z
+76.0762) was not completely
+mass resolved from glycine (Gly;
+m
+/
+z
+76.0399) using a TOF-MS system, it was partially resolved electrophoretically
+in most samples, PeakMeister verified if these isobaric ions were
+comigrating in certain samples and labeled the interfering peaks to
+TMAO as “Interfered” to prevent bias due to peak overlap
+(
+Figure S10D
+). In this case, data integration
+for serum TMAO from this specific sample was not reported due to isobaric
+comigration. Alternatively, MSI-CE-MS/MS in conjunction with multiple
+reaction monitoring can be used for improved selectivity and sensitivity
+for the targeted analysis of low abundance metabolites
+37
+or higher resolution Orbitrap mass analyzers
+for untargeted analyses.
+46
+Another
+challenge was low abundance serum metabolites near or below method
+detection limits (S/
+N
+< 3 or any user defined
+value) which still required annotation to correctly label certain
+samples analyzed by MSI-CE-MS as having nondetected metabolites. To
+ensure these features were correctly labeled, PeakMeister computes
+the S/N of all peaks in each EIE and labels peaks with S/N below the
+user set threshold as “<LOD” following data preprocessing
+(
+Figure S10E
+). Lastly, certain serum metabolites
+may not be detected due to its low natural abundance, or in the case
+of exogenous metabolites, low average exposure. In these instances,
+if no peak was detected, then PeakMeister annotated the expected position
+of the peak as “NPD” (no peak detected), again allowing
+for appropriate annotation to be performed after analysis. For example,
+serum proline betaine exhibited a very large range of signals including
+instances where no peaks were detected since its concentrations in
+blood reflect recent dietary intake of citrus fruit reflecting a habitual
+Prudent diet (
+Figure S10F
+).
+47
+Annotated EIE plots are standard outputs for
+PeakMeister that allows users to review peak picking, integration
+and sample position assignment for each serum metabolite in each MSI-CE-MS
+run. PeakMeister also produces two CSV files containing MTs and peak
+areas for all data collected, with annotations (“Interfered”,
+“<LOD”, and “NPD”) included so that
+specific imputations can be made prior to statistical analysis, including
+optimal missing value input decisions.
+48
+Furthermore, a third CSV file is generated by PeakMeister which
+reports the MTIs or RMTs for each serum metabolite as well as internal
+standard(s) used in their computation, which can be used for reporting
+purposes. All of this data is saved in a folder along with a copy
+of the user parameters to maximize traceability, transparency, and
+data organization.
+Overall, automated preprocessing of serum
+metabolome data by PeakMeister,
+which included the analysis of serum/plasma samples, pooled QCs/reference
+samples, calibrants, and blanks, was processed within 4 days with
+a standard desktop computer (Core i7–9700 @ 3.00 GHz, 32 Gb
+of DDR4 RAM @ 2677 MHz). Also, one workday of manual preprocessing
+time was needed for initial optimization of input parameters in PeakMeister
+for each of the 3 batches. However, this was a fraction of the approximate
+125 days required to manually integrate the data by an experienced
+analyst in our laboratory. To this end, we achieved our primary objective
+of developing a rapid and automated data preprocessing tool that is
+optimal for high throughput data acquisition when using a serial sample
+injection format in MSI-CE-MS. This work comprised a substudy of a
+population-based household survey that assessed breastfeeding, dietary
+intake, anthropometric assessment of nutritional status, and micronutrient
+deficiencies in 14,558 children under the age of five from 1,500 census
+enumeration areas across Brazil.
+49
+Using
+sample data preprocessed by PeakMeister (after removal of an outlier
+data file), reference intervals for 40 serum metabolites with available
+chemical standards from 5,000 participants from the ENANI-2019 study
+are summarized in
+Table S2
+. These intervals,
+which were derived from largely nonfasting serum collected from healthy
+children between the ages of 6 months and 5 years across different
+regions of Brazil, have the potential to improve risk assessment of
+excess adiposity in childhood,
+50
+as well
+as understand the impact of gut microflora on health outcomes during
+infancy
+51
+and across multiple generations
+within the maternal lineage.
+52
+Certain
+circulating metabolites can also serve as promising dietary biomarkers
+of food intake and complex eating patterns that are difficult to assess
+when using food frequency questionnaires since they are prone to misreporting.
+53
+Current work is underway to evaluate putative
+biomarkers associated with dietary exposures and/or microbial activity
+using MSI-CE-MS serum metabolome data, which may be useful for risk
+assessment of developmental delays in early childhood.
+40
+Also, PeakMeister extends well beyond MSI-CE-MS
+since it is suitable to process serial sample injections implemented
+in isocratic elution LC-MS methods for ultrafast targeted metabolite
+analyses,
+54
+as well as comprehensive lipidomic
+analysis by LC-MS using a single sample injection format.
+55
+Conclusion
+In this work, we demonstrate that PeakMeister,
+an open-access software
+tool available on GitHub, can significantly reduce data preprocessing
+times in MSI-CE-MS by over 30-fold while maintaining outstanding peak
+annotation fidelity as compared to manual data preprocessing. Two
+major challenges were overcome in this large-scale serum metabolomics
+study, namely accurate peak picking and consistent sample position
+assignment when using a serial injection format in MSI-CE-MS despite
+large MT variability and long-term between-batch effects. Importantly,
+the use of a MTI for each serum metabolite with two flanking internal
+standards (or a single stable-isotope internal standard) drastically
+lowered the mean absolute prediction error for MT within a few seconds
+that is comparable to reversed-phase LC-MS metabolomic analyses. Moreover,
+acceptable intermediate precision and accuracy for metabolite quantification
+was demonstrated by PeakMeister after being extensively tested on
+more than 6,368 samples overall. This included 5,000 serum filtrates
+from the ENANI-2019 study together with 468 NIST SRM-1950 plasma samples,
+420 pooled QCs, and 480 calibrant solutions that were acquired efficiently
+over 40 days of data acquisition on a single instrumental platform
+across 3 batches over an eight-month period. Moreover, all data preprocessing
+using PeakMeister was directly performed on mzML files without computationally
+intensive dynamic time warping algorithms or effective mobility transformation.
+However, certain late migrating serum metabolites lacking two flanking
+or a stable-isotope internal standard were prone to peak misannotation,
+including low abundance metabolites with signals near the method detection
+limit. Future work is underway to develop a more user-friendly software
+interface for PeakMeister as required for high throughput MSI-CE-MS
+metabolomic analyses in different sample matrices (e.g., urine, saliva,
+stool) with the capability of “real-time” data preprocessing
+output for review (e.g., control charts, calibration curves, QC checks)
+rather than being performed retrospectively weeks or months after
+data acquisition. PeakMeister may also prove useful in multiplexed
+LC-MS analyses, as well as HILIC based separations that are susceptible
+to greater RT variations albeit to a much lesser extent than CE. We
+anticipate that PeakMeister will assist new users to MSI-CE-MS since
+it is more cost-effective and sustainable given its lower infrastructure,
+energy and organic solvent requirements than conventional LC-MS methods
+for large-scale metabolomic studies.
